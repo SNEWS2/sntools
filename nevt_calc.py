@@ -9,8 +9,8 @@ import numpy as np
 from scipy import integrate
 
 totnevt=0
-nP = 4.96*10**34 #number of hydrogen nuclei in detector
-d = 10*1.563738*10**32 #distance in MeV
+nP = 4.96*10**34 #number of hydrogen nuclei in whole detector volume; needs to be updated for design changes
+d = 1.5637*10**33 # length/hbar*c - distance in MeV^-1 = 10 kpc/((6.582*10**-22 sMeV)*(9.717*10**-12 kpc s^-1))
 mN = 939.6 #MeV
 mP = 938.2 #MeV
 mE = 0.511 #MeV
@@ -35,7 +35,7 @@ C = ((f1**2) + (g1**2))/4
 absMsquared = A-(sMinusU*B)+((sMinusU**2)*C)
 dSigmadE = ((((1.16637*(10**(-11)))**2)*(0.9746**2))/(8*pi*(mP**2)*(eNu**2)))*absMsquared*2*mP
 a = (eNuSquared-(2*(eNu**2)))/((eNu**2)-eNuSquared)    #for gamma distribution
-dFluxdE = (1/(4*pi*(d**2)))*((L/(6.242*(10**5)))/1000*eNu)*np.random.gamma(a+1, eNu/(a+1))#neutrino flux per ms
+dFluxdE = ((1/(4*pi*(d**2)))*((L/624.2)/eNu))*np.random.gamma(a+1, eNu/(a+1))#neutrino flux per ms
 def f(eE_all, eNu_all):
     return dSigmadE*dFluxdE
 def bounds_eNu():
@@ -43,9 +43,9 @@ def bounds_eNu():
 def bounds_eE(eNu_all):
     return [0,(eNu_all-1.3)]
 simnevt= nP * integrate.nquad(f, [bounds_eE, bounds_eNu])[0] #integrate(dFluxdE*dSigmadE) wrt eE and then eNu
-#nevt= np.random.poisson(1, simnevt) #number of events in 1ms interval
-#totnevt += len(nevt)
+nevt= np.random.poisson(1, simnevt) #number of events in 1ms interval
+totnevt += len(nevt)
 
-print(dSigmadE, dFluxdE, simnevt)
+print(simnevt, nevt, totnevt)
 
 
