@@ -16,7 +16,7 @@ pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
 #holds detector [radius, height] in cm
 detectors = {"SuperK":[3368.15/2., 3620.],
              "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000.],
-             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000.]}
+	     "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000.]} # TODO: change to ID size once that’s fully implemented in WCSim and BONSAI
 
 for pname, no in list(pid.items()):
     if pname.endswith('+'):
@@ -123,7 +123,7 @@ mE = 0.511 #MeV
 mPi = 139.6 #MeV
 delta = mN-mP
 mAvg=(mP+mN)/2
-gF=1.16637e-11**2 #Fermi coupling constant
+gF=1.16637e-11 #Fermi coupling constant in MeV^-2
 eThr=((mN+mE)**2 - mP**2)/(2*mP)
 
 #for 1ms time intervals:
@@ -152,9 +152,9 @@ with open('simData.txt') as simData:
         C = (f1**2 + g1**2)/4
         
         absMsquared = A-(sMinusU*B)+((sMinusU**2)*C)
-        dSigmadE = ((gF*0.9746**2)/(8 * pi * mP**2 * eNu**2))*absMsquared*2*mP
+        dSigmadE = ((gF**2 * 0.9746**2)/(8 * pi * mP**2 * eNu**2))*absMsquared*2*mP
         alpha = (eNuSquared-(2*eNu**2))/(eNu**2-eNuSquared)
-        dFluxdE = ((1/(4*pi*dSquared))*((L*624.15)/eNu))*(eNu**alpha/(gamma(alpha+1)))*(((alpha+1)/eNu)**(alpha+1))*(exp(((alpha+1)*eNu)/A))#temp changed from L*624.1
+        dFluxdE = ((1/(4*pi*dSquared))*((L*624.15)/eNu))*(eNu**alpha/(gamma(alpha+1)))*(((alpha+1)/eNu)**(alpha+1))*(exp(((alpha+1)*eNu)/A))
         
         def f(eE, eNu):
             return dSigmadE*dFluxdE
