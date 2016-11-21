@@ -2,8 +2,8 @@
 
 from optparse import OptionParser
 import random
-from math import pi, sin, cos, sqrt
-import sys
+from math import pi, sin, cos, sqrt, gamma, exp
+from scipy import integrate
 import numpy as np
 
 pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
@@ -99,7 +99,7 @@ def partPrint(p, f, recno):
     #th = random.random()*pi
     #phi = random.random()*2*pi
     #p["direction"] = (cos(phi)*cos(th), sin(phi)*cos(th), sin(th))
-        
+       
     printTrack(p, f)    # Outgoing Particle Track
     f.write("$ end\n")
 
@@ -115,14 +115,58 @@ for fileno in range(nfiles):
             outfile = open(filename, 'w')
 
 totnevt = 0           
+nP = 4.96e+34 #number of hydrogen nuclei in whole inner volume; needs to be updated for design changes
+dSquared = (1.5637e+33)**2 # length/hbar*c - distance in MeV^-1 = 10 kpc/((6.582*10**-22 sMeV)*(9.717*10**-12 kpc s^-1))
+mN = 939.57 #MeV
+mP = 938.28 #MeV
+mE = 0.511 #MeV
+mPi = 139.6 #MeV
+delta = mN-mP
+mAvg=(mP+mN)/2
+gF=1.16637e-11**2 #Fermi coupling constant
+eThr=((mN+mE)**2 - mP**2)/(2*mP)
 
 #for 1ms time intervals:
-with open('simdata.txt') as simdata:
-    for line in simdata:
+with open('simData.txt') as simData:
+    for line in simData:
     
-        #import mean energy, mean squared energy and no of events in interval
-        t, mu, mu2, simnevt = line.split(",")
-        a = (mu2-2*mu**2)/(mu**2-mu2)
+        #import time, mean energy, mean squared energy and no of events in interval
+        t, eNu, eNuSquared, L = line.split(",")
+        t=float(t)
+        eNu = float(eNu)
+        eNuSquared = float(eNuSquared)
+        L=float(L)
+        eE = eNu - 1.3
+        sMinusU = (2*mP*(eNu+eE))-mE**2
+        t_eNu_eE = mN**2 - mP**2 - 2*mP*(eNu-eE)
+        x = t_eNu_eE/(4*mAvg**2)
+        y = 1-(t_eNu_eE/710000)
+        z = 1-(t_eNu_eE/1000000)
+        f1 = (1-(4.706*x))/((1-x)*y**2)
+        f2 = 3.706/((1-x)*(y**2))
+        g1 = -1.27/z**2
+        g2 = (2 * g1 * mAvg**2)/(mPi**2 - t_eNu_eE)
+        
+        A = (mAvg**2 * (f1**2 - g1**2) * (t_eNu_eE-mE**2)) - (mAvg**2 * delta**2 * (f1**2+g1**2)) - (2 * mE**2 * mAvg * delta * g1 * (f1+f2))
+        B = t_eNu_eE*g1*(f1+f2)
+        C = (f1**2 + g1**2)/4
+        
+        absMsquared = A-(sMinusU*B)+((sMinusU**2)*C)
+        dSigmadE = ((gF*0.9746**2)/(8 * pi * mP**2 * eNu**2))*absMsquared*2*mP
+        alpha = (eNuSquared-(2*eNu**2))/(eNu**2-eNuSquared)
+        dFluxdE = ((1/(4*pi*dSquared))*((L*624.15)/eNu))*(eNu**alpha/(gamma(alpha+1)))*(((alpha+1)/eNu)**(alpha+1))*(exp(((alpha+1)*eNu)/A))#temp changed from L*624.1
+        
+        def f(eE, eNu):
+            return dSigmadE*dFluxdE
+        def bounds_eNu():
+            return [eThr,50]
+        def bounds_eE(eNu):
+            return [0,(eNu-1.3)]
+        simnevt= nP * integrate.nquad(f, [bounds_eE, bounds_eNu])[0]
+        
+        nevt_poisson= np.random.poisson(simnevt, 1000)
+        nevt=np.random.choice(nevt_poisson) # select nevt from poisson distribution
+        a = (eNuSquared-2*eNu**2)/(eNu**2-eNuSquared)
         nevt= np.random.poisson(1, simnevt) #number of events in 1ms interval
         totnevt += len(nevt)
     
@@ -132,7 +176,7 @@ with open('simdata.txt') as simdata:
             particle = {"vertex":(),
                         "time":t,
                         "type":pid[options.type],
-                        "energy":np.random.gamma(a+1, mu/(a+1)),
+                        "energy":np.random.gamma(a+1, eNu/(a+1)),
                         "direction":()}
     
 
