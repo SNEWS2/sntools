@@ -114,8 +114,9 @@ for fileno in range(nfiles):
         
             outfile = open(filename, 'w')
 
-totnevt = 0           
-nP = 4.96e+34 #number of hydrogen nuclei in whole inner volume; needs to be updated for design changes
+totnevt = 0
+#define variables
+nP = 4.96e+34 #number of hydrogen nuclei in whole detector volume; needs to be updated for design changes
 dSquared = (1.5637e+33)**2 # length/hbar*c - distance in MeV^-1 = 10 kpc/((6.582*10**-22 sMeV)*(9.717*10**-12 kpc s^-1))
 mN = 939.57 #MeV
 mP = 938.28 #MeV
@@ -123,10 +124,10 @@ mE = 0.511 #MeV
 mPi = 139.6 #MeV
 delta = mN-mP
 mAvg=(mP+mN)/2
-gF=1.16637e-11**2 #Fermi coupling constant
-eThr=((mN+mE)**2 - mP**2)/(2*mP)
+gF=1.16638e-11 #Fermi coupling constant
+eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 
-#for 1ms time intervals:
+#calculate the number of events for interval
 with open('simData.txt') as simData:
     for line in simData:
     
@@ -136,47 +137,75 @@ with open('simData.txt') as simData:
         eNu = float(eNu)
         eNuSquared = float(eNuSquared)
         L=float(L)
-        eE = eNu - 1.3
-        sMinusU = (2*mP*(eNu+eE))-mE**2
-        t_eNu_eE = mN**2 - mP**2 - 2*mP*(eNu-eE)
-        x = t_eNu_eE/(4*mAvg**2)
-        y = 1-(t_eNu_eE/710000)
-        z = 1-(t_eNu_eE/1000000)
-        f1 = (1-(4.706*x))/((1-x)*y**2)
-        f2 = 3.706/((1-x)*(y**2))
-        g1 = -1.27/z**2
-        g2 = (2 * g1 * mAvg**2)/(mPi**2 - t_eNu_eE)
         
-        A = (mAvg**2 * (f1**2 - g1**2) * (t_eNu_eE-mE**2)) - (mAvg**2 * delta**2 * (f1**2+g1**2)) - (2 * mE**2 * mAvg * delta * g1 * (f1+f2))
-        B = t_eNu_eE*g1*(f1+f2)
-        C = (f1**2 + g1**2)/4
+        def t_eNu_eE(eNu, eE):
+            return mN**2 - mP**2 - 2*mP*(eNu-eE)
+        def x(eNu, eE):
+            return t_eNu_eE(eNu, eE)/(4*mAvg**2)
+        def y (eNu, eE):
+            return 1-(t_eNu_eE(eNu, eE)/710000)
+        def z (eNu, eE):
+            return 1-(t_eNu_eE(eNu, eE)/1000000)
+        def f1 (eNu, eE):
+            return (1-(4.706*x(eNu, eE)))/((1-x(eNu, eE))*y(eNu, eE)**2)
+        def f2 (eNu, eE):
+            return 3.706/((1-x(eNu, eE))*y(eNu, eE)**2)
+        def g1(eNu, eE):
+            return (-1.27)/z(eNu, eE)**2
+            #g2 = (2 * g1 * mAvg**2)/(mPi**2 - t_eNu_eE(eNu, eE)) for use for precise values of A, B and C
+           
+        def A(eNu, eE):
+            return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) * (f1(eNu, eE)+f2(eNu, eE)))
+        def B(eNu, eE):
+            return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
+        def C(eNu, eE):
+            return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
+        def sMinusU(eNu, eE):
+            return 2*mP*(eNu+eE)-mE**2
+        def absMsquared(eNu, eE):
+            return A(eNu, eE)-(sMinusU(eNu, eE)*B(eNu, eE))+((sMinusU(eNu, eE)**2)*C(eNu, eE))
+        def dSigmadE(eNu, eE):
+            return 2*mP*gF**2 * 0.9746**2/(8 * pi * mP**2 * eNu**2)*absMsquared(eNu, eE)
+        def alpha(eNu):
+            return (2*eNu**2-eNuSquared)/(eNuSquared-eNu**2)
+        def gamma_dist(eNu):
+            return (eNu**alpha(eNu)/gamma(alpha(eNu)+1))*(((alpha(eNu)+1)/eNu)**(alpha(eNu)+1))*exp(-(alpha(eNu)+1)*eNu/eNu)
+        #calculate dFluxdE for ms interval
+        def dFluxdE(eNu):
+            return 1/(4*pi*dSquared)*((L*624.15)/eNu)*gamma_dist(eNu)
+
+        #calculate range for eE from eNu
+        s= 2*mP*eNu + mP**2
+        pE_cm = (sqrt((s-(mN-mE)**2)*(s-(mN+mE)**2)))/(2*sqrt(s))
+        eNu_cm = (s-mP**2)/(2*sqrt(s))
+        eE_cm = (s-mN**2+mE**2)/(2*sqrt(s))
+        delta_cm = (mN**2-mP**2-mE**2)/(2*mP)
+        eE_Min= eNu - delta_cm - (1/mP)*eNu_cm*(eE_cm+pE_cm)
+        eE_Max = eNu - delta_cm - (1/mP)*eNu_cm*(eE_cm-pE_cm)
         
-        absMsquared = A-(sMinusU*B)+((sMinusU**2)*C)
-        dSigmadE = ((gF*0.9746**2)/(8 * pi * mP**2 * eNu**2))*absMsquared*2*mP
-        alpha = (eNuSquared-(2*eNu**2))/(eNu**2-eNuSquared)
-        dFluxdE = ((1/(4*pi*dSquared))*((L*624.15)/eNu))*(eNu**alpha/(gamma(alpha+1)))*(((alpha+1)/eNu)**(alpha+1))*(exp(((alpha+1)*eNu)/A))#temp changed from L*624.1
-        
-        def f(eE, eNu):
-            return dSigmadE*dFluxdE
+        #integrate over eE and then eNu to obtain the number of events per time interval
+        def f(eNu, eE):
+            return dSigmadE(eNu, eE)*dFluxdE(eNu)
         def bounds_eNu():
             return [eThr,50]
         def bounds_eE(eNu):
-            return [0,(eNu-1.3)]
-        simnevt= nP * integrate.nquad(f, [bounds_eE, bounds_eNu])[0]
-        
+            return [eE_Min+1, eE_Max+1]
+        simnevt= (nP/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu])[0]
+        #create a Poisson distribution    
         nevt_poisson= np.random.poisson(simnevt, 1000)
-        nevt=np.random.choice(nevt_poisson) # select nevt from poisson distribution
-        a = (eNuSquared-2*eNu**2)/(eNu**2-eNuSquared)
-        nevt= np.random.poisson(1, simnevt) #number of events in 1ms interval
-        totnevt += len(nevt)
-    
-        for i in range(len(nevt)):
+        #randomly select number of events from Poisson distribution
+        nevt=np.random.choice(nevt_poisson)
+        #find total number of events for input into WCSim.mac
+        totnevt += nevt
+
+#define particle for each event in time interval
+        for i in range(nevt):
 
             #Define the particle
             particle = {"vertex":(),
                         "time":t,
                         "type":pid[options.type],
-                        "energy":np.random.gamma(a+1, eNu/(a+1)),
+                        "energy":np.random.gamma(alpha(eNu)+1, eNu/(alpha(eNu)+1)),
                         "direction":()}
     
 
