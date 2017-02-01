@@ -3,7 +3,7 @@
 from optparse import OptionParser
 import random
 from math import pi, sin, cos, sqrt, gamma, exp
-from scipy import integrate
+from scipy import integrate, interpolate
 import numpy as np
 
 pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
@@ -16,7 +16,7 @@ pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
 #holds detector [radius, height] in cm
 detectors = {"SuperK":[3368.15/2., 3620.],
              "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000.],
-	     "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000.]} # TODO: change to ID size once that’s fully implemented in WCSim and BONSAI
+             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000.]}
 
 for pname, no in list(pid.items()):
     if pname.endswith('+'):
@@ -31,11 +31,6 @@ optdefault = 1
 parser.add_option("-N", "--nfiles", dest="nfiles",
                   help="number of files of particles to produce. Default: %s" \
                       % (optdefault),
-                  metavar="#", default=optdefault)
-optdefault = 100
-parser.add_option("-n", "--npart", dest="npart",
-                  help="number of particles to simulate per file. Default: %s" \
-                  % (optdefault),
                   metavar="#", default=optdefault)
 optchoices = list(pid.keys())
 optdefault = "e+"
@@ -113,79 +108,178 @@ for fileno in range(nfiles):
             filename="%s_%s_%s_%s_%03i.kin" % (typestr, options.vertname, options.dirname, options.detector, fileno)
         
             outfile = open(filename, 'w')
-
-totnevt = 0           
-nP = 4.96e+34 #number of hydrogen nuclei in whole inner volume; needs to be updated for design changes
-dSquared = (1.5637e+33)**2 # length/hbar*c - distance in MeV^-1 = 10 kpc/((6.582*10**-22 sMeV)*(9.717*10**-12 kpc s^-1))
-mN = 939.57 #MeV
-mP = 938.28 #MeV
-mE = 0.511 #MeV
-mPi = 139.6 #MeV
+nevtValues=[]
+tValues=[]
+aValues=[]
+totnevt = 0
+#define variables
+nP_HK = 4.96e+34 #number of hydrogen nuclei in whole detector volume; needs to be updated for design changes
+dSquared = (1.563738e+33)**2
+mN = 939.5654 #MeV
+mP = 938.2721 #MeV
+mE = 0.5109989 #MeV
+mPi = 139.57018 #MeV
 delta = mN-mP
 mAvg=(mP+mN)/2
-gF=1.16637e-11 #Fermi coupling constant in MeV^-2
-eThr=((mN+mE)**2 - mP**2)/(2*mP)
+gF=1.16637e-11 #Fermi coupling constant
+eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 
-#for 1ms time intervals:
+#calculate the event rate at each time from the pre-processed data
+
 with open('simData.txt') as simData:
     for line in simData:
-    
-        #import time, mean energy, mean squared energy and no of events in interval
-        t, eNu, eNuSquared, L = line.split(",")
+        
+        #import time, mean energy, mean squared energy and luminosity at time t
+        t, a, eNuSquared, L = line.split(",")
         t=float(t)
-        eNu = float(eNu)
+        t=t*1000
+        tValues.append(t)
+        a=float(a)
+        aValues.append(a)
         eNuSquared = float(eNuSquared)
         L=float(L)
-        eE = eNu - 1.3
-        sMinusU = (2*mP*(eNu+eE))-mE**2
-        t_eNu_eE = mN**2 - mP**2 - 2*mP*(eNu-eE)
-        x = t_eNu_eE/(4*mAvg**2)
-        y = 1-(t_eNu_eE/710000)
-        z = 1-(t_eNu_eE/1000000)
-        f1 = (1-(4.706*x))/((1-x)*y**2)
-        f2 = 3.706/((1-x)*(y**2))
-        g1 = -1.27/z**2
-        g2 = (2 * g1 * mAvg**2)/(mPi**2 - t_eNu_eE)
+
+        #calculate the energy-dependent cross section for IBD        
         
-        A = (mAvg**2 * (f1**2 - g1**2) * (t_eNu_eE-mE**2)) - (mAvg**2 * delta**2 * (f1**2+g1**2)) - (2 * mE**2 * mAvg * delta * g1 * (f1+f2))
-        B = t_eNu_eE*g1*(f1+f2)
-        C = (f1**2 + g1**2)/4
+        def t_eNu_eE(eNu, eE):
+            return mN**2 - mP**2 - 2*mP*(eNu-eE)
+        def x(eNu, eE):
+            return t_eNu_eE(eNu, eE)/(4*mAvg**2)
+        def y (eNu, eE):
+            return 1-(t_eNu_eE(eNu, eE)/710000)
+        def z (eNu, eE):
+            return 1-(t_eNu_eE(eNu, eE)/1000000)
+        def f1 (eNu, eE):
+            return (1-(4.706*x(eNu, eE)))/((1-x(eNu, eE))*y(eNu, eE)**2)
+        def f2 (eNu, eE):
+            return 3.706/((1-x(eNu, eE))*y(eNu, eE)**2)
+        def g1(eNu, eE):
+            return (-1.27)/z(eNu, eE)**2
+        def g2(eNu, eE):
+            return (2 * g1(eNu, eE) * mAvg**2)/(mPi**2 - t_eNu_eE(eNu, eE)) 
+           
+        #AM, BM and CM for approximate calculation of absMsquared, AM1, BM1,
+        #CM1 for more precise calculation
+        def AM(eNu, eE):
+            return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) *
+            (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * 
+            (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *
+            (f1(eNu, eE)+f2(eNu, eE)))
+        def AM1(eNu, eE):
+            return  ((1/16)*(t_eNu_eE(eNu, eE)-mE**2) * ((4*(f1(eNu, eE)**2)*
+            ((4*mAvg**2)+t_eNu_eE(eNu, eE)+mE**2))
+            +(4*(g1(eNu, eE)**2)*(-4*(mAvg**2)+t_eNu_eE(eNu, eE)+mE**2))
+            +((f2(eNu, eE)**2)*(((t_eNu_eE(eNu, eE)**2)/(mAvg**2))+4*t_eNu_eE(eNu, eE)+4*mE**2))
+            +(4*(mE**2)*t_eNu_eE(eNu, eE)*(g2(eNu, eE)**2)/(mAvg**2)) 
+            +(8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)+mE**2))
+            +(16*(mE**2)*g1(eNu, eE)*g2(eNu, eE)))
+            -(delta**2)*((4*(f1(eNu, eE)**2)+t_eNu_eE(eNu, eE)*(f2(eNu, eE)**2)/mAvg**2)*
+            (4*(mAvg**2)+t_eNu_eE(eNu, eE)-mE**2)
+            +(4*(g1(eNu, eE)**2)*(4*(mAvg**2)-t_eNu_eE(eNu, eE)+mE**2))
+            +4*(mE**2)*(g2(eNu, eE)**2)*(t_eNu_eE(eNu, eE)-mE**2)/(mAvg**2)
+            +8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)-mE**2)
+            +16*(mE**2)*g1(eNu, eE)*g2(eNu, eE))
+            -32*(mE**2)*mAvg*delta*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE)))
+        def BM(eNu, eE):
+            return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
+        def BM1(eNu, eE):
+            return ((1/16)*(16*t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
+            +4*(mE**2)*delta*((f2(eNu, eE)**2)+f1(eNu, eE)*f2(eNu, eE)+2*g1(eNu, eE)*g2(eNu, eE))/mAvg))
+        def CM(eNu, eE):
+            return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
+        def CM1(eNu, eE):
+            return (1/16)*(4*((f1(eNu, eE)**2)+(g1(eNu, eE)**2)) - ((t_eNu_eE(eNu, eE)*(f2(eNu, eE)**2))/(mAvg**2)))
+        def sMinusU(eNu, eE):
+            return (2*mP*(eNu+eE))-mE**2
+        def absMsquared(eNu, eE):
+            return AM1(eNu, eE)-(sMinusU(eNu, eE)*BM1(eNu, eE))+((sMinusU(eNu, eE)**2)*CM1(eNu, eE))
+        def dSigmadE(eNu, eE):
+            return (2*mP*gF**2 * (0.9746**2))/(8 * pi * mP**2 * eNu**2)*absMsquared(eNu, eE)
         
-        absMsquared = A-(sMinusU*B)+((sMinusU**2)*C)
-        dSigmadE = ((gF**2 * 0.9746**2)/(8 * pi * mP**2 * eNu**2))*absMsquared*2*mP
-        alpha = (eNuSquared-(2*eNu**2))/(eNu**2-eNuSquared)
-        dFluxdE = ((1/(4*pi*dSquared))*((L*624.15)/eNu))*(eNu**alpha/(gamma(alpha+1)))*(((alpha+1)/eNu)**(alpha+1))*(exp(((alpha+1)*eNu)/A))
+        #calculate the energy-dependent flux per ms        
+        alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
+        def gamma_dist(eNu): #energy distribution of neutrinos
+            return (eNu**alpha/gamma(alpha+1))*(((alpha+1)/a)**(alpha+1))*(exp(-(alpha+1)*(eNu/a)))
+        def dFluxdE(eNu):
+            return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
         
+        #calculate range for eE from eNu
+        def s(eNu):
+            return 2*mP*eNu + mP**2
+        def pE_cm(eNu):
+            return (sqrt((s(eNu)-(mN-mE)**2)*(s(eNu)-(mN+mE)**2)))/(2*sqrt(s(eNu)))
+        #def eNu_cm(eNu):
+         #   return (s(eNu)-mP**2)/(2*sqrt(s(eNu)))
+        def eE_cm(eNu):
+            return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
+        delta_cm = (mN**2-mP**2-mE**2)/(2*mP)
+        def eE_Min(eNu):
+            return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
+        def eE_Max(eNu):
+            return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
+        
+        #integrate over eE and then eNu to obtain the event rate at time t
         def f(eE, eNu):
-            return dSigmadE*dFluxdE
+            return dSigmadE(eNu, eE)*dFluxdE(eNu)
         def bounds_eNu():
             return [eThr,50]
         def bounds_eE(eNu):
-            return [0,(eNu-1.3)]
-        simnevt= nP * integrate.nquad(f, [bounds_eE, bounds_eNu])[0]
+            return [eE_Min(eNu)+1, eE_Max(eNu)+1]
         
-        nevt_poisson= np.random.poisson(simnevt, 1000)
-        nevt=np.random.choice(nevt_poisson) # select nevt from poisson distribution
-        a = (eNuSquared-2*eNu**2)/(eNu**2-eNuSquared)
-        nevt= np.random.poisson(1, simnevt) #number of events in 1ms interval
-        totnevt += len(nevt)
-    
-        for i in range(len(nevt)):
+        #calculate the detector event rate at time t
+        simnevt= (nP_HK/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+        
+        #create a list of nevt values at time (t) for input into interpolation function
+        nevtValues.append(simnevt)
 
-            #Define the particle
-            particle = {"vertex":(),
-                        "time":t,
-                        "type":pid[options.type],
-                        "energy":np.random.gamma(a+1, eNu/(a+1)),
-                        "direction":()}
+#interpolate the mean energy
+interpolatedEnergy = interpolate.pchip(tValues, aValues)
+
+#interpolate the event rate            
+interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
+
+#specify bin width and number of bins for binning to 1ms intervals
+binWidth=1#time interval in ms
+binNr = np.arange(1, 535, 1)#time range
+
+#integrate event rate and energy over each bin
+for i in binNr:
+    
+    time=15+(i*binWidth)
+    interpolatedNevtValues = interpolatedNevt(time)
+    
+    interpolatedEnergyValues = interpolatedEnergy(time)    
+    
+    boundsMin = time-1
+    boundsMax = time
+    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0]
+    #create a poisson distribution of number of events for each bin:
+    binnedNevtPoisson = np.random.poisson(binnedNevt, size=1000)
+    #randomly select number of events from the Poisson distribution to give the
+    #final value for the chosen interval:
+    binnedNevt1ms = np.random.choice(binnedNevtPoisson)
+    #find the total number of events over all bins
+    totnevt += binnedNevt1ms
+
+    binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
     
 
-            nu =   {"type":pid["numu"], "energy":1000.0, #removed energy+
-                   "direction":(1, 0, 0)}
-            prot = {"type":pid["p+"], "energy":935.9840,
-                  "direction":(0, 0, 1)}
-              
-            partPrint(particle, outfile, i)
+    #define particle for each event in time interval
+    for i in range(binnedNevt1ms):
+        #Define the particle
+        particle = {"vertex":(),
+                    "time": t, #To do: change this to new values for t
+                    "type":pid[options.type],
+                    "energy":np.random.gamma(alpha+1, binnedEnergy/(alpha+1)),
+                    "direction":()}
+
+
+        nu =   {"type":pid["numu"], "energy":1000.0, #removed energy+
+               "direction":(1, 0, 0)}
+        prot = {"type":pid["p+"], "energy":935.9840,
+               "direction":(0, 0, 1)}
+      
+        partPrint(particle, outfile, i)
 
 print(("Writing %i particles to " % totnevt) + filename)
 
