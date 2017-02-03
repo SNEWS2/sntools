@@ -268,7 +268,7 @@ for i in binNr:
     for i in range(binnedNevt1ms):
         #Define the particle
         particle = {"vertex":(),
-                    "time": t, #To do: change this to new values for t
+                    "time": time - np.random.random(), # distribute randomly within that 1 ms bin
                     "type":pid[options.type],
                     "energy":np.random.gamma(alpha+1, binnedEnergy/(alpha+1)),
                     "direction":()}
