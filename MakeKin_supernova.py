@@ -304,7 +304,7 @@ for i in binNr:
         dir = direction(ene)
 
         particle = {"vertex": (), # random vertex is generated in partPrint()
-                    "time": t, #To do: change this to new values for t
+                    "time": time - np.random.random(), # distribute randomly within that 1 ms bin
                     "type": pid[options.type],
                     "energy": ene,
                     "direction": dir}
