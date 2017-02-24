@@ -85,12 +85,13 @@ def partPrint(p, f, recno):
     printTrack(nu, f, -1)   # "Neutrino" Track
     printTrack(prot, f, -1) # "Target" track
     f.write("$ info 0 0 %i\n" % recno)
-    th = random.random()*2*pi
-    u = 1.-2*random.random()
-    x = sqrt(1.-u**2)*cos(th)
-    y = sqrt(1.-u**2)*sin(th)
-    z = u
-    p["direction"] = (x, y, z)
+
+#     th = random.random()*2*pi
+#     u = 1.-2*random.random()
+#     x = sqrt(1.-u**2)*cos(th)
+#     y = sqrt(1.-u**2)*sin(th)
+#     z = u
+#     p["direction"] = (x, y, z)
     #th = random.random()*pi
     #phi = random.random()*2*pi
     #p["direction"] = (cos(phi)*cos(th), sin(phi)*cos(th), sin(th))
@@ -101,6 +102,37 @@ def partPrint(p, f, recno):
 def printTrack(p, f, code=0):
     f.write("$ track %(type)i %(energy).5f " % p)
     f.write("%.5f %.5f %.5f %i\n" % (p["direction"]+(code,)))
+
+# return direction of a positron with the given energy
+def direction(energy):
+	eneNu = energy + eThr
+	pMax = 0
+	cosT = 0
+	nCosTBins = 1000
+	cosTBinWidth = 2./nCosTBins
+	for j in range(nCosTBins):
+		cosT = -1 + cosTBinWidth*(j+0.5) # 1000 steps in the interval [-1,1]
+		p = dir_nuebar_p_sv(eneNu, cosT)
+		if p > pMax:
+			pMax = p
+
+	while (True):
+		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
+		if dir_nuebar_p_sv(eneNu, cosT) > pMax*np.random.random():
+			sinT = math.sin(np.arccos(cosT))
+			phi = 2 * math.pi * np.random.random() - math.pi # randomly distributed in [-pi, pi)
+
+	return (sinT*math.cos(phi), sinT*math.sin(phi), cosT)
+
+# probability distribution for the angle at which the positron is emitted
+# numerical values are from Ishino-san's code for SK, based on email from Vissani
+def dir_nuebar_p_sv(eneNu, cosT):
+	def f1(eneNu):
+		return -0.05396 + 0.35824 * (eneNu/100) + 0.03309 * (eneNu/100)**2
+	def f1(eneNu):
+		return  0.00050 - 0.02390 * (eneNu/100) + 0.14537 * (eneNu/100)**2
+
+	return 0.5 + f1(eneNu) * cosT + f2(eneNu) * (cosT**2 -1./3)
 
 for fileno in range(nfiles):
             typestr = options.type.replace("+", "plus").replace("-", "minus")
@@ -266,12 +298,16 @@ for i in binNr:
 
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
-        #Define the particle
-        particle = {"vertex":(),
+
+        #Define properties of the particle
+        ene = np.random.gamma(alpha+1, binnedEnergy/(alpha+1))
+        dir = direction(ene)
+
+        particle = {"vertex": (), # random vertex is generated in partPrint()
                     "time": t, #To do: change this to new values for t
-                    "type":pid[options.type],
-                    "energy":np.random.gamma(alpha+1, binnedEnergy/(alpha+1)),
-                    "direction":()}
+                    "type": pid[options.type],
+                    "energy": ene,
+                    "direction": dir}
 
 
         nu =   {"type":pid["numu"], "energy":1000.0, #removed energy+
