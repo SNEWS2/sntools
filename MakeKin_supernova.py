@@ -121,6 +121,7 @@ def direction(energy):
 		if dir_nuebar_p_sv(eneNu, cosT) > pMax*np.random.random():
 			sinT = math.sin(np.arccos(cosT))
 			phi = 2 * math.pi * np.random.random() - math.pi # randomly distributed in [-pi, pi)
+			break
 
 	return (sinT*math.cos(phi), sinT*math.sin(phi), cosT)
 
