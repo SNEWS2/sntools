@@ -23,38 +23,13 @@ for pname, no in list(pid.items()):
         pid[pname.replace('+', '-')] = -1*pid[pname]
 
 
-
-
-
 parser = OptionParser()
-optdefault = 1
-parser.add_option("-N", "--nfiles", dest="nfiles",
-                  help="number of files of particles to produce. Default: %s" \
-                      % (optdefault),
-                  metavar="#", default=optdefault)
 optchoices = list(pid.keys())
 optdefault = "e+"
 parser.add_option("-t", "--type", dest="type",
                   help="Particle type to be generated. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
                   metavar="TYPE",
-                  choices=optchoices, default=optdefault)
-optdefault = 1000
-parser.add_option("-e", "--energy", dest="energy",
-                  help="Particle energy to be generated in MeV. Default: %s" \
-                      % (optdefault),
-                  metavar="ENERGY", default=optdefault)
-optchoices = ["center", "random", "minusx", "plusx", "minusz", "plusz"]
-optdefault = optchoices[1]
-parser.add_option("-v", "--vertex", dest="vertname",
-                  help="Type of vertex. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  choices=optchoices, default=optdefault)
-optchoices = ["4pi", "towall", "tocap"]
-optdefault = optchoices[0]
-parser.add_option("-d", "--direction", dest="dirname",
-                  help="Type of direction. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
                   choices=optchoices, default=optdefault)
 optchoices = list(detectors.keys())
 optdefault = "SuperK"
@@ -64,12 +39,6 @@ parser.add_option("-w", "--detector", dest="detector",
                   choices=optchoices, default=optdefault)
 
 (options, args) = parser.parse_args()
-
-options.vertname = options.vertname.lower()
-options.dirname = options.dirname.lower()
-
-
-nfiles = int(options.nfiles)
 
 def partPrint(p, f, recno):
     f.write("$ begin\n")
@@ -86,16 +55,6 @@ def partPrint(p, f, recno):
     printTrack(prot, f, -1) # "Target" track
     f.write("$ info 0 0 %i\n" % recno)
 
-#     th = random.random()*2*pi
-#     u = 1.-2*random.random()
-#     x = sqrt(1.-u**2)*cos(th)
-#     y = sqrt(1.-u**2)*sin(th)
-#     z = u
-#     p["direction"] = (x, y, z)
-    #th = random.random()*pi
-    #phi = random.random()*2*pi
-    #p["direction"] = (cos(phi)*cos(th), sin(phi)*cos(th), sin(th))
-       
     printTrack(p, f)    # Outgoing Particle Track
     f.write("$ end\n")
 
@@ -135,12 +94,10 @@ def dir_nuebar_p_sv(eneNu, cosT):
 
 	return 0.5 + f1(eneNu) * cosT + f2(eneNu) * (cosT**2 -1./3)
 
-for fileno in range(nfiles):
-            typestr = options.type.replace("+", "plus").replace("-", "minus")
-            
-            filename="%s_%s_%s_%s_%03i.kin" % (typestr, options.vertname, options.dirname, options.detector, fileno)
-        
-            outfile = open(filename, 'w')
+typestr = options.type.replace("+", "plus").replace("-", "minus")
+filename="%s_%s.kin" % (typestr, options.detector)
+outfile = open(filename, 'w')
+
 nevtValues=[]
 tValues=[]
 aValues=[]
@@ -294,7 +251,6 @@ for i in binNr:
     totnevt += binnedNevt1ms
 
     binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
-    
 
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
@@ -309,7 +265,6 @@ for i in binNr:
                     "energy": ene,
                     "direction": dir}
 
-
         nu =   {"type":pid["numu"], "energy":1000.0, #removed energy+
                "direction":(1, 0, 0)}
         prot = {"type":pid["p+"], "energy":935.9840,
@@ -321,4 +276,3 @@ print(("Writing %i particles to " % totnevt) + filename)
 
 outfile.write("$ stop")
 outfile.close()
-
