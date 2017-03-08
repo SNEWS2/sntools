@@ -260,7 +260,7 @@ with open('simData.txt') as simData:
             return [eE_Min(eNu)+1, eE_Max(eNu)+1]
         
         #calculate the detector event rate at time t
-        simnevt= (nP_HK/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+        simnevt = (nP_HK/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
         
         #create a list of nevt values at time (t) for input into interpolation function
         nevtValues.append(simnevt)
@@ -272,19 +272,18 @@ interpolatedEnergy = interpolate.pchip(tValues, aValues)
 interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
 
 #specify bin width and number of bins for binning to 1ms intervals
-binWidth=1#time interval in ms
-binNr = np.arange(1, 535, 1)#time range
+binWidth = 1 #time interval in ms
+binNr = np.arange(1, 535, 1) #time range
 
 #integrate event rate and energy over each bin
 for i in binNr:
-    
-    time=15+(i*binWidth)
-    interpolatedNevtValues = interpolatedNevt(time)
-    
-    interpolatedEnergyValues = interpolatedEnergy(time)    
-    
-    boundsMin = time-1
+    time = 15 + (i*binWidth)
+    boundsMin = time - 1
     boundsMax = time
+
+    # TODO: when taking neutrino oscillations into account, multiply binnedNevt
+    # with appropriate factor (0,1,sin^2 (theta12), cos^2(theta12)) here
+    # (--> see p. 236 of public DR!)
     binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0]
     #create a poisson distribution of number of events for each bin:
     binnedNevtPoisson = np.random.poisson(binnedNevt, size=1000)
