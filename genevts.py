@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # call this as
-# $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile -d [sk|hk]
+# $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile -d [SuperK|HyperK]
 # where the input files are called infile_{e,eb,x}.txt and the output file is outfile.txt
 
 from os import system
@@ -38,8 +38,8 @@ parser.add_option("-o", "--output", dest="output",
                   metavar="FILENAME",
                   default=optdefault)
 
-optchoices = ["sk", "hk"]
-optdefault = "sk"
+optchoices = ["SuperK", "HyperK"]
+optdefault = "SuperK"
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -49,8 +49,6 @@ parser.add_option("-d", "--detector", dest="detector",
 parser.add_option("-v", "--verbose", dest="verbose",
                   help="Verbose output, e.g. for debugging. Off by default.",
                   default=False, action="store_true")
-
-# TODO: add option for switching between SK and HK
 
 (options, args) = parser.parse_args()
 

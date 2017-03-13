@@ -14,9 +14,10 @@ pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
        "p+":2212, "n0":2112}
 
 #holds detector [radius, height] in cm
-detectors = {"SuperK":[3368.15/2., 3620.],
-             "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000.],
-             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000.]}
+detectors = {"SuperK":[3368.15/2., 3620., 2.1e+33],
+             "HyperK":[7080./2., 5480., 1.4e+34],
+             "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000., 1.7e+34],
+             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000., 1.7e+34]}
 
 for pname, no in list(pid.items()):
     if pname.endswith('+'):
@@ -24,6 +25,7 @@ for pname, no in list(pid.items()):
 
 
 parser = OptionParser()
+
 optchoices = list(pid.keys())
 optdefault = "e+"
 parser.add_option("-t", "--type", dest="type",
@@ -31,10 +33,11 @@ parser.add_option("-t", "--type", dest="type",
                       % (optchoices, optdefault),
                   metavar="TYPE",
                   choices=optchoices, default=optdefault)
+
 optchoices = list(detectors.keys())
 optdefault = "SuperK"
-parser.add_option("-w", "--detector", dest="detector",
-                  help="Detector water volume to use (for vertex positioning). Choices: %s. Default: %s" \
+parser.add_option("-d", "--detector", dest="detector",
+                  help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
                   choices=optchoices, default=optdefault)
 
@@ -103,8 +106,7 @@ tValues=[]
 aValues=[]
 totnevt = 0
 #define variables
-#nP_HK = 4.96e+34 #number of hydrogen nuclei in whole Hyper-K detector volume; needs to be updated for design changes
-nP_SK = 2.1e+33 #number of protons in Super-K detector volume
+nP = detectors[options.detector][2] #number of protons in detector volume
 dSquared = (1.563738e+33)**2
 mN = 939.5654 #MeV
 mP = 938.2721 #MeV
@@ -217,8 +219,8 @@ with open('simData.txt') as simData:
         def bounds_eE(eNu):
             return [eE_Min(eNu)+1, eE_Max(eNu)+1]
         
-        #calculate the detector event rate at time t; specify the number of protons: nP_SK/nP_HK
-        simnevt = (nP_SK/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+        #calculate the detector event rate at time t
+        simnevt = (nP/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
         
         #create a list of nevt values at time (t) for input into interpolation function
         nevtValues.append(simnevt)
