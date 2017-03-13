@@ -4,6 +4,7 @@
 # $ ./genevts.py --channel [ibd|es|all] --hierarchy [noosc|normal|inverted] -i infile -o outfile
 # where the input files are called infile_{e,eb,x}.txt and the output file is outfile.txt
 
+from os import system
 from optparse import OptionParser
 parser = OptionParser()
 
@@ -45,11 +46,12 @@ parser.add_option("-v", "--verbose", dest="verbose",
 
 (options, args) = parser.parse_args()
 
-channel = options.channel
 hierarchy = options.hierarchy
-in_e = options.input + "_e.txt"
-in_eb = options.input + "_eb.txt"
-in_x = options.input + "_x.txt"
+channel = options.channel
+input = options.input
+in_e = input + "_e.txt"
+in_eb = input + "_eb.txt"
+in_x = input + "_x.txt"
 output = options.output
 verbose = options.verbose
 
@@ -57,7 +59,7 @@ if verbose:
 	print "channel   =", channel
 	print "hierarchy =", hierarchy
 	print "inputs    =", in_e, in_eb, in_x
-	print "output    =", out, "\n"
+	print "output    =", output
 
 # call script for each interaction channel as
 #     ./channel.py -i infile -o outfile -n normalization_factor
@@ -69,31 +71,32 @@ sin2t12 = 0.304
 cos2t12 = 1 - sin2t12
 tmpfiles = []
 
+def execute(thisChannel, flavor, n):
+	tmpfile = "tmp_%s_%s.txt" % (thisChannel, flavor)
+	cmd = "python %s.py -i %s_%s.txt -o %s -n %s" % (thisChannel, input, flavor, tmpfile, n)
+	if verbose: print cmd
+	system(cmd)
+	tmpfiles.append(tmpfile)
+
 if (hierarchy == "noosc"):
 	if (channel == "ibd" or channel == "all"):
-		print "./ibd.py -i %s -o tmp_eb_ibd -n 1" % in_eb
-		tmpfiles.append("tmp_eb_ibd")
+		execute("ibd", "eb", 1)
 	if (channel == "es" or channel == "all"):
-		print "./es.py -i %s -o tmp_e_es -n 1" % in_e
-		tmpfiles.append("tmp_e_es")
+		execute("es", "e", 1)
 
 if (hierarchy == "normal"):
 	if (channel == "ibd" or channel == "all"):
-		print "./ibd.py -i %s -o tmp_eb_ibd -n cos2t12" % in_eb
-		print "./ibd.py -i %s -o tmp_x_ibd -n sin2t12" % in_x
-		tmpfiles.extend(["tmp_eb_ibd","tmp_x_ibd"])
+		execute("ibd", "eb", cos2t12)
+		execute("ibd", "x", sin2t12)
 	if (channel == "es" or channel == "all"):
-		print "./es.py -i %s -o tmp_x_es -n 1" % in_x
-		tmpfiles.append("tmp_x_es")
+		execute("es", "x", 1)
 
 if (hierarchy == "inverted"):
 	if (channel == "ibd" or channel == "all"):
-		print "./ibd.py -i %s -o tmp_x_ibd -n 1" % in_x
-		tmpfiles.append("tmp_x_ibd")
+		execute("ibd", "x", 1)
 	if (channel == "es" or channel == "all"):
-		print "./es.py -i %s -o tmp_e_es -n sin2t12" % in_e
-		print "./es.py -i %s -o tmp_x_es -n cos2t12" % in_x
-		tmpfiles.extend(["tmp_e_es","tmp_x_es"])
+		execute("es", "e", sin2t12)
+		execute("es", "x", cos2t12)
 
 events = [] # this will become a list of lists: one entry per event, which is a list of time, energy, etc.
 for filename in tmpfiles:
