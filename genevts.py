@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # call this as
-# $ ./genevts.py --channel [ibd|es|all] --hierarchy [noosc|normal|inverted] -i infile -o outfile
+# $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile -d [sk|hk]
 # where the input files are called infile_{e,eb,x}.txt and the output file is outfile.txt
 
 from os import system
@@ -38,6 +38,14 @@ parser.add_option("-o", "--output", dest="output",
                   metavar="FILENAME",
                   default=optdefault)
 
+optchoices = ["sk", "hk"]
+optdefault = "sk"
+parser.add_option("-d", "--detector", dest="detector",
+                  help="Detector configuration. Choices: %s. Default: %s" \
+                      % (optchoices, optdefault),
+                  metavar="DETECTOR",
+                  choices=optchoices, default=optdefault)
+
 parser.add_option("-v", "--verbose", dest="verbose",
                   help="Verbose output, e.g. for debugging. Off by default.",
                   default=False, action="store_true")
@@ -53,6 +61,7 @@ in_e = input + "_e.txt"
 in_eb = input + "_eb.txt"
 in_x = input + "_x.txt"
 output = options.output
+detector = options.detector
 verbose = options.verbose
 
 if verbose:
@@ -60,9 +69,10 @@ if verbose:
 	print "hierarchy =", hierarchy
 	print "inputs    =", in_e, in_eb, in_x
 	print "output    =", output
+	print "detector  =", detector, "\n"
 
 # call script for each interaction channel as
-#     ./channel.py -i infile -o outfile -n normalization_factor
+#     ./channel.py -i infile -o outfile -n normalization_factor -d detector
 # where the normalization factor is 0 or 1 or sin^2(theta_12) or cos^2(theta_12),
 # depending on oscillation scenario (see p. 236 HK public DR). We assume P_H = 0.
 
@@ -73,7 +83,7 @@ tmpfiles = []
 
 def execute(thisChannel, flavor, n):
 	tmpfile = "tmp_%s_%s.txt" % (thisChannel, flavor)
-	cmd = "python %s.py -i %s_%s.txt -o %s -n %s" % (thisChannel, input, flavor, tmpfile, n)
+	cmd = "python %s.py -i %s_%s.txt -o %s -n %s -d %s" % (thisChannel, input, flavor, tmpfile, n, detector)
 	if verbose: print cmd
 	system(cmd)
 	tmpfiles.append(tmpfile)
