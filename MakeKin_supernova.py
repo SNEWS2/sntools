@@ -78,18 +78,18 @@ def direction(energy):
 	while (True):
 		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
 		if dir_nuebar_p_sv(eneNu, cosT) > pMax*np.random.random():
-			sinT = math.sin(np.arccos(cosT))
-			phi = 2 * math.pi * np.random.random() - math.pi # randomly distributed in [-pi, pi)
+			sinT = sin(np.arccos(cosT))
+			phi = 2 * pi * np.random.random() - pi # randomly distributed in [-pi, pi)
 			break
 
-	return (sinT*math.cos(phi), sinT*math.sin(phi), cosT)
+	return (sinT*cos(phi), sinT*sin(phi), cosT)
 
 # probability distribution for the angle at which the positron is emitted
 # numerical values are from Ishino-san's code for SK, based on email from Vissani
 def dir_nuebar_p_sv(eneNu, cosT):
 	def f1(eneNu):
 		return -0.05396 + 0.35824 * (eneNu/100) + 0.03309 * (eneNu/100)**2
-	def f1(eneNu):
+	def f2(eneNu):
 		return  0.00050 - 0.02390 * (eneNu/100) + 0.14537 * (eneNu/100)**2
 
 	return 0.5 + f1(eneNu) * cosT + f2(eneNu) * (cosT**2 -1./3)
@@ -103,7 +103,8 @@ tValues=[]
 aValues=[]
 totnevt = 0
 #define variables
-nP_HK = 4.96e+34 #number of hydrogen nuclei in whole detector volume; needs to be updated for design changes
+#nP_HK = 4.96e+34 #number of hydrogen nuclei in whole Hyper-K detector volume; needs to be updated for design changes
+nP_SK = 2.1e+33 #number of protons in Super-K detector volume
 dSquared = (1.563738e+33)**2
 mN = 939.5654 #MeV
 mP = 938.2721 #MeV
@@ -216,8 +217,8 @@ with open('simData.txt') as simData:
         def bounds_eE(eNu):
             return [eE_Min(eNu)+1, eE_Max(eNu)+1]
         
-        #calculate the detector event rate at time t
-        simnevt = (nP_HK/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+        #calculate the detector event rate at time t; specify the number of protons: nP_SK/nP_HK
+        simnevt = (nP_SK/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
         
         #create a list of nevt values at time (t) for input into interpolation function
         nevtValues.append(simnevt)
