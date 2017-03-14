@@ -48,6 +48,13 @@ parser.add_option("-o", "--output", dest="output",
                   metavar="FILENAME",
                   default=optdefault)
 
+optdefault = 1.0
+parser.add_option("-n", "--normalization", dest="normalization",
+                  help="Normalization factor to account for neutrino oscillations. Gets set by `genevts.py`. Default: '%s'." \
+                      % (optdefault),
+                  metavar="NORMALIZATION",
+                  default=optdefault)
+
 optchoices = list(detectors.keys())
 optdefault = "SuperK"
 parser.add_option("-d", "--detector", dest="detector",
@@ -56,6 +63,11 @@ parser.add_option("-d", "--detector", dest="detector",
                   choices=optchoices, default=optdefault)
 
 (options, args) = parser.parse_args()
+
+normalization = float(options.normalization)
+if (normalization <= 0 or normalization > 1):
+	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
+	exit()
 
 def partPrint(p, f, recno):
     f.write("$ begin\n")
@@ -104,12 +116,12 @@ def direction(energy):
 # probability distribution for the angle at which the positron is emitted
 # numerical values are from Ishino-san's code for SK, based on email from Vissani
 def dir_nuebar_p_sv(eneNu, cosT):
-	def f1(eneNu):
+	def dir_f1(eneNu):
 		return -0.05396 + 0.35824 * (eneNu/100) + 0.03309 * (eneNu/100)**2
-	def f2(eneNu):
+	def dir_f2(eneNu):
 		return  0.00050 - 0.02390 * (eneNu/100) + 0.14537 * (eneNu/100)**2
 
-	return 0.5 + f1(eneNu) * cosT + f2(eneNu) * (cosT**2 -1./3)
+	return 0.5 + dir_f1(eneNu) * cosT + dir_f2(eneNu) * (cosT**2 -1./3)
 
 typestr = options.type.replace("+", "plus").replace("-", "minus")
 outfile = open(options.output, 'w')
@@ -254,10 +266,9 @@ for i in binNr:
     boundsMin = time - 1
     boundsMax = time
 
-    # TODO: when taking neutrino oscillations into account, multiply binnedNevt
-    # with appropriate factor (0,1,sin^2 (theta12), cos^2(theta12)) here
-    # (--> see p. 236 of public DR!)
-    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0]
+    # calculate expected number of events in this bin and multiply with a factor
+    # (0, 1, sin^2(theta12), cos^2(theta12)) to take neutrino oscillations into account
+    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * options.normalization
     #create a poisson distribution of number of events for each bin:
     binnedNevtPoisson = np.random.poisson(binnedNevt, size=1000)
     #randomly select number of events from the Poisson distribution to give the

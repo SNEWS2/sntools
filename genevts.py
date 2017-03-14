@@ -77,6 +77,8 @@ if verbose:
 # normalization factors, from C. Patrignani et al. (Particle Data Group), Chin. Phys. C, 40, 100001 (2016)
 sin2t12 = 0.304
 cos2t12 = 1 - sin2t12
+
+# List of files that contain events for a single channel/flavor combination. Will be combined into `outfile` later.
 tmpfiles = []
 
 def execute(thisChannel, flavor, n):
