@@ -34,6 +34,20 @@ parser.add_option("-t", "--type", dest="type",
                   metavar="TYPE",
                   choices=optchoices, default=optdefault)
 
+optdefault = "simData.txt"
+parser.add_option("-i", "--input", dest="input",
+                  help="Name of the input file. Default: '%s'." \
+                      % (optdefault),
+                  metavar="FILENAME",
+                  default=optdefault)
+
+optdefault = "tmp_ibd_eb.txt"
+parser.add_option("-o", "--output", dest="output",
+                  help="Name of the output file. Default: '%s'." \
+                      % (optdefault),
+                  metavar="FILENAME",
+                  default=optdefault)
+
 optchoices = list(detectors.keys())
 optdefault = "SuperK"
 parser.add_option("-d", "--detector", dest="detector",
@@ -98,8 +112,7 @@ def dir_nuebar_p_sv(eneNu, cosT):
 	return 0.5 + f1(eneNu) * cosT + f2(eneNu) * (cosT**2 -1./3)
 
 typestr = options.type.replace("+", "plus").replace("-", "minus")
-filename="%s_%s.kin" % (typestr, options.detector)
-outfile = open(filename, 'w')
+outfile = open(options.output, 'w')
 
 nevtValues=[]
 tValues=[]
@@ -119,7 +132,7 @@ eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 
 #calculate the event rate at each time from the pre-processed data
 
-with open('simData.txt') as simData:
+with open(options.input) as simData:
     for line in simData:
         
         #import time, mean energy, mean squared energy and luminosity at time t
@@ -275,7 +288,7 @@ for i in binNr:
       
         partPrint(particle, outfile, i)
 
-print(("Writing %i particles to " % totnevt) + filename)
+print(("Writing %i particles to " % totnevt) + options.output)
 
 outfile.write("$ stop")
 outfile.close()
