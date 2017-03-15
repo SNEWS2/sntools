@@ -83,8 +83,10 @@ tmpfiles = []
 
 def execute(thisChannel, flavor, n):
 	tmpfile = "tmp_%s_%s.txt" % (thisChannel, flavor)
-	cmd = "python %s.py -i %s_%s.txt -o %s -n %s -d %s" % (thisChannel, input, flavor, tmpfile, n, detector)
-	if verbose: print cmd
+	cmd = "python %s.py --input=%s_%s.txt --output=%s --normalization=%s --detector=%s" % (thisChannel, input, flavor, tmpfile, n, detector)
+	if verbose:
+		cmd = cmd + " --verbose" # inherit verbosity
+		print "Now executing:", cmd
 	system(cmd)
 	tmpfiles.append(tmpfile)
 

@@ -62,8 +62,13 @@ parser.add_option("-d", "--detector", dest="detector",
                       % (optchoices, optdefault),
                   choices=optchoices, default=optdefault)
 
+parser.add_option("-v", "--verbose", dest="verbose",
+                  help="Verbose output, e.g. for debugging. Off by default.",
+                  default=False, action="store_true")
+
 (options, args) = parser.parse_args()
 
+verbose = options.verbose
 normalization = float(options.normalization)
 if (normalization <= 0 or normalization > 1):
 	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
@@ -145,6 +150,7 @@ eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 #calculate the event rate at each time from the pre-processed data
 
 with open(options.input) as simData:
+    if verbose: print "Reading neutrino simulation data from", options.input, "..."
     for line in simData:
         
         #import time, mean energy, mean squared energy and luminosity at time t
@@ -267,8 +273,8 @@ for i in binNr:
     boundsMax = time
 
     # calculate expected number of events in this bin and multiply with a factor
-    # (0, 1, sin^2(theta12), cos^2(theta12)) to take neutrino oscillations into account
-    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * options.normalization
+    # (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
+    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
     #create a poisson distribution of number of events for each bin:
     binnedNevtPoisson = np.random.poisson(binnedNevt, size=1000)
     #randomly select number of events from the Poisson distribution to give the
@@ -278,6 +284,14 @@ for i in binNr:
     totnevt += binnedNevt1ms
 
     binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
+    
+    if verbose:
+    	print "**************************************"
+    	print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+    	print "Nevt (theor.) =", binnedNevt
+    	print "Nevt (actual) =", binnedNevt1ms
+    	print "mean energy   =", binnedEnergy, "MeV"
+    	print "Now generating events for this bin ..."
 
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
@@ -299,6 +313,7 @@ for i in binNr:
       
         partPrint(particle, outfile, i)
 
+print "**************************************"
 print(("Writing %i particles to " % totnevt) + options.output)
 
 outfile.write("$ stop")
