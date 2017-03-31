@@ -6,33 +6,7 @@ from math import pi, sin, cos, sqrt, gamma, exp
 from scipy import integrate, interpolate
 import numpy as np
 
-pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
-       "e+":-11, "mu+":-13, "tau+":-15, 
-       "nue":12, "nuebar":-12, 
-       "numu":14, "numubar":-14, 
-       "nutau":16, "nutaubar":-16,
-       "p+":2212, "n0":2112}
-
-#holds detector [radius, height] in cm
-detectors = {"SuperK":[3368.15/2., 3620., 2.1e+33],
-             "HyperK":[7080./2., 5480., 1.4e+34],
-             "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000., 1.7e+34],
-             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000., 1.7e+34]}
-
-for pname, no in list(pid.items()):
-    if pname.endswith('+'):
-        pid[pname.replace('+', '-')] = -1*pid[pname]
-
-
 parser = OptionParser()
-
-optchoices = list(pid.keys())
-optdefault = "e+"
-parser.add_option("-t", "--type", dest="type",
-                  help="Particle type to be generated. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="TYPE",
-                  choices=optchoices, default=optdefault)
 
 optdefault = "simData.txt"
 parser.add_option("-i", "--input", dest="input",
@@ -55,8 +29,11 @@ parser.add_option("-n", "--normalization", dest="normalization",
                   metavar="NORMALIZATION",
                   default=optdefault)
 
-optchoices = list(detectors.keys())
-optdefault = "SuperK"
+# number of free protons (i.e. H nuclei) in each detector
+detectors = {"SuperK": 2.1e+33,
+             "HyperK": 1.4e+34}
+optchoices = detectors.keys()
+optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -106,14 +83,12 @@ def dir_nuebar_p_sv(eneNu, cosT):
 
 	return 0.5 + dir_f1(eneNu) * cosT + dir_f2(eneNu) * (cosT**2 -1./3)
 
-typestr = options.type.replace("+", "plus").replace("-", "minus")
-
 nevtValues=[]
 tValues=[]
 aValues=[]
 totnevt = 0
 #define variables
-nP = detectors[options.detector][2] #number of protons in detector volume
+nP = detectors[options.detector] # number of protons in detector volume
 dSquared = (1.563738e+33)**2
 mN = 939.5654 #MeV
 mP = 938.2721 #MeV
