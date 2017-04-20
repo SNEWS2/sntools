@@ -5,6 +5,7 @@
 # where the input files are called infile_{e,eb,x}.txt and the output file is outfile.txt
 
 from os import system
+import random
 from optparse import OptionParser
 parser = OptionParser()
 
@@ -38,8 +39,11 @@ parser.add_option("-o", "--output", dest="output",
                   metavar="FILENAME",
                   default=optdefault)
 
-optchoices = ["SuperK", "HyperK"]
-optdefault = "SuperK"
+# [radius, height] of inner detector in cm
+detectors = {"SuperK":[3368.15/2., 3620.],
+             "HyperK":[7080./2., 5480.]}
+optchoices = detectors.keys()
+optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -111,20 +115,46 @@ if (hierarchy == "inverted"):
 		execute("es", "x", cos2t12)
 
 events = [] # this will become a list of lists: one entry per event, which is a list of time, energy, etc.
+# read in all events:
 for filename in tmpfiles:
 	f = open(filename)
-	
-	# read in all events
 	for line in f:
 		event = map(float, line.split(","))
-		# `event` now is [t, pid, energy, posx, posy, posz, dirx, diry, dirz]
+		# `event` has the format `[t, pid, energy, dirx, diry, dirz]`
 		events.append(event)
-	
 	f.close()
 
 # sort events by first element of the list (i.e. by time)
 events.sort()
 
-outfile = open(output)
 # ... and write the events to vector file (`outfile`) in this nuance-like format
+outfile = open(output, 'w')
+for i in range(len(events)):
+	event = events[i]
+	t   = event[0]
+	pid = int(event[1])
+	ene = event[2]
+	(dirx, diry, dirz) = (event[3], event[4], event[5])
+	
+	if verbose: print "events[",i,"] = ", event
+	
+	# create random vertex position inside the detector volume
+	rad    = detectors[options.detector][0] - 20.
+	height = detectors[options.detector][1] - 20.
+	while True:
+		x = random.uniform(-rad, rad)
+		y = random.uniform(-rad, rad)
+		if x**2 + y**2 < rad**2: break
+	z = random.uniform(-height/2, height/2)
+	
+	outfile.write("$ begin\n")
+	outfile.write("$ nuance 0\n")
+	outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
+	outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
+	outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
+	outfile.write("$ info 0 0 %i\n" % i)
+	outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
+	outfile.write("$ end\n")
+
+outfile.write("$ stop\n")
 outfile.close()

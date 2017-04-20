@@ -6,33 +6,7 @@ from math import pi, sin, cos, sqrt, gamma, exp
 from scipy import integrate, interpolate
 import numpy as np
 
-pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
-       "e+":-11, "mu+":-13, "tau+":-15, 
-       "nue":12, "nuebar":-12, 
-       "numu":14, "numubar":-14, 
-       "nutau":16, "nutaubar":-16,
-       "p+":2212, "n0":2112}
-
-#holds detector [radius, height] in cm
-detectors = {"SuperK":[3368.15/2., 3620., 2.1e+33],
-             "HyperK":[7080./2., 5480., 1.4e+34],
-             "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000., 1.7e+34],
-             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000., 1.7e+34]}
-
-for pname, no in list(pid.items()):
-    if pname.endswith('+'):
-        pid[pname.replace('+', '-')] = -1*pid[pname]
-
-
 parser = OptionParser()
-
-optchoices = list(pid.keys())
-optdefault = "e+"
-parser.add_option("-t", "--type", dest="type",
-                  help="Particle type to be generated. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="TYPE",
-                  choices=optchoices, default=optdefault)
 
 optdefault = "simData.txt"
 parser.add_option("-i", "--input", dest="input",
@@ -55,8 +29,11 @@ parser.add_option("-n", "--normalization", dest="normalization",
                   metavar="NORMALIZATION",
                   default=optdefault)
 
-optchoices = list(detectors.keys())
-optdefault = "SuperK"
+# number of free protons (i.e. H nuclei) in each detector
+detectors = {"SuperK": 2.1e+33,
+             "HyperK": 1.4e+34}
+optchoices = detectors.keys()
+optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -74,28 +51,6 @@ if (normalization <= 0 or normalization > 1):
 	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
 	exit()
 
-def partPrint(p, f, recno):
-    f.write("$ begin\n")
-    f.write("$ nuance 0\n")
-    rad    = detectors[options.detector][0] - 20.
-    height = detectors[options.detector][1] - 20.
-    while True:
-        x = random.uniform(-rad, rad)
-        y = random.uniform(-rad, rad)
-        if x**2 + y**2 < rad**2: break
-    z = random.uniform(-height/2, height/2)
-    f.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, p["time"]))
-    printTrack(nu, f, -1)   # "Neutrino" Track
-    printTrack(prot, f, -1) # "Target" track
-    f.write("$ info 0 0 %i\n" % recno)
-
-    printTrack(p, f)    # Outgoing Particle Track
-    f.write("$ end\n")
-
-def printTrack(p, f, code=0):
-    f.write("$ track %(type)i %(energy).5f " % p)
-    f.write("%.5f %.5f %.5f %i\n" % (p["direction"]+(code,)))
-
 # return direction of a positron with the given energy
 def direction(energy):
 	eneNu = energy + eThr
@@ -108,14 +63,14 @@ def direction(energy):
 		p = dir_nuebar_p_sv(eneNu, cosT)
 		if p > pMax:
 			pMax = p
-
+	
 	while (True):
 		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
 		if dir_nuebar_p_sv(eneNu, cosT) > pMax*np.random.random():
 			sinT = sin(np.arccos(cosT))
 			phi = 2 * pi * np.random.random() - pi # randomly distributed in [-pi, pi)
 			break
-
+	
 	return (sinT*cos(phi), sinT*sin(phi), cosT)
 
 # probability distribution for the angle at which the positron is emitted
@@ -128,15 +83,12 @@ def dir_nuebar_p_sv(eneNu, cosT):
 
 	return 0.5 + dir_f1(eneNu) * cosT + dir_f2(eneNu) * (cosT**2 -1./3)
 
-typestr = options.type.replace("+", "plus").replace("-", "minus")
-outfile = open(options.output, 'w')
-
 nevtValues=[]
 tValues=[]
 aValues=[]
 totnevt = 0
 #define variables
-nP = detectors[options.detector][2] #number of protons in detector volume
+nP = detectors[options.detector] # number of protons in detector volume
 dSquared = (1.563738e+33)**2
 mN = 939.5654 #MeV
 mP = 938.2721 #MeV
@@ -266,6 +218,7 @@ interpolatedNevt = interpolate.pchip(tValues, nevtValues)
 binWidth = 1 #time interval in ms
 binNr = np.arange(1, 535, 1) #time range
 
+outfile = open(options.output, 'w')
 #integrate event rate and energy over each bin
 for i in binNr:
     time = 15 + (i*binWidth)
@@ -295,26 +248,15 @@ for i in binNr:
 
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
-
         #Define properties of the particle
+        t = time - np.random.random()
         ene = np.random.gamma(alpha+1, binnedEnergy/(alpha+1))
-        dir = direction(ene)
-
-        particle = {"vertex": (), # random vertex is generated in partPrint()
-                    "time": time - np.random.random(), # distribute randomly within that 1 ms bin
-                    "type": pid[options.type],
-                    "energy": ene,
-                    "direction": dir}
-
-        nu =   {"type":pid["numu"], "energy":1000.0, #removed energy+
-               "direction":(1, 0, 0)}
-        prot = {"type":pid["p+"], "energy":935.9840,
-               "direction":(0, 0, 1)}
-      
-        partPrint(particle, outfile, i)
+        (dirx, diry, dirz) = direction(ene)
+        
+        # print out [t, pid, energy, dirx, diry, dirz] to file
+        outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print "**************************************"
-print(("Writing %i particles to " % totnevt) + options.output)
+print(("Wrote %i particles to " % totnevt) + options.output)
 
-outfile.write("$ stop")
 outfile.close()
