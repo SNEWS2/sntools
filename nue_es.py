@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 from optparse import OptionParser
-import random
 from math import pi, sin, cos, sqrt, gamma, exp, log
 from scipy import integrate, interpolate
 from scipy.special import spence
@@ -75,28 +74,6 @@ if (normalization <= 0 or normalization > 1):
 	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
 	exit()
 
-def partPrint(p, f, recno):
-    f.write("$ begin\n")
-    f.write("$ nuance 0\n")
-    rad    = detectors[options.detector][0] - 20.
-    height = detectors[options.detector][1] - 20.
-    while True:
-        x = random.uniform(-rad, rad)
-        y = random.uniform(-rad, rad)
-        if x**2 + y**2 < rad**2: break
-    z = random.uniform(-height/2, height/2)
-    f.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, p["time"]))
-    printTrack(nu, f, -1)   # "Neutrino" Track
-    printTrack(elec, f, -1) # "Target" track
-    f.write("$ info 0 0 %i\n" % recno)
-
-    printTrack(p, f)    # Outgoing Particle Track
-    f.write("$ end\n")
-
-def printTrack(p, f, code=0):
-    f.write("$ track %(type)i %(energy).5f " % p)
-    f.write("%.5f %.5f %.5f %i\n" % (p["direction"]+(code,)))
-
 # return direction of an electron with the given energy
 #TODO alter for direction of electron rather than ibd proton: approximately the same as the neutrino direction
 def direction(energy):
@@ -132,7 +109,6 @@ def dir_nue_p_sv(eneNu, cosT):
 	return 0.5 + dir_f1(eneNu) * cosT + dir_f2(eneNu) * (cosT**2 -1./3)
 
 typestr = options.type.replace("+", "plus").replace("-", "minus")
-outfile = open(options.output, 'w')
 
 nevtValues=[]
 tValues=[]
@@ -248,6 +224,7 @@ interpolatedNevt = interpolate.pchip(tValues, nevtValues)
 binWidth = 1 #time interval in ms
 binNr = np.arange(1, 535, 1) #time range
 
+outfile = open(options.output, 'w')
 #integrate event rate and energy over each bin
 for i in binNr:
     time = 15 + (i*binWidth)
@@ -277,26 +254,15 @@ for i in binNr:
 
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
-
         #Define properties of the particle
+        t = time - np.random.random()
         ene = np.random.gamma(alpha+1, binnedEnergy/(alpha+1))
-        dir = direction(ene)
-
-        particle = {"vertex": (), # random vertex is generated in partPrint()
-                    "time": time - np.random.random(), # distribute randomly within that 1 ms bin
-                    "type": pid[options.type],
-                    "energy": ene,
-                    "direction": dir}
-
-        nu =   {"type":pid["numu"], "energy":1000.0, #removed energy+
-               "direction":(1, 0, 0)}
-        elec = {"type":pid["e-"], "energy":0.511,
-               "direction":(0, 0, 1)}
-      
-        partPrint(particle, outfile, i)
+        (dirx, diry, dirz) = direction(ene)
+        
+        #print out [t, pid, energy, dirx, diry, dirz] to file
+        outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print ("**************************************")
-print(("Writing %i particles to " % totnevt) + options.output)
+print(("Wrote %i particles to " % totnevt) + options.output)
 
-outfile.write("$ stop")
 outfile.close()
