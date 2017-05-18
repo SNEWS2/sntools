@@ -216,25 +216,22 @@ interpolatedNevt = interpolate.pchip(tValues, nevtValues)
 
 #specify bin width and number of bins for binning to 1ms intervals
 binWidth = 1 #time interval in ms
-binNr = np.arange(1, 535, 1) #time range
+binNr = np.arange(1, 535/binWidth, 1) #time range
 
 outfile = open(options.output, 'w')
 #integrate event rate and energy over each bin
 for i in binNr:
     time = 15 + (i*binWidth)
-    boundsMin = time - 1
+    boundsMin = time - binWidth
     boundsMax = time
 
     # calculate expected number of events in this bin and multiply with a factor
     # (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
     binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
-    #create a poisson distribution of number of events for each bin:
-    binnedNevtPoisson = np.random.poisson(binnedNevt, size=1000)
-    #randomly select number of events from the Poisson distribution to give the
-    #final value for the chosen interval:
-    binnedNevt1ms = np.random.choice(binnedNevtPoisson)
+    # randomly select number of events in this bin from Poisson distribution around binnedNevt:
+    binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
     #find the total number of events over all bins
-    totnevt += binnedNevt1ms
+    totnevt += binnedNevtRnd
 
     binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
     
@@ -242,12 +239,12 @@ for i in binNr:
     	print "**************************************"
     	print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
     	print "Nevt (theor.) =", binnedNevt
-    	print "Nevt (actual) =", binnedNevt1ms
+    	print "Nevt (actual) =", binnedNevtRnd
     	print "mean energy   =", binnedEnergy, "MeV"
     	print "Now generating events for this bin ..."
 
     #define particle for each event in time interval
-    for i in range(binnedNevt1ms):
+    for i in range(binnedNevtRnd):
         #Define properties of the particle
         t = time - np.random.random()
         ene = np.random.gamma(alpha+1, binnedEnergy/(alpha+1))
