@@ -1,21 +1,20 @@
 #!/usr/bin/python
 
 from optparse import OptionParser
-import random
 from math import pi, sin, cos, sqrt, gamma, exp
 from scipy import integrate, interpolate
 import numpy as np
 
 parser = OptionParser()
 
-optdefault = "simData.txt"
+optdefault = "simData_eb.txt"
 parser.add_option("-i", "--input", dest="input",
                   help="Name of the input file. Default: '%s'." \
                       % (optdefault),
                   metavar="FILENAME",
                   default=optdefault)
 
-optdefault = "tmp_ibd_eb.txt"
+optdefault = "tmp_ibd_eb_HK.txt"
 parser.add_option("-o", "--output", dest="output",
                   help="Name of the output file. Default: '%s'." \
                       % (optdefault),
@@ -32,8 +31,8 @@ parser.add_option("-n", "--normalization", dest="normalization",
 # number of free protons (i.e. H nuclei) in each detector
 detectors = {"SuperK": 2.1e+33,
              "HyperK": 1.4e+34}
-optchoices = detectors.keys()
-optdefault = detectors.keys()[0]
+optchoices = list(detectors.keys())
+optdefault = "HyperK" #list(detectors.keys())[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -52,8 +51,8 @@ if (normalization <= 0 or normalization > 1):
 	exit()
 
 # return direction of a positron with the given energy
-def direction(energy):
-	eneNu = energy + eThr
+def direction(eneNu):
+	#eneNu = eneNu + eThr
 	pMax = 0
 	cosT = 0
 	nCosTBins = 1000
@@ -86,6 +85,7 @@ def dir_nuebar_p_sv(eneNu, cosT):
 nevtValues=[]
 tValues=[]
 aValues=[]
+eNuSquaredValues=[]
 totnevt = 0
 #define variables
 nP = detectors[options.detector] # number of protons in detector volume
@@ -102,7 +102,7 @@ eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 #calculate the event rate at each time from the pre-processed data
 
 with open(options.input) as simData:
-    if verbose: print "Reading neutrino simulation data from", options.input, "..."
+    if verbose: print ("Reading neutrino simulation data from", options.input, "...")
     for line in simData:
         
         #import time, mean energy, mean squared energy and luminosity at time t
@@ -113,6 +113,7 @@ with open(options.input) as simData:
         a=float(a)
         aValues.append(a)
         eNuSquared = float(eNuSquared)
+        eNuSquaredValues.append(eNuSquared)
         L=float(L)
 
         #calculate the energy-dependent cross section for IBD        
@@ -137,30 +138,13 @@ with open(options.input) as simData:
         #AM, BM and CM for approximate calculation of absMsquared, AM1, BM1,
         #CM1 for more precise calculation
         def AM(eNu, eE):
-            return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) *
-            (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * 
-            (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *
-            (f1(eNu, eE)+f2(eNu, eE)))
+            return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *(f1(eNu, eE)+f2(eNu, eE)))
         def AM1(eNu, eE):
-            return  ((1/16)*(t_eNu_eE(eNu, eE)-mE**2) * ((4*(f1(eNu, eE)**2)*
-            ((4*mAvg**2)+t_eNu_eE(eNu, eE)+mE**2))
-            +(4*(g1(eNu, eE)**2)*(-4*(mAvg**2)+t_eNu_eE(eNu, eE)+mE**2))
-            +((f2(eNu, eE)**2)*(((t_eNu_eE(eNu, eE)**2)/(mAvg**2))+4*t_eNu_eE(eNu, eE)+4*mE**2))
-            +(4*(mE**2)*t_eNu_eE(eNu, eE)*(g2(eNu, eE)**2)/(mAvg**2)) 
-            +(8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)+mE**2))
-            +(16*(mE**2)*g1(eNu, eE)*g2(eNu, eE)))
-            -(delta**2)*((4*(f1(eNu, eE)**2)+t_eNu_eE(eNu, eE)*(f2(eNu, eE)**2)/mAvg**2)*
-            (4*(mAvg**2)+t_eNu_eE(eNu, eE)-mE**2)
-            +(4*(g1(eNu, eE)**2)*(4*(mAvg**2)-t_eNu_eE(eNu, eE)+mE**2))
-            +4*(mE**2)*(g2(eNu, eE)**2)*(t_eNu_eE(eNu, eE)-mE**2)/(mAvg**2)
-            +8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)-mE**2)
-            +16*(mE**2)*g1(eNu, eE)*g2(eNu, eE))
-            -32*(mE**2)*mAvg*delta*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE)))
+            return  ((1/16)*(t_eNu_eE(eNu, eE)-mE**2) * ((4*(f1(eNu, eE)**2)*((4*mAvg**2)+t_eNu_eE(eNu, eE)+mE**2))+(4*(g1(eNu, eE)**2)*(-4*(mAvg**2)+t_eNu_eE(eNu, eE)+mE**2)) +((f2(eNu, eE)**2)*(((t_eNu_eE(eNu, eE)**2)/(mAvg**2))+4*t_eNu_eE(eNu, eE)+4*mE**2))+(4*(mE**2)*t_eNu_eE(eNu, eE)*(g2(eNu, eE)**2)/(mAvg**2)) +(8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)+mE**2)) +(16*(mE**2)*g1(eNu, eE)*g2(eNu, eE))) -(delta**2)*((4*(f1(eNu, eE)**2)+t_eNu_eE(eNu, eE)*(f2(eNu, eE)**2)/mAvg**2)*(4*(mAvg**2)+t_eNu_eE(eNu, eE)-mE**2)+(4*(g1(eNu, eE)**2)*(4*(mAvg**2)-t_eNu_eE(eNu, eE)+mE**2)) +4*(mE**2)*(g2(eNu, eE)**2)*(t_eNu_eE(eNu, eE)-mE**2)/(mAvg**2)+8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)-mE**2)+16*(mE**2)*g1(eNu, eE)*g2(eNu, eE))-32*(mE**2)*mAvg*delta*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE)))
         def BM(eNu, eE):
             return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
         def BM1(eNu, eE):
-            return ((1/16)*(16*t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
-            +4*(mE**2)*delta*((f2(eNu, eE)**2)+f1(eNu, eE)*f2(eNu, eE)+2*g1(eNu, eE)*g2(eNu, eE))/mAvg))
+            return ((1/16)*(16*t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))+4*(mE**2)*delta*((f2(eNu, eE)**2)+f1(eNu, eE)*f2(eNu, eE)+2*g1(eNu, eE)*g2(eNu, eE))/mAvg))
         def CM(eNu, eE):
             return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
         def CM1(eNu, eE):
@@ -208,8 +192,9 @@ with open(options.input) as simData:
         #create a list of nevt values at time (t) for input into interpolation function
         nevtValues.append(simnevt)
 
-#interpolate the mean energy
+#interpolate the mean energy and mean squared energy
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
+interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
 
 #interpolate the event rate            
 interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
@@ -237,26 +222,39 @@ for i in binNr:
     totnevt += binnedNevt1ms
 
     binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
+    binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0]
     
     if verbose:
-    	print "**************************************"
-    	print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
-    	print "Nevt (theor.) =", binnedNevt
-    	print "Nevt (actual) =", binnedNevt1ms
-    	print "mean energy   =", binnedEnergy, "MeV"
-    	print "Now generating events for this bin ..."
+    	print ("**************************************")
+    	print ("timebin       = %s-%s ms" % (boundsMin, boundsMax))
+    	print ("Nevt (theor.) =", binnedNevt)
+    	print ("Nevt (actual) =", binnedNevt1ms)
+    	print ("mean energy   =", binnedEnergy, "MeV")
+    	print ("Now generating events for this bin ...")
 
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
         #Define properties of the particle
         t = time - np.random.random()
-        ene = np.random.gamma(alpha+1, binnedEnergy/(alpha+1))
-        (dirx, diry, dirz) = direction(ene)
+        alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+        #generate a neutrino energy above eThr
+        while (True):
+            eneNu = np.random.gamma(alpha_binned + 1, binnedEnergy/(alpha_binned + 1))
+            if eneNu > eThr:
+                break
+            eneNu=eneNu
+        #generate direction at given neutrino energy        
+        (dirx, diry, dirz) = direction(eneNu)
+        #generate positron energy at given neutrino energy and cosT (Strumia & Vissani, 2003)       
+        epsilon = eneNu/mP
+        delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
+        kappa = (1 + epsilon)**2 - (epsilon * dirz)**2
+        ene = ((eneNu - delta_cm) * (1 + epsilon) + (epsilon * dirz * sqrt((eneNu - delta_cm)**2 - (mE**2 * kappa))))/kappa
         
         # print out [t, pid, energy, dirx, diry, dirz] to file
         outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
-print "**************************************"
+print ("**************************************")
 print(("Wrote %i particles to " % totnevt) + options.output)
 
 outfile.close()

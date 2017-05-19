@@ -67,11 +67,11 @@ detector = options.detector
 verbose = options.verbose
 
 if verbose:
-	print "channel   =", channel
-	print "hierarchy =", hierarchy
-	print "inputs    =", in_e, in_eb, in_x
-	print "output    =", output
-	print "detector  =", detector, "\n"
+	print ("channel   =", channel)
+	print ("hierarchy =", hierarchy)
+	print ("inputs    =", in_e, in_eb, in_x)
+	print ("output    =", output)
+	print ("detector  =", detector, "\n")
 
 # call script for each interaction channel as
 #     ./channel.py -i infile -o outfile -n normalization_factor -d detector
@@ -90,7 +90,7 @@ def execute(thisChannel, flavor, n):
 	cmd = "python %s.py --input=%s_%s.txt --output=%s --normalization=%s --detector=%s" % (thisChannel, input, flavor, tmpfile, n, detector)
 	if verbose:
 		cmd = cmd + " --verbose" # inherit verbosity
-		print "Now executing:", cmd
+		print ("Now executing:", cmd)
 	system(cmd)
 	tmpfiles.append(tmpfile)
 
@@ -136,7 +136,7 @@ for i in range(len(events)):
 	ene = event[2]
 	(dirx, diry, dirz) = (event[3], event[4], event[5])
 	
-	if verbose: print "events[",i,"] = ", event
+	if verbose: print ("events[",i,"] = ", event)
 	
 	# create random vertex position inside the detector volume
 	rad    = detectors[options.detector][0] - 20.

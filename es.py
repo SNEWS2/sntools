@@ -56,7 +56,7 @@ parser.add_option("-n", "--normalization", dest="normalization",
                   default=optdefault)
 
 optchoices = list(detectors.keys())
-optdefault = "SuperK"
+optdefault = "HyperK"
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -75,8 +75,8 @@ if (normalization <= 0 or normalization > 1):
 	exit()
 
 # return direction of an electron with the given energy
-def direction(energy):
-	eneNu = a # TODO find best way to define eneNu
+def direction(eneNu):
+	
 	pMax = 0
 	cosT = 0
 	nCosTBins = 1000
@@ -87,7 +87,7 @@ def direction(energy):
 		p = dSigmadCosT(eneNu, cosT)
 		if p > pMax:
 			pMax = p
-
+#TODO ene*cosT**2 < 2*mE (Radel & Bayer, 1993)
 	while (True):
 		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
 		if dSigmadCosT(eneNu, cosT) > pMax*np.random.random():
@@ -100,7 +100,6 @@ def direction(energy):
 # probability distribution for the angle at which the positron is emitted
 # cosT-dependent cross-section can be found at https://www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
 def dSigmadCosT(eneNu, cosT):
-	sigma0 = (2*gF**2*mE**2)/pi
 	def dir_f1(eneNu, cosT):
 		return (sigma0*4*eneNu**2*(mE+eneNu)**2*cosT)/((mE+eneNu)**2 - eneNu**2 * cosT**2)
 	def dir_f2a(eneNu, cosT):
@@ -115,17 +114,18 @@ typestr = options.type.replace("+", "plus").replace("-", "minus")
 nevtValues=[]
 tValues=[]
 aValues=[]
+eNuSquaredValues=[]
 xValues=[]
 totnevt = 0
-
 #define variables
 nE = 9 * detectors[options.detector][2] #number of electrons in detector volume
-sin2theta_w = 0.2317 # TODO write in definition 
+sin2theta_w = 0.2317 # 
 dSquared = (1.563738e+33)**2
 mE = 0.5109989 #MeV
 gF=1.16637e-11 #Fermi coupling constant
 ro_NC = 1.0126 # +/- 0.0016
 eThr = mE # TODO set threshold energy
+sigma0 = (2*gF**2*mE**2)/pi
 
 #calculate the event rate at each time from the pre-processed data
 
@@ -141,6 +141,7 @@ with open(options.input) as simData:
         a=float(a)
         aValues.append(a)
         eNuSquared = float(eNuSquared)
+        eNuSquaredValues.append(eNuSquared)
         L=float(L)
         
         #calculate the energy-dependent cross section for (nu_e)-electron scattering        
@@ -153,58 +154,58 @@ with open(options.input) as simData:
             return eE - mE #total energy of the recoil electron minus the rest mass
         def z(eNu, eE):
             return T(eE)/eNu # ratio of recoil electron's kinetic energy to incident neutrino energy
-        def x(eNu, eE):
-            return sqrt(1+(2*mE/T(eE)))
-        def I(eNu, eE):
-            return 1/6.0 * (1/3.0 + (3-x(eNu, eE)**2) * ((x(eNu, eE)/2.0)*log((x(eNu, eE)+1)/(x(eNu, eE)-1)) - 1))
-        def k(eNu, eE):
-            return 0.9791 + 0.0097 * I(eNu, eE) #+/-0.0025 TODO Check whether to include a range to incorporate error
-        def gL(eNu, eE):
-            return ro_NC * (1/2.0 - k(eNu, eE) * sin2theta_w)-1
+        def x(eE):
+            return sqrt(1 + (2*mE/T(eE)))
+        def I(eE):
+            return 1/6.0 * (1/3.0 + (3 - x(eE)**2) * ((x(eE)/2.0)*log((x(eE) + 1)/(x(eE) - 1)) - 1))
+        def k(eE):
+            return 0.9791 + 0.0097 * I(eE) #+/-0.0025 TODO Check whether to include a range to incorporate error
+        def gL(eE):
+            return ro_NC * (1/2.0 - k(eE) * sin2theta_w) - 1
         def gR(eNu, eE):
-            return -(ro_NC) * k(eNu, eE) * sin2theta_w
+            return -(ro_NC) * k(eE) * sin2theta_w
            
         #f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z) for approximate calculation of dSigmadE, see Bahcall, 1995 TODO add web ref
 
         def f1(eNu, eE):# Non-relativistic approximation
-            return ((eE/l(eNu)) * log((eE+l(eNu))/mE) - 1)*(2.0*log(1-z(eNu, eE) - mE/(eE+l(eNu))) - log(1.0-z(eNu, eE)) - (1/2.0)*log(z(eNu, eE)) - 5/12.0) + (1/2.0) * (spence(1-beta(eNu)) - spence(1-z(eNu, eE))) - (1/2.0) * (log(1-z(eNu, eE)))**2 - (11/12.0 + z(eNu, eE)/2.0) * log(1-z(eNu, eE)) + z(eNu, eE)* (log(z(eNu, eE)) + (1/2.0)*log((2*a)/mE)) - (31/18.0 + (1/12.0)*log(z(eNu, eE)))* beta(eNu) - (11/12.0) * z(eNu, eE) + (z(eNu, eE)**2)/24.0
+            return ((eE/l(eNu)) * log((eE+l(eNu))/mE) - 1) * (2.0*log(1-z(eNu, eE) - mE/(eE+l(eNu))) - log(1.0-z(eNu, eE)) - (1/2.0)*log(z(eNu, eE)) - 5/12.0) + (1/2.0) * (spence(1-beta(eNu)) - spence(1-z(eNu, eE))) - (1/2.0) * (log(1-z(eNu, eE)))**2 - (11/12.0 + z(eNu, eE)/2.0) * log(1-z(eNu, eE)) + z(eNu, eE)* (log(z(eNu, eE)) + (1/2.0)*log((2*a)/mE)) - (31/18.0 + (1/12.0)*log(z(eNu, eE)))* beta(eNu) - (11/12.0) * z(eNu, eE) + (z(eNu, eE)**2)/24.0
         def f2(eNu, eE):
-            return ((eE/l(eNu)) * log ((eE + l(eNu))/mE) - 1)* (((1-z(eNu, eE))**2) * (2*log(1 - z(eNu, eE) - (mE/(eE+l(eNu))))-log(1-z(eNu, eE)) - (log (z(eNu, eE)))/2.0 - 2/3.0) - (z(eNu, eE)**2 * log (z(eNu, eE)) + 1 - z(eNu, eE))/2.0 ) - ((1-z(eNu, eE))**2 / 2.0)*((log(1-z(eNu, eE)))**2 + beta(eNu) * (spence(1-(1-z(eNu, eE))) - log(z(eNu, eE))*log(1-z(eNu, eE)))) + log (1-z(eNu, eE)) * (((z(eNu, eE)**2) / 2.0) * log(z(eNu, eE)) + ((1-z(eNu, eE))/3.0) * (2*z(eNu, eE) - 1/2.0)) - (z(eNu, eE)**2 / 2.0) * spence(1-(1-z(eNu, eE))) - (z(eNu, eE) * (1-2*z(eNu, eE))/3.0) * log (z(eNu, eE)) - z(eNu, eE) * ((1- z(eNu, eE))/6.0) - (beta(eNu)/12.0)* (log(z(eNu, eE)) + (1-z(eNu, eE)) * ((115 - 109 * z(eNu, eE))/6.0))
+            return ((eE/l(eNu)) * log ((eE + l(eNu))/mE) - 1) * (((1 - z(eNu, eE))**2) * (2*log(1 - z(eNu, eE) - (mE/(eE+l(eNu))))-log(1-z(eNu, eE)) - (log (z(eNu, eE)))/2.0 - 2/3.0) - (z(eNu, eE)**2 * log (z(eNu, eE)) + 1 - z(eNu, eE))/2.0 ) - ((1-z(eNu, eE))**2 / 2.0)*((log(1-z(eNu, eE)))**2 + beta(eNu) * (spence(1-(1-z(eNu, eE))) - log(z(eNu, eE))*log(1-z(eNu, eE)))) + log (1-z(eNu, eE)) * (((z(eNu, eE)**2) / 2.0) * log(z(eNu, eE)) + ((1 - z(eNu, eE))/3.0) * (2*z(eNu, eE) - 1/2.0)) - (z(eNu, eE)**2 / 2.0) * spence(1-(1-z(eNu, eE))) - (z(eNu, eE) * (1-2*z(eNu, eE))/3.0) * log (z(eNu, eE)) - z(eNu, eE) * ((1- z(eNu, eE))/6.0) - (beta(eNu)/12.0)* (log(z(eNu, eE)) + (1 - z(eNu, eE)) * ((115 - 109 * z(eNu, eE))/6.0))
         def f3(eNu, eE):
             return ((eE/l(eNu)) * log ( (eE + l(eNu))/mE) - 1) * 2 * log(1 - z(eNu, eE) - mE/(eE + l(eNu)))
         def dSigmadE(eNu, eE):
-            return (2*mE*gF**2)/pi * (gL(eNu, eE)**2 * (1 + (1/137.0/pi) * f1(eNu, eE)) + gR(eNu, eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*(1/137.0/pi))- gR(eNu, eE) * gL(eNu, eE) * (mE/eNu) * z(eNu, eE) * (1+(1/137/pi) * f3(eNu, eE)))
+            return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (1/137.0/pi) * f1(eNu, eE)) + gR(eNu, eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*(1/137.0/pi))- gR(eNu, eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + (1/137/pi) * f3(eNu, eE)))
             		
         #calculate the energy-dependent flux per ms        
         alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
         def gamma_dist(eNu): #energy distribution of neutrinos
-            return (eNu**alpha/gamma(alpha+1))*(((alpha+1)/a)**(alpha+1))*(exp(-(alpha+1)*(eNu/a)))
+            return (eNu**alpha/gamma(alpha + 1))*(((alpha + 1)/a)**(alpha + 1))*(exp(-(alpha + 1)*(eNu/a)))
         def dFluxdE(eNu):
             return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
         
-        #calculate the range for electron energy eE TODO calculate the center-of-mass energy of the electron 
+        #TODO calculate the center-of-mass energy of the electron?
         #def s(eNu):
         #    return mE**2 + 2*mE*eNu
         #def eE_cm(eNu):
         #    return sqrt(s(eNu)) # dummy value TODO define centre-of-mass energy
 
         # Bounds for integration over eE taken from Super-K code
-        eE_Min = 7
+        eE_Min = 0.7 #Cherenkov threshold
         def eE_Max(eNu):
-            return (2*eNu**2)/(2*eNu + mE) + mE
+            return (2*eNu**2)/(2*eNu + mE) + mE # also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
         
         #integrate over eE and then eNu to obtain the event rate at time t
         def eNu_min(eE):
-            return ((eE-mE)/2)*(1+sqrt(1+(2*mE)/(eE-mE)))
+            return ((eE-mE)/2)*(1 + sqrt(1 + (2*mE)/(eE-mE))) #from SuperK code, also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
         def f(eE, eNu):
             if eNu>=eNu_min(eE):
             	return dSigmadE(eNu, eE)*dFluxdE(eNu)
             else:
                 return 0
         def bounds_eNu():
-            return [6.735162382811896,50] # calculate minimum at eE=4.5 MeV using eNu_min(eE) equ
+            return [0.4, 50]#actual minimum 0.33370763820956262 at eE=0.7 MeV calculated using eNu_min(eE) equation
         def bounds_eE(eNu):
-            return [eE_Min+1, eE_Max(eNu)+1]
+            return [eE_Min + 1, eE_Max(eNu) + 1]
         
         #calculate the detector event rate at time t
         simnevt = nE * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
@@ -212,9 +213,9 @@ with open(options.input) as simData:
         #create a list of nevt values at time (t) for input into interpolation function
         nevtValues.append(simnevt)
         
-#interpolate the mean energy
+#interpolate the mean energy and mean squared energy
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
-
+interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
 #interpolate the event rate            
 interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
 
@@ -241,6 +242,7 @@ for i in binNr:
     totnevt += binnedNevt1ms
 
     binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
+    binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0]    
     
     if verbose:
     	print ("**************************************")
@@ -254,12 +256,13 @@ for i in binNr:
     for i in range(binnedNevt1ms):
         #Define properties of the particle
         t = time - np.random.random()
-        ene = np.random.gamma(alpha+1, binnedEnergy/(alpha+1))
-        (dirx, diry, dirz) = direction(ene)
-        
+        alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+        eneNu = np.random.gamma(alpha_binned + 1, binnedEnergy/(alpha_binned + 1))
+        (dirx, diry, dirz) = direction(eneNu)
+        ene = mE + ((2 * mE * eneNu**2 * dirz**2) / ((mE + eneNu)**2 - eneNu**2 * dirz**2))
         #print out [t, pid, energy, dirx, diry, dirz] to file
         outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
-
+        print (eneNu)
 print ("**************************************")
 print(("Wrote %i particles to " % totnevt) + options.output)
 
