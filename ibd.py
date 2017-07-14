@@ -31,8 +31,8 @@ parser.add_option("-n", "--normalization", dest="normalization",
 # number of free protons (i.e. H nuclei) in each detector
 detectors = {"SuperK": 2.1e+33,
              "HyperK": 1.4e+34} # one-tank configuration
-optchoices = list(detectors.keys())
-optdefault = list(detectors.keys())[0]
+optchoices = detectors.keys() #list(detectors.keys()) in python3
+optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -219,12 +219,12 @@ for i in binNr:
    
     if verbose:
 
-       print ("**************************************")
-       print ("timebin       = %s-%s ms" % (boundsMin, boundsMax))
-       print ("Nevt (theor.) =", binnedNevt)
-       print ("Nevt (actual) =", binnedNevtRnd)
-       print ("mean energy   =", binnedEnergy, "MeV")
-       print ("Now generating events for this bin ...")
+       print "**************************************"
+       print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+       print "Nevt (theor.) =", binnedNevt
+       print "Nevt (actual) =", binnedNevtRnd
+       print "mean energy   =", binnedEnergy, "MeV"
+       print "Now generating events for this bin ..."
 
     #define particle for each event in time interval
     for i in range(binnedNevtRnd):
@@ -246,7 +246,7 @@ for i in binNr:
         # print out [t, energy, dirx, diry, dirz] to file
         outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
-print ("**************************************")
-print(("Wrote %i particles to " % totnevt) + options.output)
+print "**************************************"
+print ("Wrote %i particles to " % totnevt) + options.output
 
 outfile.close()

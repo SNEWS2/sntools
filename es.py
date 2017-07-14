@@ -55,8 +55,8 @@ parser.add_option("-n", "--normalization", dest="normalization",
                   metavar="NORMALIZATION",
                   default=optdefault)
 
-optchoices = list(detectors.keys())
-optdefault = list(detectors.keys())[0]
+optchoices = detectors.keys() #list(detectors.keys()) in python3
+optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
@@ -240,12 +240,12 @@ for i in binNr:
     binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0]    
     
     if verbose:
-    	print ("**************************************")
-    	print ("timebin       = %s-%s ms" % (boundsMin, boundsMax))
-    	print ("Nevt (theor.) =", binnedNevt)
-    	print ("Nevt (actual) =", binnedNevt1ms)
-    	print ("mean energy   =", binnedEnergy, "MeV")
-    	print ("Now generating events for this bin ...")
+    	print "**************************************"
+    	print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+    	print "Nevt (theor.) =", binnedNevt
+    	print "Nevt (actual) =", binnedNevt1ms
+    	print "mean energy   =", binnedEnergy, "MeV"
+    	print "Now generating events for this bin ..."
     
     #define particle for each event in time interval
     for i in range(binnedNevt1ms):
@@ -261,7 +261,7 @@ for i in binNr:
         #print out [t, pid, energy, dirx, diry, dirz] to file
         outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
-print ("**************************************")
-print(("Wrote %i particles to " % totnevt) + options.output)
+print "**************************************"
+print("Wrote %i particles to " % totnevt) + options.output
 
 outfile.close()
