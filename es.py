@@ -262,6 +262,6 @@ for i in binNr:
         outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print "**************************************"
-print("Wrote %i particles to " % totnevt) + options.output
+print(("Wrote %i particles to " % totnevt) + options.output)
 
 outfile.close()
