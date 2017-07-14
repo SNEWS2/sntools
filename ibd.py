@@ -100,7 +100,7 @@ eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 
 #calculate the event rate at each time from the pre-processed data
 with open(options.input) as simData:
-    if verbose: print ("Reading neutrino simulation data from", options.input, "...")
+    if verbose: print "Reading neutrino simulation data from", options.input, "..."
     for line in simData:
         
         #import lists of time, and mean energy, mean squared energy and luminosity at time t
@@ -247,6 +247,6 @@ for i in binNr:
         outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print "**************************************"
-print (("Wrote %i particles to " % totnevt) + options.output)
+print(("Wrote %i particles to " % totnevt) + options.output)
 
 outfile.close()
