@@ -120,19 +120,19 @@ with open(options.input) as simData:
         def t_eNu_eE(eNu, eE):
             return mN**2 - mP**2 - 2*mP*(eNu-eE)
         def x(eNu, eE):
-            return t_eNu_eE(eNu, eE)/(4*mAvg**2)
+            return t_eNu_eE(eNu, eE) / (4*mAvg**2)
         def y (eNu, eE):
-            return 1-(t_eNu_eE(eNu, eE)/710000)
+            return 1 - t_eNu_eE(eNu, eE)/710000
         def z (eNu, eE):
-            return 1-(t_eNu_eE(eNu, eE)/1000000)
+            return 1 - t_eNu_eE(eNu, eE)/1000000
         def f1 (eNu, eE):
-            return (1-(4.706*x(eNu, eE)))/((1-x(eNu, eE))*y(eNu, eE)**2)
+            return (1 - 4.706*x(eNu, eE)) / ((1-x(eNu, eE)) * y(eNu, eE)**2)
         def f2 (eNu, eE):
-            return 3.706/((1-x(eNu, eE))*y(eNu, eE)**2)
+            return 3.706 / ((1-x(eNu, eE)) * y(eNu, eE)**2)
         def g1(eNu, eE):
-            return (-1.27)/z(eNu, eE)**2
+            return -1.27 / z(eNu, eE)**2
         def g2(eNu, eE):
-            return (2 * g1(eNu, eE) * mAvg**2)/(mPi**2 - t_eNu_eE(eNu, eE)) 
+            return 2 * g1(eNu, eE) * mAvg**2 / (mPi**2 - t_eNu_eE(eNu, eE)) 
            
         # AM, BM and CM for approximate calculation of absMsquared,
         # AM1, BM1 and CM1 for more precise calculation
@@ -166,16 +166,16 @@ with open(options.input) as simData:
         def CM1(eNu, eE):
             return 1./16 * (4*(f1(eNu, eE)**2 + g1(eNu, eE)**2) - t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2)
         def sMinusU(eNu, eE):
-            return (2*mP*(eNu+eE))-mE**2
+            return 2*mP*(eNu+eE) - mE**2
         def absMsquared(eNu, eE):
-            return AM1(eNu, eE)-(sMinusU(eNu, eE)*BM1(eNu, eE))+((sMinusU(eNu, eE)**2)*CM1(eNu, eE))
+            return AM(eNu, eE) - sMinusU(eNu, eE) * BM(eNu, eE) + sMinusU(eNu, eE)**2 * CM(eNu, eE)
         def dSigmadE(eNu, eE):
-            return (2*mP*gF**2 * (0.9746**2))/(8 * pi * mP**2 * eNu**2)*absMsquared(eNu, eE)
+            return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
         
         #calculate the energy-dependent flux per ms        
         alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
         def gamma_dist(eNu): #distribution of neutrino energies
-            return (eNu**alpha/gamma(alpha+1))*(((alpha+1)/a)**(alpha+1))*(exp(-(alpha+1)*(eNu/a)))
+            return eNu**alpha / gamma(alpha+1) * ((alpha+1)/a)**(alpha+1) * exp(-(alpha+1) * eNu/a)
         def dFluxdE(eNu):
             return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
         
