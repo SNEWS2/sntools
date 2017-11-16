@@ -88,10 +88,10 @@ eNuSquaredValues=[]
 totnevt = 0
 #define variables
 nP = detectors[options.detector] # number of protons in detector volume
-dSquared = (1.563738e+33)**2 # square of distance to supernova
-mN = 939.5654 
-mP = 938.2721 
-mE = 0.5109989 
+dSquared = (1.563738e+33)**2 # 10 kpc in units of MeV**(-1), see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
+mN = 939.5654 #MeV
+mP = 938.2721 #MeV
+mE = 0.5109989 #MeV
 mPi = 139.57018 #MeV
 delta = mN-mP
 mAvg=(mP+mN)/2
@@ -114,7 +114,9 @@ with open(options.input) as simData:
         eNuSquaredValues.append(eNuSquared)
         L=float(L)
 
-        #calculate the energy-dependent cross section for IBD        
+        # the following code implements the energy-dependent cross section for IBD
+        # from Strumia/Vissani (2003), arXiv:astro-ph/0302055
+        
         def t_eNu_eE(eNu, eE):
             return mN**2 - mP**2 - 2*mP*(eNu-eE)
         def x(eNu, eE):
@@ -132,20 +134,37 @@ with open(options.input) as simData:
         def g2(eNu, eE):
             return (2 * g1(eNu, eE) * mAvg**2)/(mPi**2 - t_eNu_eE(eNu, eE)) 
            
-        #AM, BM and CM for approximate calculation of absMsquared
-        #AM1, BM1 and CM1 for more precise calculation
+        # AM, BM and CM for approximate calculation of absMsquared,
+        # AM1, BM1 and CM1 for more precise calculation
         def AM(eNu, eE):
             return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *(f1(eNu, eE)+f2(eNu, eE)))
         def AM1(eNu, eE):
-            return  ((1/16)*(t_eNu_eE(eNu, eE)-mE**2) * ((4*(f1(eNu, eE)**2)*((4*mAvg**2)+t_eNu_eE(eNu, eE)+mE**2))+(4*(g1(eNu, eE)**2)*(-4*(mAvg**2)+t_eNu_eE(eNu, eE)+mE**2)) +((f2(eNu, eE)**2)*(((t_eNu_eE(eNu, eE)**2)/(mAvg**2))+4*t_eNu_eE(eNu, eE)+4*mE**2))+(4*(mE**2)*t_eNu_eE(eNu, eE)*(g2(eNu, eE)**2)/(mAvg**2)) +(8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)+mE**2)) +(16*(mE**2)*g1(eNu, eE)*g2(eNu, eE))) -(delta**2)*((4*(f1(eNu, eE)**2)+t_eNu_eE(eNu, eE)*(f2(eNu, eE)**2)/mAvg**2)*(4*(mAvg**2)+t_eNu_eE(eNu, eE)-mE**2)+(4*(g1(eNu, eE)**2)*(4*(mAvg**2)-t_eNu_eE(eNu, eE)+mE**2)) +4*(mE**2)*(g2(eNu, eE)**2)*(t_eNu_eE(eNu, eE)-mE**2)/(mAvg**2)+8*f1(eNu, eE)*f2(eNu, eE)*(2*t_eNu_eE(eNu, eE)-mE**2)+16*(mE**2)*g1(eNu, eE)*g2(eNu, eE))-32*(mE**2)*mAvg*delta*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE)))
+            return  1./16 * ( 
+            (t_eNu_eE(eNu, eE) - mE**2) * (
+            	4 * f1(eNu, eE)**2 * (4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
+            	+ 4 * g1(eNu, eE)**2 * (-4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
+            	+ f2(eNu, eE)**2 * ((t_eNu_eE(eNu, eE)**2)/(mAvg**2) + 4*t_eNu_eE(eNu, eE) + 4*mE**2)
+            	+ 4*mE**2 * t_eNu_eE(eNu, eE) * g2(eNu, eE)**2 / mAvg**2
+            	+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) + mE**2)
+            	+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
+            - delta**2 * (
+            	(4*f1(eNu, eE)**2 + t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2) *
+            	(4*mAvg**2 + t_eNu_eE(eNu, eE) - mE**2)
+            	+ 4*g1(eNu, eE)**2 * (4*mAvg**2 - t_eNu_eE(eNu, eE) + mE**2)
+            	+ 4*mE**2 * g2(eNu, eE)**2 * (t_eNu_eE(eNu, eE) - mE**2) / mAvg**2
+            	+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) - mE**2)
+            	+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
+            - 32*mE**2 * mAvg * delta * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE)))
         def BM(eNu, eE):
             return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
         def BM1(eNu, eE):
-            return ((1/16)*(16*t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))+4*(mE**2)*delta*((f2(eNu, eE)**2)+f1(eNu, eE)*f2(eNu, eE)+2*g1(eNu, eE)*g2(eNu, eE))/mAvg))
+            return 1./16 * (
+            16*t_eNu_eE(eNu, eE) * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE))
+            + 4*mE**2 * delta * (f2(eNu, eE)**2 + f1(eNu, eE)*f2(eNu, eE) + 2*g1(eNu, eE)*g2(eNu, eE))/mAvg)
         def CM(eNu, eE):
             return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
         def CM1(eNu, eE):
-            return (1/16)*(4*((f1(eNu, eE)**2)+(g1(eNu, eE)**2)) - ((t_eNu_eE(eNu, eE)*(f2(eNu, eE)**2))/(mAvg**2)))
+            return 1./16 * (4*(f1(eNu, eE)**2 + g1(eNu, eE)**2) - t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2)
         def sMinusU(eNu, eE):
             return (2*mP*(eNu+eE))-mE**2
         def absMsquared(eNu, eE):
@@ -182,7 +201,7 @@ with open(options.input) as simData:
             return [eE_Min(eNu)+1, eE_Max(eNu)+1]
         
         #calculate the detector event rate at time t
-        simnevt = (nP/0.89) * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+        simnevt = nP * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
         
         #create a list of event rates at time t for input into interpolation function
         nevtValues.append(simnevt)
