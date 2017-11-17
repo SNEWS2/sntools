@@ -1,0 +1,4 @@
+# ignore input and output files (come from supernova simulation, may not be openly available)
+infile_*.txt
+tmp_*.txt
+outfile.kin
