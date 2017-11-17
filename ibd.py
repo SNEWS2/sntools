@@ -105,8 +105,7 @@ with open(options.input) as simData:
         
         #import lists of time, and mean energy, mean squared energy and luminosity at time t
         t, a, eNuSquared, L = line.split(",")
-        t=float(t)
-        t=t*1000
+        t=float(t) * 1000 # convert to ms
         tValues.append(t)
         a=float(a)
         aValues.append(a)
@@ -237,7 +236,6 @@ for i in binNr:
     binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0]
    
     if verbose:
-
        print "**************************************"
        print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
        print "Nevt (theor.) =", binnedNevt
@@ -247,7 +245,7 @@ for i in binNr:
 
     #define particle for each event in time interval
     for i in range(binnedNevtRnd):
-        t = time - np.random.random()
+        t = time - np.random.random() * binWidth
         alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
         #generate a neutrino energy above eThr
         while (True):

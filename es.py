@@ -3,36 +3,9 @@
 from optparse import OptionParser
 from math import pi, sin, cos, sqrt, gamma, exp, log
 from scipy import integrate, interpolate
-#from scipy.special import spence
 import numpy as np
 
-pid = {"pi0":111, "pi+":211, "k0l":130, "k0s":310, "k+":321,
-       "e+":-11, "mu+":-13, "tau+":-15, 
-       "nue":12, "nuebar":-12, 
-       "numu":14, "numubar":-14, 
-       "nutau":16, "nutaubar":-16,
-       "p+":2212, "n0":2112}
-
-#holds detector [radius, height] in cm
-detectors = {"SuperK":[3368.15/2., 3620., 2.1e+33],
-             "HyperK":[7080./2., 5480., 2*2*1.4e+34],
-             "Cylinder_60x74_20inchBandL_14perCent":[7400./2., 6000., 1.7e+34],
-             "Cylinder_60x74_20inchBandL_40perCent":[7400./2., 6000., 1.7e+34]}
-
-for pname, no in list(pid.items()):
-    if pname.endswith('+'):
-        pid[pname.replace('+', '-')] = -1*pid[pname]
-
-
 parser = OptionParser()
-
-optchoices = list(pid.keys())
-optdefault = "e+"
-parser.add_option("-t", "--type", dest="type",
-                  help="Particle type to be generated. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="TYPE",
-                  choices=optchoices, default=optdefault)
 
 optdefault = "simData_e.txt"
 parser.add_option("-i", "--input", dest="input",
@@ -55,6 +28,9 @@ parser.add_option("-n", "--normalization", dest="normalization",
                   metavar="NORMALIZATION",
                   default=optdefault)
 
+# number of free protons (i.e. H nuclei) in each detector
+detectors = {"SuperK": 2.1e+33,
+             "HyperK": 1.4e+34} # one-tank configuration
 optchoices = detectors.keys() #list(detectors.keys()) in python3
 optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
@@ -76,7 +52,6 @@ if (normalization <= 0 or normalization > 1):
 
 # return direction of an electron with the given energy in relation to neutrino path
 def direction(eneNu):
-	
 	pMax = 0
 	cosT = 0
 	nCosTBins = 1000
@@ -108,8 +83,6 @@ def dSigmadCosT(eneNu, cosT):
 	
 	return dir_f1(eneNu, cosT) * (dir_f2a(eneNu, cosT) - dir_f2b(eneNu, cosT)) 
 
-typestr = options.type.replace("+", "plus").replace("-", "minus")
-
 nevtValues=[]
 tValues=[]
 aValues=[]
@@ -117,7 +90,7 @@ eNuSquaredValues=[]
 xValues=[]
 totnevt = 0
 #define variables
-nE = 9 * detectors[options.detector][2] #number of electrons in detector volume
+nE = 5 * detectors[options.detector] #number of electrons in detector volume (8+1+1 per water molecule, i.e. 5 per hydrogen nucleus)
 sin2theta_w = 0.2317  
 dSquared = (1.563738e+33)**2
 mE = 0.5109989 #MeV
@@ -133,8 +106,7 @@ with open(options.input) as simData:
         
         #import time, mean energy, mean squared energy and luminosity at time t
         t, a, eNuSquared, L = line.split(",")
-        t=float(t)
-        t=t*1000
+        t=float(t) * 1000 # convert to ms
         tValues.append(t)
         a=float(a)
         aValues.append(a)
@@ -142,7 +114,7 @@ with open(options.input) as simData:
         eNuSquaredValues.append(eNuSquared)
         L=float(L)
         
-        #calculate the energy-dependent cross section for (nu_e)-electron scattering        
+        #calculate the energy-dependent cross section for (nu_e)-electron scattering
         
         def l(eNu):
             return sqrt(eNu**2 - mE**2)
@@ -153,19 +125,19 @@ with open(options.input) as simData:
         def z(eNu, eE):
             return T(eE)/eNu # ratio of recoil electron's kinetic energy to incident neutrino energy
         def x(eE):
-            return sqrt(1 + (2*mE/T(eE)))
+            return sqrt(1 + 2*mE/T(eE))
         def I(eE):
-            return 1/6.0 * (1/3.0 + (3 - x(eE)**2) * ((x(eE)/2.0)*log((x(eE) + 1)/(x(eE) - 1)) - 1))
+            return 1/6.0 * (1/3.0 + (3 - x(eE)**2) * (x(eE)/2.0 *log((x(eE) + 1)/(x(eE) - 1)) - 1))
         def k(eE):
             return 0.9791 + 0.0097 * I(eE) #+/-0.0025
         def gL(eE):
             return ro_NC * (1/2.0 - k(eE) * sin2theta_w) - 1
         def gR(eE):
-            return -(ro_NC) * k(eE) * sin2theta_w
-           
+            return -ro_NC * k(eE) * sin2theta_w
+        
         # f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z) for approximate calculation of dSigmadE
-	# see Bahcall, 1995 DOI:https://doi.org/10.1103/PhysRevD.51.6146 
-                   
+        # see Bahcall, 1995 DOI:https://doi.org/10.1103/PhysRevD.51.6146 
+        
         def spence(n):
             return integrate.quad(lambda n: log(1-n)/n, 0, n) [0]
         def f1(eNu, eE):
@@ -176,8 +148,8 @@ with open(options.input) as simData:
             return ((eE/l(eNu)) * log ( (eE + l(eNu))/mE) - 1) * 2 * log(1 - z(eNu, eE) - mE/(eE + l(eNu)))
         def dSigmadT(eNu, eE):
             return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (1/137.0/pi) * f1(eNu, eE)) + gR(eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*((1/137.0)/pi))- gR(eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + ((1/137.)/pi) * f3(eNu, eE)))
-            		
-        #calculate the energy-dependent flux per ms        
+        
+        #calculate the energy-dependent flux per ms
         alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
         def gamma_dist(eNu): #energy distribution of neutrinos
             return (eNu**alpha/gamma(alpha + 1))*(((alpha + 1)/a)**(alpha + 1))*(exp(-(alpha + 1)*(eNu/a)))
@@ -205,37 +177,36 @@ with open(options.input) as simData:
         #calculate the detector event rate at time t
         simnevt = nE * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
         
-        #create a list of nevt values at time (t) for input into interpolation function
+        #create a list of nevt values at time t for input into interpolation function
         nevtValues.append(simnevt)
         
 #interpolate the mean energy and mean squared energy
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
 interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
-#interpolate the event rate            
-interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
+
+#interpolate the event rate
+interpolatedNevt = interpolate.pchip(tValues, nevtValues)
 
 #specify bin width and number of bins for binning to 1ms intervals
 binWidth = 1 #time interval in ms
-binNr = np.arange(1, 535, 1) #time range
+binNr = np.arange(1, 535/binWidth, 1) #time range
 
 outfile = open(options.output, 'w')
 #integrate event rate and energy over each bin
 for i in binNr:
     time = 15 + (i*binWidth)
-    boundsMin = time - 1
+    boundsMin = time - binWidth
     boundsMax = time
 
-    # calculate expected number of events in this bin and multiply with a factor
+    # calculate expected number of events in this bin and multiply with a normalization factor
     # (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
     binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
-    #create a poisson distribution of number of events for each bin:
-    binnedNevtPoisson = np.random.poisson(binnedNevt, size=1000)
-    #randomly select number of events from the Poisson distribution to give the
-    #final value for the chosen interval:
-    binnedNevt1ms = np.random.choice(binnedNevtPoisson)
+    # randomly select number of events in this bin from Poisson distribution around binnedNevt:
+    binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
     #find the total number of events over all bins
-    totnevt += binnedNevt1ms
+    totnevt += binnedNevtRnd
 
+    #create binned values for energy and mean squared energy
     binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
     binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0]    
     
@@ -243,20 +214,20 @@ for i in binNr:
     	print "**************************************"
     	print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
     	print "Nevt (theor.) =", binnedNevt
-    	print "Nevt (actual) =", binnedNevt1ms
+    	print "Nevt (actual) =", binnedNevtRnd
     	print "mean energy   =", binnedEnergy, "MeV"
     	print "Now generating events for this bin ..."
     
     #define particle for each event in time interval
-    for i in range(binnedNevt1ms):
+    for i in range(binnedNevtRnd):
         #Define properties of the particle
-        t = time - np.random.random()
+        t = time - np.random.random() * binWidth
         alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
         eneNu = np.random.gamma(alpha_binned + 1, binnedEnergy/(alpha_binned + 1))
         (dirx, diry, dirz) = direction(eneNu)
         while(True): 
-            ene = mE + ((2 * mE * eneNu**2 * dirz**2) / ((mE + eneNu)**2 - (eneNu**2 * dirz**2)))
-            if ene < (2*eneNu**2/(mE + 2*eneNu))+mE:
+            ene = mE + (2 * mE * eneNu**2 * dirz**2) / ((mE + eneNu)**2 - eneNu**2 * dirz**2)
+            if ene < (2*eneNu**2/(mE + 2*eneNu))+mE: # TODO: this condition is effectively |dirz|<1 ?!?
                 break
         #print out [t, pid, energy, dirx, diry, dirz] to file
         outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
