@@ -225,10 +225,7 @@ for i in binNr:
         alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
         eneNu = np.random.gamma(alpha_binned + 1, binnedEnergy/(alpha_binned + 1))
         (dirx, diry, dirz) = direction(eneNu)
-        while(True): 
-            ene = mE + (2 * mE * eneNu**2 * dirz**2) / ((mE + eneNu)**2 - eneNu**2 * dirz**2)
-            if ene < (2*eneNu**2/(mE + 2*eneNu))+mE: # TODO: this condition is effectively |dirz|<1 ?!?
-                break
+        ene = mE + (2 * mE * eneNu**2 * dirz**2) / ((mE + eneNu)**2 - eneNu**2 * dirz**2)
         #print out [t, pid, energy, dirx, diry, dirz] to file
         outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
