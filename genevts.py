@@ -42,7 +42,7 @@ parser.add_option("-o", "--output", dest="output",
 # [radius, height] of inner detector in cm
 detectors = {"SuperK":[3368.15/2., 3620.],
              "HyperK":[7080./2., 5480.]}
-optchoices = detectors.keys()
+optchoices = detectors.keys() #list(detectors.keys()) in python3
 optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
@@ -119,7 +119,7 @@ events = [] # this will become a list of lists: one entry per event, which is a 
 for filename in tmpfiles:
 	f = open(filename)
 	for line in f:
-		event = map(float, line.split(","))
+		event = map(float, line.split(",")) #list(map(float, line.split(","))) in python3
 		# `event` has the format `[t, pid, energy, dirx, diry, dirz]`
 		events.append(event)
 	f.close()
