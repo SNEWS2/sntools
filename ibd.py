@@ -195,7 +195,7 @@ with open(options.input) as simData:
         def f(eE, eNu):
             return dSigmadE(eNu, eE)*dFluxdE(eNu)
         def bounds_eNu():
-            return [eThr,50]
+            return [eThr,100]
         def bounds_eE(eNu):
             return [eE_Min(eNu)+1, eE_Max(eNu)+1]
         
