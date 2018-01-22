@@ -95,6 +95,7 @@ mE = 0.5109989 #MeV
 mPi = 139.57018 #MeV
 delta = mN-mP
 mAvg=(mP+mN)/2
+delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
 gF=1.16637e-11 #Fermi coupling constant
 eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 
@@ -185,7 +186,6 @@ with open(options.input) as simData:
             return (sqrt((s(eNu)-(mN-mE)**2)*(s(eNu)-(mN+mE)**2)))/(2*sqrt(s(eNu)))
         def eE_cm(eNu):
             return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
-        delta_cm = (mN**2-mP**2-mE**2)/(2*mP)
         def eE_Min(eNu):
             return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
         def eE_Max(eNu):
@@ -245,22 +245,22 @@ for i in binNr:
 
     #define particle for each event in time interval
     for i in range(binnedNevtRnd):
-        t = time - np.random.random() * binWidth
+        t = boundsMin + np.random.random() * binWidth
         alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+        
         #generate a neutrino energy above eThr
         while (True):
             eneNu = np.random.gamma(alpha_binned + 1, binnedEnergy/(alpha_binned + 1))
             if eneNu > eThr:
                 break
-        eneNu=eneNu
-        #generate direction of positron at given neutrino energy        
+        
+        #generate direction of positron at given neutrino energy
         (dirx, diry, dirz) = direction(eneNu)
-        #generate positron energy at given neutrino energy and cosT (Strumia & Vissani, 2003)       
+        #generate positron energy at given neutrino energy and cosT (Strumia & Vissani, 2003)
         epsilon = eneNu/mP
-        delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
         kappa = (1 + epsilon)**2 - (epsilon * dirz)**2
         ene = ((eneNu - delta_cm) * (1 + epsilon) + (epsilon * dirz * sqrt((eneNu - delta_cm)**2 - (mE**2 * kappa))))/kappa
-        # print out [t, energy, dirx, diry, dirz] to file
+        # print out [t, PID, energy, dirx, diry, dirz] to file
         outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print "**************************************"
