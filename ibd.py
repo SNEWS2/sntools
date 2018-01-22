@@ -50,6 +50,11 @@ if (normalization <= 0 or normalization > 1):
 	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
 	exit()
 
+# read data from input file, remove lines with comments and empty lines
+with open(options.input) as infile:
+	if verbose: print "Reading neutrino simulation data from", options.input, "..."
+	indata = [line for line in infile if not (line.startswith("#") or line.isspace())]
+
 # return direction of a positron in relation to path of incident neutrino (z-direction)
 def direction(eneNu):
 	pMax = 0
@@ -100,110 +105,108 @@ gF=1.16637e-11 #Fermi coupling constant
 eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
 
 #calculate the event rate at each time from the pre-processed data
-with open(options.input) as simData:
-    if verbose: print "Reading neutrino simulation data from", options.input, "..."
-    for line in simData:
-        
-        #import lists of time, and mean energy, mean squared energy and luminosity at time t
-        t, a, eNuSquared, L = line.split(",")
-        t=float(t) * 1000 # convert to ms
-        tValues.append(t)
-        a=float(a)
-        aValues.append(a)
-        eNuSquared = float(eNuSquared)
-        eNuSquaredValues.append(eNuSquared)
-        L=float(L)
+for line in indata:
+	
+	#import lists of time, and mean energy, mean squared energy and luminosity at time t
+	t, a, eNuSquared, L = line.split(",")
+	t=float(t) * 1000 # convert to ms
+	tValues.append(t)
+	a=float(a)
+	aValues.append(a)
+	eNuSquared = float(eNuSquared)
+	eNuSquaredValues.append(eNuSquared)
+	L=float(L)
 
-        # the following code implements the energy-dependent cross section for IBD
-        # from Strumia/Vissani (2003), arXiv:astro-ph/0302055
-        
-        def t_eNu_eE(eNu, eE):
-            return mN**2 - mP**2 - 2*mP*(eNu-eE)
-        def x(eNu, eE):
-            return t_eNu_eE(eNu, eE) / (4*mAvg**2)
-        def y (eNu, eE):
-            return 1 - t_eNu_eE(eNu, eE)/710000
-        def z (eNu, eE):
-            return 1 - t_eNu_eE(eNu, eE)/1000000
-        def f1 (eNu, eE):
-            return (1 - 4.706*x(eNu, eE)) / ((1-x(eNu, eE)) * y(eNu, eE)**2)
-        def f2 (eNu, eE):
-            return 3.706 / ((1-x(eNu, eE)) * y(eNu, eE)**2)
-        def g1(eNu, eE):
-            return -1.27 / z(eNu, eE)**2
-        def g2(eNu, eE):
-            return 2 * g1(eNu, eE) * mAvg**2 / (mPi**2 - t_eNu_eE(eNu, eE)) 
-           
-        # AM, BM and CM for approximate calculation of absMsquared,
-        # AM1, BM1 and CM1 for more precise calculation
-        def AM(eNu, eE):
-            return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *(f1(eNu, eE)+f2(eNu, eE)))
-        def AM1(eNu, eE):
-            return  1./16 * ( 
-            (t_eNu_eE(eNu, eE) - mE**2) * (
-            	4 * f1(eNu, eE)**2 * (4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
-            	+ 4 * g1(eNu, eE)**2 * (-4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
-            	+ f2(eNu, eE)**2 * ((t_eNu_eE(eNu, eE)**2)/(mAvg**2) + 4*t_eNu_eE(eNu, eE) + 4*mE**2)
-            	+ 4*mE**2 * t_eNu_eE(eNu, eE) * g2(eNu, eE)**2 / mAvg**2
-            	+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) + mE**2)
-            	+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
-            - delta**2 * (
-            	(4*f1(eNu, eE)**2 + t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2) *
-            	(4*mAvg**2 + t_eNu_eE(eNu, eE) - mE**2)
-            	+ 4*g1(eNu, eE)**2 * (4*mAvg**2 - t_eNu_eE(eNu, eE) + mE**2)
-            	+ 4*mE**2 * g2(eNu, eE)**2 * (t_eNu_eE(eNu, eE) - mE**2) / mAvg**2
-            	+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) - mE**2)
-            	+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
-            - 32*mE**2 * mAvg * delta * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE)))
-        def BM(eNu, eE):
-            return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
-        def BM1(eNu, eE):
-            return 1./16 * (
-            16*t_eNu_eE(eNu, eE) * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE))
-            + 4*mE**2 * delta * (f2(eNu, eE)**2 + f1(eNu, eE)*f2(eNu, eE) + 2*g1(eNu, eE)*g2(eNu, eE))/mAvg)
-        def CM(eNu, eE):
-            return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
-        def CM1(eNu, eE):
-            return 1./16 * (4*(f1(eNu, eE)**2 + g1(eNu, eE)**2) - t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2)
-        def sMinusU(eNu, eE):
-            return 2*mP*(eNu+eE) - mE**2
-        def absMsquared(eNu, eE):
-            return AM(eNu, eE) - sMinusU(eNu, eE) * BM(eNu, eE) + sMinusU(eNu, eE)**2 * CM(eNu, eE)
-        def dSigmadE(eNu, eE):
-            return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
-        
-        #calculate the energy-dependent flux per ms        
-        alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
-        def gamma_dist(eNu): #distribution of neutrino energies
-            return eNu**alpha / gamma(alpha+1) * ((alpha+1)/a)**(alpha+1) * exp(-(alpha+1) * eNu/a)
-        def dFluxdE(eNu):
-            return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
-        
-        #calculate range for eE from eNu in center-of-mass (cm) frame
-        def s(eNu):
-            return 2*mP*eNu + mP**2
-        def pE_cm(eNu):
-            return (sqrt((s(eNu)-(mN-mE)**2)*(s(eNu)-(mN+mE)**2)))/(2*sqrt(s(eNu)))
-        def eE_cm(eNu):
-            return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
-        def eE_Min(eNu):
-            return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
-        def eE_Max(eNu):
-            return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
-        
-        #integrate over eE and eNu to obtain event rate at time t
-        def f(eE, eNu):
-            return dSigmadE(eNu, eE)*dFluxdE(eNu)
-        def bounds_eNu():
-            return [eThr,100]
-        def bounds_eE(eNu):
-            return [eE_Min(eNu)+1, eE_Max(eNu)+1]
-        
-        #calculate the detector event rate at time t
-        simnevt = nP * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
-        
-        #create a list of event rates at time t for input into interpolation function
-        nevtValues.append(simnevt)
+	# the following code implements the energy-dependent cross section for IBD
+	# from Strumia/Vissani (2003), arXiv:astro-ph/0302055
+	
+	def t_eNu_eE(eNu, eE):
+		return mN**2 - mP**2 - 2*mP*(eNu-eE)
+	def x(eNu, eE):
+		return t_eNu_eE(eNu, eE) / (4*mAvg**2)
+	def y (eNu, eE):
+		return 1 - t_eNu_eE(eNu, eE)/710000
+	def z (eNu, eE):
+		return 1 - t_eNu_eE(eNu, eE)/1000000
+	def f1 (eNu, eE):
+		return (1 - 4.706*x(eNu, eE)) / ((1-x(eNu, eE)) * y(eNu, eE)**2)
+	def f2 (eNu, eE):
+		return 3.706 / ((1-x(eNu, eE)) * y(eNu, eE)**2)
+	def g1(eNu, eE):
+		return -1.27 / z(eNu, eE)**2
+	def g2(eNu, eE):
+		return 2 * g1(eNu, eE) * mAvg**2 / (mPi**2 - t_eNu_eE(eNu, eE)) 
+	   
+	# AM, BM and CM for approximate calculation of absMsquared,
+	# AM1, BM1 and CM1 for more precise calculation
+	def AM(eNu, eE):
+		return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *(f1(eNu, eE)+f2(eNu, eE)))
+	def AM1(eNu, eE):
+		return  1./16 * ( 
+		(t_eNu_eE(eNu, eE) - mE**2) * (
+			4 * f1(eNu, eE)**2 * (4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
+			+ 4 * g1(eNu, eE)**2 * (-4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
+			+ f2(eNu, eE)**2 * ((t_eNu_eE(eNu, eE)**2)/(mAvg**2) + 4*t_eNu_eE(eNu, eE) + 4*mE**2)
+			+ 4*mE**2 * t_eNu_eE(eNu, eE) * g2(eNu, eE)**2 / mAvg**2
+			+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) + mE**2)
+			+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
+		- delta**2 * (
+			(4*f1(eNu, eE)**2 + t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2) *
+			(4*mAvg**2 + t_eNu_eE(eNu, eE) - mE**2)
+			+ 4*g1(eNu, eE)**2 * (4*mAvg**2 - t_eNu_eE(eNu, eE) + mE**2)
+			+ 4*mE**2 * g2(eNu, eE)**2 * (t_eNu_eE(eNu, eE) - mE**2) / mAvg**2
+			+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) - mE**2)
+			+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
+		- 32*mE**2 * mAvg * delta * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE)))
+	def BM(eNu, eE):
+		return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
+	def BM1(eNu, eE):
+		return 1./16 * (
+		16*t_eNu_eE(eNu, eE) * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE))
+		+ 4*mE**2 * delta * (f2(eNu, eE)**2 + f1(eNu, eE)*f2(eNu, eE) + 2*g1(eNu, eE)*g2(eNu, eE))/mAvg)
+	def CM(eNu, eE):
+		return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
+	def CM1(eNu, eE):
+		return 1./16 * (4*(f1(eNu, eE)**2 + g1(eNu, eE)**2) - t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2)
+	def sMinusU(eNu, eE):
+		return 2*mP*(eNu+eE) - mE**2
+	def absMsquared(eNu, eE):
+		return AM(eNu, eE) - sMinusU(eNu, eE) * BM(eNu, eE) + sMinusU(eNu, eE)**2 * CM(eNu, eE)
+	def dSigmadE(eNu, eE):
+		return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
+	
+	#calculate the energy-dependent flux per ms
+	alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
+	def gamma_dist(eNu): #distribution of neutrino energies
+		return eNu**alpha / gamma(alpha+1) * ((alpha+1)/a)**(alpha+1) * exp(-(alpha+1) * eNu/a)
+	def dFluxdE(eNu):
+		return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
+	
+	#calculate range for eE from eNu in center-of-mass (cm) frame
+	def s(eNu):
+		return 2*mP*eNu + mP**2
+	def pE_cm(eNu):
+		return (sqrt((s(eNu)-(mN-mE)**2)*(s(eNu)-(mN+mE)**2)))/(2*sqrt(s(eNu)))
+	def eE_cm(eNu):
+		return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
+	def eE_Min(eNu):
+		return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
+	def eE_Max(eNu):
+		return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
+	
+	#integrate over eE and eNu to obtain event rate at time t
+	def f(eE, eNu):
+		return dSigmadE(eNu, eE)*dFluxdE(eNu)
+	def bounds_eNu():
+		return [eThr,100]
+	def bounds_eE(eNu):
+		return [eE_Min(eNu)+1, eE_Max(eNu)+1]
+	
+	#calculate the detector event rate at time t
+	simnevt = nP * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+	
+	#create a list of event rates at time t for input into interpolation function
+	nevtValues.append(simnevt)
 
 #interpolate the mean energy and mean squared energy
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
