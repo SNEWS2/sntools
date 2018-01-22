@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from optparse import OptionParser
-from math import pi, sin, cos, sqrt, gamma, exp
+from math import pi, sin, cos, sqrt, gamma, exp, floor, ceil
 from scipy import integrate, interpolate
 import numpy as np
 
@@ -38,6 +38,14 @@ parser.add_option("-d", "--detector", dest="detector",
                       % (optchoices, optdefault),
                   choices=optchoices, default=optdefault)
 
+parser.add_option("--starttime", dest="starttime",
+                  help="Start generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
+                  metavar="T")
+
+parser.add_option("--endtime", dest="endtime",
+                  help="Stop generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: Last time bin in input file.",
+                  metavar="T")
+
 parser.add_option("-v", "--verbose", dest="verbose",
                   help="Verbose output, e.g. for debugging. Off by default.",
                   default=False, action="store_true")
@@ -45,6 +53,8 @@ parser.add_option("-v", "--verbose", dest="verbose",
 (options, args) = parser.parse_args()
 
 verbose = options.verbose
+starttime = options.starttime
+endtime = options.endtime
 normalization = float(options.normalization)
 if (normalization <= 0 or normalization > 1):
 	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
@@ -54,6 +64,27 @@ if (normalization <= 0 or normalization > 1):
 with open(options.input) as infile:
 	if verbose: print "Reading neutrino simulation data from", options.input, "..."
 	indata = [line for line in infile if not (line.startswith("#") or line.isspace())]
+
+# if start time and end time are not given as command line arguments, get them from 1st/last line of input file
+_starttime = indata[0].split(",")[0]
+_endtime = indata[-1].split(",")[0]
+
+if not starttime:
+	starttime = _starttime
+elif starttime < _starttime:
+	print("Error: Start time must be greater than time in first line of input file. Aborting ...")
+	exit()
+
+if not endtime:
+	endtime = _endtime
+elif endtime > _endtime:
+	print("Error: End time must be less than time in last line of input file. Aborting ...")
+	exit()
+
+starttime = ceil(float(starttime) * 1000) # convert to ms
+endtime = floor(float(endtime) * 1000)
+duration = endtime - starttime
+
 
 # return direction of a positron in relation to path of incident neutrino (z-direction)
 def direction(eneNu):
@@ -215,16 +246,17 @@ interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
 #interpolate the event rate            
 interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
 
-#specify bin width and number of bins for binning to 1ms intervals
-binWidth = 1 #time interval in ms
-binNr = np.arange(1, 535/binWidth, 1) #time range
+binWidth = 1 # bin width in ms
+binNr = np.arange(1, floor(duration/binWidth)+1) # number of full-width bins
+if verbose:
+	print "Now generating events in %s ms bins between %s-%s ms" % (binWidth, starttime, endtime)
+	print "**************************************"
 
 outfile = open(options.output, 'w')
 #integrate event rate and energy over each bin
 for i in binNr:
-    time = 15 + (i*binWidth)
-    boundsMin = time - binWidth
-    boundsMax = time
+    boundsMin = starttime + (i-1)*binWidth
+    boundsMax = starttime + i*binWidth
 
     # calculate expected number of events in this bin and multiply with a normalization factor
     # (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
@@ -234,26 +266,25 @@ for i in binNr:
     #find the total number of events over all bins
     totnevt += binnedNevtRnd
 
-    #create binned values for energy and mean squared energy
-    binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0]
-    binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0]
-   
+    #create binned values for energy, mean squared energy and shape parameter
+    binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
+    binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
+    binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+
     if verbose:
-       print "**************************************"
        print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
        print "Nevt (theor.) =", binnedNevt
        print "Nevt (actual) =", binnedNevtRnd
        print "mean energy   =", binnedEnergy, "MeV"
-       print "Now generating events for this bin ..."
+       print "**************************************"
 
     #define particle for each event in time interval
     for i in range(binnedNevtRnd):
         t = boundsMin + np.random.random() * binWidth
-        alpha_binned = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
         
         #generate a neutrino energy above eThr
         while (True):
-            eneNu = np.random.gamma(alpha_binned + 1, binnedEnergy/(alpha_binned + 1))
+            eneNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
             if eneNu > eThr:
                 break
         
@@ -266,7 +297,6 @@ for i in binNr:
         # print out [t, PID, energy, dirx, diry, dirz] to file
         outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
-print "**************************************"
 print(("Wrote %i particles to " % totnevt) + options.output)
 
 outfile.close()
