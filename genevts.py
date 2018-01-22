@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 # call this as
-# $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile -d [SuperK|HyperK]
-# where the input files are called infile_{e,eb,x}.txt and the output file is outfile.txt
+# $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile.kin -d [SuperK|HyperK]
+# where the input files are called infile_{e,eb,x}.txt and the output file is outfile.kin
 
 from os import system
 import random
@@ -50,6 +50,14 @@ parser.add_option("-d", "--detector", dest="detector",
                   metavar="DETECTOR",
                   choices=optchoices, default=optdefault)
 
+parser.add_option("--starttime", dest="starttime",
+                  help="Start generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
+                  metavar="T")
+
+parser.add_option("--endtime", dest="endtime",
+                  help="Stop generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: Last time bin in input file.",
+                  metavar="T")
+
 parser.add_option("-v", "--verbose", dest="verbose",
                   help="Verbose output, e.g. for debugging. Off by default.",
                   default=False, action="store_true")
@@ -64,6 +72,8 @@ in_eb = input + "_eb.txt"
 in_x = input + "_x.txt"
 output = options.output
 detector = options.detector
+starttime = options.starttime
+endtime = options.endtime
 verbose = options.verbose
 
 if verbose:
@@ -71,10 +81,12 @@ if verbose:
 	print "hierarchy =", hierarchy
 	print "inputs    =", in_e, in_eb, in_x
 	print "output    =", output
-	print "detector  =", detector, "\n"
+	print "detector  =", detector
+	print "starttime =", starttime
+	print "endtime   =", endtime
 
 # call script for each interaction channel as
-#     ./channel.py -i infile -o outfile -n normalization_factor -d detector
+# $ ./channel.py -i infile -o tmpfile.txt -n normalization_factor -d detector
 # where the normalization factor is 0 or 1 or sin^2(theta_12) or cos^2(theta_12),
 # depending on oscillation scenario (see p. 236 HK public DR). We assume P_H = 0.
 
@@ -88,6 +100,8 @@ tmpfiles = []
 def execute(thisChannel, flavor, n):
 	tmpfile = "tmp_%s_%s.txt" % (thisChannel, flavor)
 	cmd = "python %s.py --input=%s_%s.txt --output=%s --normalization=%s --detector=%s" % (thisChannel, input, flavor, tmpfile, n, detector)
+	if starttime: cmd = cmd + " --starttime=%s" % starttime
+	if endtime: cmd = cmd + " --endtime=%s" % endtime
 	if verbose:
 		cmd = cmd + " --verbose" # inherit verbosity
 		print "Now executing:", cmd
