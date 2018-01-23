@@ -31,7 +31,7 @@ parser.add_option("-n", "--normalization", dest="normalization",
 # number of free protons (i.e. H nuclei) in each detector
 detectors = {"SuperK": 2.1e+33,
              "HyperK": 1.4e+34} # one-tank configuration
-optchoices = detectors.keys() #list(detectors.keys()) in python3
+optchoices = detectors.keys() # list(detectors.keys()) in python3
 optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
@@ -121,19 +121,19 @@ aValues=[]
 eNuSquaredValues=[]
 xValues=[]
 totnevt = 0
-#define variables
-nE = 5 * detectors[options.detector] #number of electrons in detector volume (8+1+1 per water molecule, i.e. 5 per hydrogen nucleus)
+# define variables
+nE = 5 * detectors[options.detector] # number of electrons in detector volume (8+1+1 per water molecule, i.e. 5 per hydrogen nucleus)
 sin2theta_w = 0.2317  
 dSquared = (1.563738e+33)**2
-mE = 0.5109989 #MeV
-gF=1.16637e-11 #Fermi coupling constant
+mE = 0.5109989 # MeV
+gF=1.16637e-11 # Fermi coupling constant
 ro_NC = 1.0126 # +/- 0.0016
 sigma0 = (2*gF**2*mE**2)/pi
 
-#calculate the event rate at each time from the pre-processed data
+# calculate the event rate at each time from the pre-processed data
 
 for line in indata:
-	#import time, mean energy, mean squared energy and luminosity at time t
+	# import time, mean energy, mean squared energy and luminosity at time t
 	t, a, eNuSquared, L = line.split(",")
 	t=float(t) * 1000 # convert to ms
 	tValues.append(t)
@@ -143,14 +143,16 @@ for line in indata:
 	eNuSquaredValues.append(eNuSquared)
 	L=float(L)
 	
-	#calculate the energy-dependent cross section for (nu_e)-electron scattering
+	# calculate the energy-dependent cross section for (nu_e)-electron scattering
+	# see Bahcall, 1995 DOI:https://doi.org/10.1103/PhysRevD.51.6146 (Appendices)
 	
+	# Appendix A: Radiative Corrections
 	def l(eNu):
 		return sqrt(eNu**2 - mE**2)
 	def beta(eNu):
 		return l(eNu)/eNu
 	def T(eE):# kinetic energy of recoil electron
-		return eE - mE #total energy of the recoil electron minus the rest mass
+		return eE - mE # total energy of the recoil electron minus the rest mass
 	def z(eNu, eE):
 		return T(eE)/eNu # ratio of recoil electron's kinetic energy to incident neutrino energy
 	def x(eE):
@@ -164,9 +166,8 @@ for line in indata:
 	def gR(eE):
 		return -ro_NC * k(eE) * sin2theta_w
 	
-	# f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z) for approximate calculation of dSigmadE
-	# see Bahcall, 1995 DOI:https://doi.org/10.1103/PhysRevD.51.6146 
-	
+	# Appendix B: QED Effects
+	# f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z)
 	def spence(n):
 		return integrate.quad(lambda n: log(1-n)/n, 0, n) [0]
 	def f1(eNu, eE):
@@ -175,12 +176,14 @@ for line in indata:
 		return ((eE/l(eNu)) * log ((eE + l(eNu))/mE) - 1.) * (((1. - z(eNu, eE))**2) * (2*log(1. - z(eNu, eE) - (mE/(eE+l(eNu))))-log(1.-z(eNu, eE)) - (log (z(eNu, eE)))/2.0 - 2/3.0) - (z(eNu, eE)**2 * log (z(eNu, eE)) + 1 - z(eNu, eE))/2.0 ) - ((1-z(eNu, eE))**2 / 2.0)*((log(1-z(eNu, eE)))**2 + beta(eNu) * (spence(1-z(eNu, eE)) - log(z(eNu, eE))*log(1-z(eNu, eE)))) + log (1-z(eNu, eE)) * (((z(eNu, eE)**2) / 2.0) * log(z(eNu, eE)) + ((1 - z(eNu, eE))/3.0) * (2*z(eNu, eE) - 1/2.0)) - (z(eNu, eE)**2 / 2.0) * spence(1-z(eNu, eE)) - (z(eNu, eE) * (1-2*z(eNu, eE))/3.0) * log (z(eNu, eE)) - z(eNu, eE) * ((1- z(eNu, eE))/6.0) - (beta(eNu)/12.0)* (log(z(eNu, eE)) + (1 - z(eNu, eE)) * ((115 - 109 * z(eNu, eE))/6.0))
 	def f3(eNu, eE):
 		return ((eE/l(eNu)) * log ( (eE + l(eNu))/mE) - 1) * 2 * log(1 - z(eNu, eE) - mE/(eE + l(eNu)))
+	
+	# Complete formula
 	def dSigmadT(eNu, eE):
 		return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (1/137.0/pi) * f1(eNu, eE)) + gR(eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*((1/137.0)/pi))- gR(eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + ((1/137.)/pi) * f3(eNu, eE)))
 	
-	#calculate the energy-dependent flux per ms
+	# calculate the energy-dependent flux per ms
 	alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
-	def gamma_dist(eNu): #energy distribution of neutrinos
+	def gamma_dist(eNu): # energy distribution of neutrinos
 		return (eNu**alpha/gamma(alpha + 1))*(((alpha + 1)/a)**(alpha + 1))*(exp(-(alpha + 1)*(eNu/a)))
 	def dFluxdE(eNu):
 		return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
@@ -190,30 +193,30 @@ for line in indata:
 	def eE_Max(eNu):
 		return ((2*eNu**2)/(2*eNu + mE)) + mE # also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf; also eE_Max(cosT) = (2*mE)/(arccos(cosT))**2
 	
-	#integrate over eE and then eNu to obtain the event rate at time t
+	# integrate over eE and then eNu to obtain the event rate at time t
 	def eNu_min(eE):
-		return (T(eE)/2.)*(1 + sqrt(1 + (2*mE)/T(eE))) #from SuperK code, also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
+		return (T(eE)/2.)*(1 + sqrt(1 + (2*mE)/T(eE))) # from SuperK code, also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
 	def f(eE, eNu):
 		if eNu>=eNu_min(eE):
 			return dSigmadT(eNu, eE)*dFluxdE(eNu)
 		else:
 			return 0
 	def bounds_eNu():
-		return [eNu_min(0.9), 50]#actual minimum 0.33370763820956262 at eE=0.7 MeV calculated using eNu_min(eE) equation
+		return [eNu_min(0.9), 50]# actual minimum 0.33370763820956262 at eE=0.7 MeV calculated using eNu_min(eE) equation
 	def bounds_eE(eNu):
 		return [eE_Min + 1, eE_Max(eNu) + 1]
 	
-	#calculate the detector event rate at time t
+	# calculate the detector event rate at time t
 	simnevt = nE * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
 	
-	#create a list of nevt values at time t for input into interpolation function
+	# create a list of nevt values at time t for input into interpolation function
 	nevtValues.append(simnevt)
 
-#interpolate the mean energy and mean squared energy
+# interpolate the mean energy and mean squared energy
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
 interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
 
-#interpolate the event rate
+# interpolate the event rate
 interpolatedNevt = interpolate.pchip(tValues, nevtValues)
 
 binWidth = 1 # bin width in ms
@@ -223,40 +226,40 @@ if verbose:
 	print "**************************************"
 
 outfile = open(options.output, 'w')
-#integrate event rate and energy over each bin
+# integrate event rate and energy over each bin
 for i in binNr:
-    boundsMin = starttime + (i-1)*binWidth
-    boundsMax = starttime + i*binWidth
-
-    # calculate expected number of events in this bin and multiply with a normalization factor
-    # (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
-    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
-    # randomly select number of events in this bin from Poisson distribution around binnedNevt:
-    binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
-    #find the total number of events over all bins
-    totnevt += binnedNevtRnd
-
-    #create binned values for energy, mean squared energy and shape parameter
-    binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
-    binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
-    binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
-
-    if verbose:
-    	print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
-    	print "Nevt (theor.) =", binnedNevt
-    	print "Nevt (actual) =", binnedNevtRnd
-    	print "mean energy   =", binnedEnergy, "MeV"
-    	print "**************************************"
-    
-    #define particle for each event in time interval
-    for i in range(binnedNevtRnd):
-        #Define properties of the particle
-        t = boundsMin + np.random.random() * binWidth
-        eneNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
-        (dirx, diry, dirz) = direction(eneNu)
-        ene = mE + (2 * mE * eneNu**2 * dirz**2) / ((mE + eneNu)**2 - eneNu**2 * dirz**2)
-        #print out [t, pid, energy, dirx, diry, dirz] to file
-        outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
+	boundsMin = starttime + (i-1)*binWidth
+	boundsMax = starttime + i*binWidth
+	
+	# calculate expected number of events in this bin and multiply with a normalization factor
+	# (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
+	binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
+	# randomly select number of events in this bin from Poisson distribution around binnedNevt:
+	binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
+	# find the total number of events over all bins
+	totnevt += binnedNevtRnd
+	
+	# create binned values for energy, mean squared energy and shape parameter
+	binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
+	binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
+	binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+	
+	if verbose:
+		print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+		print "Nevt (theor.) =", binnedNevt
+		print "Nevt (actual) =", binnedNevtRnd
+		print "mean energy   =", binnedEnergy, "MeV"
+		print "**************************************"
+	
+	# define particle for each event in time interval
+	for i in range(binnedNevtRnd):
+		# Define properties of the particle
+		t = boundsMin + np.random.random() * binWidth
+		eNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
+		(dirx, diry, dirz) = direction(eNu)
+		ene = eneE(eNu, dirz)
+		# print out [t, pid, energy, dirx, diry, dirz] to file
+		outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print(("Wrote %i particles to " % totnevt) + options.output)
 

@@ -31,7 +31,7 @@ parser.add_option("-n", "--normalization", dest="normalization",
 # number of free protons (i.e. H nuclei) in each detector
 detectors = {"SuperK": 2.1e+33,
              "HyperK": 1.4e+34} # one-tank configuration
-optchoices = detectors.keys() #list(detectors.keys()) in python3
+optchoices = detectors.keys() # list(detectors.keys()) in python3
 optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
@@ -122,23 +122,23 @@ tValues=[]
 aValues=[]
 eNuSquaredValues=[]
 totnevt = 0
-#define variables
+# define variables
 nP = detectors[options.detector] # number of protons in detector volume
 dSquared = (1.563738e+33)**2 # 10 kpc in units of MeV**(-1), see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
-mN = 939.5654 #MeV
-mP = 938.2721 #MeV
-mE = 0.5109989 #MeV
-mPi = 139.57018 #MeV
+mN = 939.5654 # MeV
+mP = 938.2721 # MeV
+mE = 0.5109989 # MeV
+mPi = 139.57018 # MeV
 delta = mN-mP
 mAvg=(mP+mN)/2
 delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
-gF=1.16637e-11 #Fermi coupling constant
-eThr=((mN+mE)**2 - mP**2)/(2*mP) #threshold energy for IBD
+gF=1.16637e-11 # Fermi coupling constant
+eThr=((mN+mE)**2 - mP**2)/(2*mP) # threshold energy for IBD
 
-#calculate the event rate at each time from the pre-processed data
+# calculate the event rate at each time from the pre-processed data
 for line in indata:
 	
-	#import lists of time, and mean energy, mean squared energy and luminosity at time t
+	# import lists of time, and mean energy, mean squared energy and luminosity at time t
 	t, a, eNuSquared, L = line.split(",")
 	t=float(t) * 1000 # convert to ms
 	tValues.append(t)
@@ -206,14 +206,14 @@ for line in indata:
 	def dSigmadE(eNu, eE):
 		return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
 	
-	#calculate the energy-dependent flux per ms
+	# calculate the energy-dependent flux per ms
 	alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
-	def gamma_dist(eNu): #distribution of neutrino energies
+	def gamma_dist(eNu): # distribution of neutrino energies
 		return eNu**alpha / gamma(alpha+1) * ((alpha+1)/a)**(alpha+1) * exp(-(alpha+1) * eNu/a)
 	def dFluxdE(eNu):
 		return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
 	
-	#calculate range for eE from eNu in center-of-mass (cm) frame
+	# calculate range for eE from eNu in center-of-mass (cm) frame
 	def s(eNu):
 		return 2*mP*eNu + mP**2
 	def pE_cm(eNu):
@@ -225,7 +225,7 @@ for line in indata:
 	def eE_Max(eNu):
 		return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
 	
-	#integrate over eE and eNu to obtain event rate at time t
+	# integrate over eE and eNu to obtain event rate at time t
 	def f(eE, eNu):
 		return dSigmadE(eNu, eE)*dFluxdE(eNu)
 	def bounds_eNu():
@@ -233,17 +233,17 @@ for line in indata:
 	def bounds_eE(eNu):
 		return [eE_Min(eNu)+1, eE_Max(eNu)+1]
 	
-	#calculate the detector event rate at time t
+	# calculate the detector event rate at time t
 	simnevt = nP * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
 	
-	#create a list of event rates at time t for input into interpolation function
+	# create a list of event rates at time t for input into interpolation function
 	nevtValues.append(simnevt)
 
-#interpolate the mean energy and mean squared energy
+# interpolate the mean energy and mean squared energy
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
 interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
 
-#interpolate the event rate            
+# interpolate the event rate            
 interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
 
 binWidth = 1 # bin width in ms
@@ -253,49 +253,49 @@ if verbose:
 	print "**************************************"
 
 outfile = open(options.output, 'w')
-#integrate event rate and energy over each bin
+# integrate event rate and energy over each bin
 for i in binNr:
-    boundsMin = starttime + (i-1)*binWidth
-    boundsMax = starttime + i*binWidth
-
-    # calculate expected number of events in this bin and multiply with a normalization factor
-    # (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
-    binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
-    # randomly select number of events in this bin from Poisson distribution around binnedNevt:
-    binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
-    #find the total number of events over all bins
-    totnevt += binnedNevtRnd
-
-    #create binned values for energy, mean squared energy and shape parameter
-    binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
-    binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
-    binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
-
-    if verbose:
-       print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
-       print "Nevt (theor.) =", binnedNevt
-       print "Nevt (actual) =", binnedNevtRnd
-       print "mean energy   =", binnedEnergy, "MeV"
-       print "**************************************"
-
-    #define particle for each event in time interval
-    for i in range(binnedNevtRnd):
-        t = boundsMin + np.random.random() * binWidth
-        
-        #generate a neutrino energy above eThr
-        while (True):
-            eneNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
-            if eneNu > eThr:
-                break
-        
-        #generate direction of positron at given neutrino energy
-        (dirx, diry, dirz) = direction(eneNu)
-        #generate positron energy at given neutrino energy and cosT (Strumia & Vissani, 2003)
-        epsilon = eneNu/mP
-        kappa = (1 + epsilon)**2 - (epsilon * dirz)**2
-        ene = ((eneNu - delta_cm) * (1 + epsilon) + (epsilon * dirz * sqrt((eneNu - delta_cm)**2 - (mE**2 * kappa))))/kappa
-        # print out [t, PID, energy, dirx, diry, dirz] to file
-        outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
+	boundsMin = starttime + (i-1)*binWidth
+	boundsMax = starttime + i*binWidth
+	
+	# calculate expected number of events in this bin and multiply with a normalization factor
+	# (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
+	binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
+	# randomly select number of events in this bin from Poisson distribution around binnedNevt:
+	binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
+	# find the total number of events over all bins
+	totnevt += binnedNevtRnd
+	
+	# create binned values for energy, mean squared energy and shape parameter
+	binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
+	binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
+	binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+	
+	if verbose:
+		print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+		print "Nevt (theor.) =", binnedNevt
+		print "Nevt (actual) =", binnedNevtRnd
+		print "mean energy   =", binnedEnergy, "MeV"
+		print "**************************************"
+	
+	# define particle for each event in time interval
+	for i in range(binnedNevtRnd):
+		t = boundsMin + np.random.random() * binWidth
+		
+		# generate a neutrino energy above eThr
+		while (True):
+			eneNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
+			if eneNu > eThr:
+				break
+		
+		# generate direction of positron at given neutrino energy
+		(dirx, diry, dirz) = direction(eneNu)
+		# generate positron energy at given neutrino energy and cosT (Strumia & Vissani, 2003)
+		epsilon = eneNu/mP
+		kappa = (1 + epsilon)**2 - (epsilon * dirz)**2
+		ene = ((eneNu - delta_cm) * (1 + epsilon) + epsilon * dirz * sqrt((eneNu - delta_cm)**2 - mE**2 * kappa)) / kappa
+		# print out [t, PID, energy, dirx, diry, dirz] to file
+		outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
 print(("Wrote %i particles to " % totnevt) + options.output)
 
