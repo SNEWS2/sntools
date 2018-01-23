@@ -87,37 +87,33 @@ duration = endtime - starttime
 
 
 # return direction of an electron with the given energy in relation to neutrino path
-def direction(eneNu):
+def direction(eNu):
 	pMax = 0
-	cosT = 0
-	nCosTBins = 1000
-	cosTBinWidth = 2./nCosTBins
-#find the largest value of p
+	nCosTBins = 500
+	cosTBinWidth = 1./nCosTBins
+	# find the largest value of p
 	for j in range(nCosTBins):
-		cosT = -1 + cosTBinWidth*(j+0.5) # 1000 steps in the interval [-1,1]
-		p = dSigmadCosT(eneNu, cosT)
+		cosT = cosTBinWidth * (j+0.5) # 500 steps in the interval [0,1)
+		p = dSigmadCosT(eNu, cosT)
 		if p > pMax:
 			pMax = p
 	while (True):
 		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
-		if dSigmadCosT(eneNu, cosT) > pMax*np.random.random():
+		if dSigmadCosT(eNu, cosT) > pMax * np.random.random():
 			sinT = sin(np.arccos(cosT))
-			phi = 2 * pi * np.random.random() - pi # randomly distributed in [-pi, pi)
+			phi = 2 * pi * np.random.random() # randomly distributed in [0, 2 pi)
 			break
-
 	return (sinT*cos(phi), sinT*sin(phi), cosT)
 
-# probability distribution for the scattering angle
-# cosT-dependent cross-section can be found at https://www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
-def dSigmadCosT(eneNu, cosT):
-	def dir_f1(eneNu, cosT):
-		return (sigma0 * 4 * eneNu**2 * (mE+eneNu)**2 * cosT)/((mE+eneNu)**2 - eneNu**2 * cosT**2)**2
-	def dir_f2a(eneNu, cosT):
-		return 0.73**2 + 0.23**2 * (1 - ((2 * mE * eneNu * cosT**2) / ((mE+eneNu)**2 - eneNu**2 * cosT**2)))**2
-	def dir_f2b(eneNu, cosT):
-		return (0.73 * 0.23 * 2 * mE**2 * cosT**2)/((mE+eneNu)**2 - (eneNu**2 * cosT**2))
-	
-	return dir_f1(eneNu, cosT) * (dir_f2a(eneNu, cosT) - dir_f2b(eneNu, cosT)) 
+def eneE(eNu, cosT):
+	return mE + (2 * mE * eNu**2 * cosT**2) / ((mE + eNu)**2 - eNu**2 * cosT**2)
+
+# probability distribution for the scattering angle, see derivation at
+# https://www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
+def dSigmadCosT(eNu, cosT):
+	dTdCosT = 4 * mE * eNu**2 * (mE+eNu)**2 * cosT / ((mE+eNu)**2 - eNu**2 * cosT**2)**2
+	eE = eneE(eNu, cosT)
+	return dTdCosT * dSigmadT(eNu, eE)
 
 nevtValues=[]
 tValues=[]
