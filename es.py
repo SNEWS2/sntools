@@ -38,6 +38,13 @@ parser.add_option("-d", "--detector", dest="detector",
                       % (optchoices, optdefault),
                   choices=optchoices, default=optdefault)
 
+optdefault = "e"
+parser.add_option("-f", "--flavor", dest="flavor",
+                  help="Neutrino flavor. Choices: 'e', 'eb', 'x', 'xb'. Default: '%s'." \
+                      % (optdefault),
+                  metavar="flavor",
+                  default=optdefault)
+
 parser.add_option("--starttime", dest="starttime",
                   help="Start generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
                   metavar="T")
@@ -53,11 +60,14 @@ parser.add_option("-v", "--verbose", dest="verbose",
 (options, args) = parser.parse_args()
 
 verbose = options.verbose
-starttime = options.starttime
-endtime = options.endtime
 normalization = float(options.normalization)
 if (normalization <= 0 or normalization > 1):
 	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
+	exit()
+
+flavor = options.flavor
+if flavor not in ("e", "eb", "x", "xb"):
+	print("Error: flavor needs to be one of 'e', 'eb', 'x', 'xb'. Aborting ...")
 	exit()
 
 # read data from input file, remove lines with comments and empty lines
@@ -68,6 +78,8 @@ with open(options.input) as infile:
 # if start time and end time are not given as command line arguments, get them from 1st/last line of input file
 _starttime = indata[0].split(",")[0]
 _endtime = indata[-1].split(",")[0]
+starttime = options.starttime
+endtime = options.endtime
 
 if not starttime:
 	starttime = _starttime
@@ -127,11 +139,9 @@ sin2theta_w = 0.2317
 dSquared = (1.563738e+33)**2
 mE = 0.5109989 # MeV
 gF=1.16637e-11 # Fermi coupling constant
-ro_NC = 1.0126 # +/- 0.0016
-sigma0 = (2*gF**2*mE**2)/pi
+rho_NC = 1.0126 # +/- 0.0016
 
 # calculate the event rate at each time from the pre-processed data
-
 for line in indata:
 	# import time, mean energy, mean squared energy and luminosity at time t
 	t, a, eNuSquared, L = line.split(",")
@@ -160,11 +170,27 @@ for line in indata:
 	def I(eE):
 		return 1/6.0 * (1/3.0 + (3 - x(eE)**2) * (x(eE)/2.0 *log((x(eE) + 1)/(x(eE) - 1)) - 1))
 	def k(eE):
-		return 0.9791 + 0.0097 * I(eE) #+/-0.0025
+		if flavor in ("e", "eb"):
+			return 0.9791 + 0.0097 * I(eE) #+/-0.0025
+		if flavor in ("x", "xb"):
+			return 0.9970 - 0.00037 * I(eE) #+/-0.0025
+	
+	def g1(eE):
+		return rho_NC * (1/2.0 - k(eE) * sin2theta_w)
+	def g2(eE):
+		return -rho_NC * k(eE) * sin2theta_w
+	
 	def gL(eE):
-		return ro_NC * (1/2.0 - k(eE) * sin2theta_w) - 1
+		if   flavor == "e":  return g1(eE) - 1
+		elif flavor == "eb": return g2(eE)
+		elif flavor == "x":  return g1(eE)
+		elif flavor == "xb": return g2(eE)
+	
 	def gR(eE):
-		return -ro_NC * k(eE) * sin2theta_w
+		if   flavor == "e":  return g2(eE)
+		elif flavor == "eb": return g1(eE) - 1
+		elif flavor == "x":  return g2(eE)
+		elif flavor == "xb": return g1(eE)
 	
 	# Appendix B: QED Effects
 	# f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z)
