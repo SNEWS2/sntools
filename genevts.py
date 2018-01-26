@@ -86,9 +86,9 @@ if verbose:
 	print "endtime   =", endtime
 
 # call script for each interaction channel as
-# $ ./channel.py -i infile -o tmpfile.txt -n normalization_factor -d detector
-# where the normalization factor is 0 or 1 or sin^2(theta_12) or cos^2(theta_12),
-# depending on oscillation scenario (see p. 236 HK public DR). We assume P_H = 0.
+# $ ./channel.py -i infile -o tmpfile -n normalization_factor -d detector
+# where normalization_factor depends on oscillation scenario (see p. 236 HK public DR).
+# We assume adiabatic transition (P_H = 0).
 
 # normalization factors, from C. Patrignani et al. (Particle Data Group), Chin. Phys. C, 40, 100001 (2016)
 sin2t12 = 0.304
@@ -97,9 +97,11 @@ cos2t12 = 1 - sin2t12
 # List of files that contain events for a single channel/flavor combination. Will be combined into `outfile` later.
 tmpfiles = []
 
-def execute(thisChannel, flavor, n):
-	tmpfile = "tmp_%s_%s.txt" % (thisChannel, flavor)
-	cmd = "python %s.py --input=%s_%s.txt --output=%s --normalization=%s --detector=%s" % (thisChannel, input, flavor, tmpfile, n, detector)
+def execute(this_channel, original_flavor, n, detected_flavor=""):
+	tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
+	infile = "%s_%s.txt" % (input, original_flavor)
+	cmd = "python %s.py --input=%s --output=%s --normalization=%s --detector=%s" % (this_channel, infile, tmpfile, n, detector)
+	if this_channel == "es": cmd = cmd + " --flavor=%s" % detected_flavor
 	if starttime: cmd = cmd + " --starttime=%s" % starttime
 	if endtime: cmd = cmd + " --endtime=%s" % endtime
 	if verbose:
@@ -112,21 +114,35 @@ if (hierarchy == "noosc"):
 	if (channel == "ibd" or channel == "all"):
 		execute("ibd", "eb", 1)
 	if (channel == "es" or channel == "all"):
-		execute("es", "e", 1)
+		execute("es", "e",  1, "e")
+		execute("es", "eb", 1, "eb")
+		execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
+		execute("es", "x",  2, "xb") # anti-nu_x have different cross section then nu_x but use same input file
 
 if (hierarchy == "normal"):
 	if (channel == "ibd" or channel == "all"):
 		execute("ibd", "eb", cos2t12)
-		execute("ibd", "x", sin2t12)
+		execute("ibd", "x",  sin2t12)
 	if (channel == "es" or channel == "all"):
-		execute("es", "x", 1)
+		execute("es", "x",  1, "e") # nu_e that originated as nu_x
+		execute("es", "eb", cos2t12, "eb") # anti-nu_e that originated as anti-nu_e
+		execute("es", "x",  sin2t12, "eb") # anti-nu_e that originated as anti-nu_x
+		execute("es", "e",  1, "x") # nu_x that originated as nu_e
+		execute("es", "x",  1, "x") # nu_x that originated as nu_x
+		execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
+		execute("es", "x",  1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
 
 if (hierarchy == "inverted"):
 	if (channel == "ibd" or channel == "all"):
 		execute("ibd", "x", 1)
 	if (channel == "es" or channel == "all"):
-		execute("es", "e", sin2t12)
-		execute("es", "x", cos2t12)
+		execute("es", "e",  sin2t12, "e") # nu_e that originated as nu_e
+		execute("es", "x",  cos2t12, "e") # nu_e that originated as nu_x
+		execute("es", "x",  1, "eb") # anti-nu_e that originated as anti-nu_x
+		execute("es", "e",  cos2t12, "x") # nu_x that originated as nu_e
+		execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
+		execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
+		execute("es", "x",  1, "xb") # anti-nu_x that originated as anti-nu_x
 
 events = [] # this will become a list of lists: one entry per event, which is a list of time, energy, etc.
 # read in all events:
@@ -150,7 +166,7 @@ for i in range(len(events)):
 	ene = event[2]
 	(dirx, diry, dirz) = (event[3], event[4], event[5])
 	
-	if verbose: print "events[",i,"] = ", event
+	if verbose: print "events[%d] = %s" %(i, event)
 	
 	# create random vertex position inside the detector volume
 	rad    = detectors[options.detector][0] - 20.

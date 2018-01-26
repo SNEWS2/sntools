@@ -61,8 +61,8 @@ parser.add_option("-v", "--verbose", dest="verbose",
 
 verbose = options.verbose
 normalization = float(options.normalization)
-if (normalization <= 0 or normalization > 1):
-	print("Error: Normalization factor should be in the interval (0,1]. Aborting ...")
+if (normalization <= 0 or normalization > 2):
+	print("Error: Normalization factor should be in the interval (0,2]. Aborting ...")
 	exit()
 
 flavor = options.flavor
