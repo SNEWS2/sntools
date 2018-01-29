@@ -7,7 +7,7 @@ import numpy as np
 
 parser = OptionParser()
 
-optdefault = "simData_eb.txt"
+optdefault = "infile_eb.txt"
 parser.add_option("-i", "--input", dest="input",
                   help="Name of the input file. Default: '%s'." \
                       % (optdefault),

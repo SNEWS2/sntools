@@ -7,7 +7,7 @@ import numpy as np
 
 parser = OptionParser()
 
-optdefault = "simData_e.txt"
+optdefault = "infile_e.txt"
 parser.add_option("-i", "--input", dest="input",
                   help="Name of the input file. Default: '%s'." \
                       % (optdefault),
@@ -135,7 +135,7 @@ xValues=[]
 totnevt = 0
 # define variables
 nE = 5 * detectors[options.detector] # number of electrons in detector volume (8+1+1 per water molecule, i.e. 5 per hydrogen nucleus)
-sin2theta_w = 0.2317  
+sin2theta_w = 0.2317
 dSquared = (1.563738e+33)**2
 mE = 0.5109989 # MeV
 gF=1.16637e-11 # Fermi coupling constant
