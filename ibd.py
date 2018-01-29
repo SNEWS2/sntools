@@ -5,6 +5,12 @@ from math import pi, sin, cos, sqrt, gamma, exp, floor, ceil
 from scipy import integrate, interpolate
 import numpy as np
 
+'''
+Setup section.
+* Define command line options.
+* Parse input options (and perform some sanity checks).
+* Read in data from input file.
+'''
 parser = OptionParser()
 
 optdefault = "infile_eb.txt"
@@ -86,7 +92,83 @@ endtime = floor(float(endtime) * 1000)
 duration = endtime - starttime
 
 
-# return direction of a positron in relation to path of incident neutrino (z-direction)
+'''
+Particle physics section.
+* cross section for neutrino-electron scattering
+* directionality of scattered electron
+
+Based on Strumia/Vissani (2003), arXiv:astro-ph/0302055.
+'''
+mN = 939.5654 # neutron mass (MeV)
+mP = 938.2721 # proton mass (MeV)
+mE = 0.5109989 # electron mass (MeV)
+mPi = 139.57018 # pion mass (MeV)
+delta = mN-mP
+mAvg=(mP+mN)/2
+gF=1.16637e-11 # Fermi coupling constant
+
+def t_eNu_eE(eNu, eE):
+	return mN**2 - mP**2 - 2*mP*(eNu-eE)
+def x(eNu, eE):
+	return t_eNu_eE(eNu, eE) / (4*mAvg**2)
+def y(eNu, eE):
+	return 1 - t_eNu_eE(eNu, eE)/710000
+def z(eNu, eE):
+	return 1 - t_eNu_eE(eNu, eE)/1000000
+def f1(eNu, eE):
+	return (1 - 4.706*x(eNu, eE)) / ((1-x(eNu, eE)) * y(eNu, eE)**2)
+def f2(eNu, eE):
+	return 3.706 / ((1-x(eNu, eE)) * y(eNu, eE)**2)
+def g1(eNu, eE):
+	return -1.27 / z(eNu, eE)**2
+def g2(eNu, eE):
+	return 2 * g1(eNu, eE) * mAvg**2 / (mPi**2 - t_eNu_eE(eNu, eE)) 
+
+# AM, BM and CM for approximate calculation of absMsquared,
+# AM1, BM1 and CM1 for more precise calculation
+def AM(eNu, eE):
+	return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *(f1(eNu, eE)+f2(eNu, eE)))
+def AM1(eNu, eE):
+	return  1./16 * ( 
+	(t_eNu_eE(eNu, eE) - mE**2) * (
+		4 * f1(eNu, eE)**2 * (4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
+		+ 4 * g1(eNu, eE)**2 * (-4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
+		+ f2(eNu, eE)**2 * ((t_eNu_eE(eNu, eE)**2)/(mAvg**2) + 4*t_eNu_eE(eNu, eE) + 4*mE**2)
+		+ 4*mE**2 * t_eNu_eE(eNu, eE) * g2(eNu, eE)**2 / mAvg**2
+		+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) + mE**2)
+		+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
+	- delta**2 * (
+		(4*f1(eNu, eE)**2 + t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2) *
+		(4*mAvg**2 + t_eNu_eE(eNu, eE) - mE**2)
+		+ 4*g1(eNu, eE)**2 * (4*mAvg**2 - t_eNu_eE(eNu, eE) + mE**2)
+		+ 4*mE**2 * g2(eNu, eE)**2 * (t_eNu_eE(eNu, eE) - mE**2) / mAvg**2
+		+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) - mE**2)
+		+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
+	- 32*mE**2 * mAvg * delta * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE)))
+
+def BM(eNu, eE):
+	return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
+def BM1(eNu, eE):
+	return 1./16 * (
+	16*t_eNu_eE(eNu, eE) * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE))
+	+ 4*mE**2 * delta * (f2(eNu, eE)**2 + f1(eNu, eE)*f2(eNu, eE) + 2*g1(eNu, eE)*g2(eNu, eE))/mAvg)
+
+def CM(eNu, eE):
+	return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
+def CM1(eNu, eE):
+	return 1./16 * (4*(f1(eNu, eE)**2 + g1(eNu, eE)**2) - t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2)
+
+def sMinusU(eNu, eE):
+	return 2*mP*(eNu+eE) - mE**2
+
+def absMsquared(eNu, eE):
+	return AM(eNu, eE) - sMinusU(eNu, eE) * BM(eNu, eE) + sMinusU(eNu, eE)**2 * CM(eNu, eE)
+
+def dSigmadE(eNu, eE):
+	return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
+
+
+# return direction of outgoing positron, if incoming neutrino moves in z direction
 def direction(eneNu):
 	pMax = 0
 	cosT = 0
@@ -114,31 +196,68 @@ def dir_nuebar_p_sv(eneNu, cosT):
 		return -0.05396 + 0.35824 * (eneNu/100) + 0.03309 * (eneNu/100)**2
 	def dir_f2(eneNu):
 		return  0.00050 - 0.02390 * (eneNu/100) + 0.14537 * (eneNu/100)**2
-
+	
 	return 0.5 + dir_f1(eneNu) * cosT + dir_f2(eneNu) * (cosT**2 -1./3)
+
+
+'''
+Astrophysics section.
+* neutrinos are well described by a Gamma distribution
+* calculate energy-dependent flux at a fiducial distance of 10 kpc
+'''
+# Convert fiducial distance of 10 kpc into units of MeV**(-1)
+# see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
+dSquared = (1.563738e+33)**2 
+
+# energy distribution of neutrinos
+def gamma_dist(eNu):
+	return eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
+
+def dFluxdE(eNu, luminosity):
+	return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu)
+
+
+'''
+Preparation section.
+* Parse input data.
+* For each time step in the input data, calculate instantaneous event rate.
+* Interpolate to get event rate as a function of time.
+'''
+# double differential event rate
+def ddEventRate(eE, eNu):
+	return dSigmadE(eNu, eE)*dFluxdE(eNu, L)
+
+# calculate range for eE from eNu in center-of-mass (cm) frame
+def s(eNu):
+	return 2*mP*eNu + mP**2
+def pE_cm(eNu):
+	return (sqrt((s(eNu)-(mN-mE)**2)*(s(eNu)-(mN+mE)**2)))/(2*sqrt(s(eNu)))
+def eE_cm(eNu):
+	return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
+
+# Bounds for integration over eE and eNu
+delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
+eThr=((mN+mE)**2 - mP**2)/(2*mP) # threshold energy for IBD
+
+def eE_Min(eNu):
+	return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
+def eE_Max(eNu):
+	return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
+
+def bounds_eE(eNu):
+	return [eE_Min(eNu)+1, eE_Max(eNu)+1]
+def bounds_eNu():
+	return [eThr,100]
 
 nevtValues=[]
 tValues=[]
 aValues=[]
 eNuSquaredValues=[]
 totnevt = 0
-# define variables
-nP = detectors[options.detector] # number of protons in detector volume
-dSquared = (1.563738e+33)**2 # 10 kpc in units of MeV**(-1), see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
-mN = 939.5654 # MeV
-mP = 938.2721 # MeV
-mE = 0.5109989 # MeV
-mPi = 139.57018 # MeV
-delta = mN-mP
-mAvg=(mP+mN)/2
-delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
-gF=1.16637e-11 # Fermi coupling constant
-eThr=((mN+mE)**2 - mP**2)/(2*mP) # threshold energy for IBD
+nP = detectors[options.detector] # number of protons in detector
 
-# calculate the event rate at each time from the pre-processed data
 for line in indata:
-	
-	# import lists of time, and mean energy, mean squared energy and luminosity at time t
+	# get time, mean energy, mean squared energy, luminosity
 	t, a, eNuSquared, L = line.split(",")
 	t=float(t) * 1000 # convert to ms
 	tValues.append(t)
@@ -146,106 +265,28 @@ for line in indata:
 	aValues.append(a)
 	eNuSquared = float(eNuSquared)
 	eNuSquaredValues.append(eNuSquared)
-	L=float(L)
-
-	# the following code implements the energy-dependent cross section for IBD
-	# from Strumia/Vissani (2003), arXiv:astro-ph/0302055
+	L=float(L) * 624.151 # convert from erg/s to MeV/ms
 	
-	def t_eNu_eE(eNu, eE):
-		return mN**2 - mP**2 - 2*mP*(eNu-eE)
-	def x(eNu, eE):
-		return t_eNu_eE(eNu, eE) / (4*mAvg**2)
-	def y (eNu, eE):
-		return 1 - t_eNu_eE(eNu, eE)/710000
-	def z (eNu, eE):
-		return 1 - t_eNu_eE(eNu, eE)/1000000
-	def f1 (eNu, eE):
-		return (1 - 4.706*x(eNu, eE)) / ((1-x(eNu, eE)) * y(eNu, eE)**2)
-	def f2 (eNu, eE):
-		return 3.706 / ((1-x(eNu, eE)) * y(eNu, eE)**2)
-	def g1(eNu, eE):
-		return -1.27 / z(eNu, eE)**2
-	def g2(eNu, eE):
-		return 2 * g1(eNu, eE) * mAvg**2 / (mPi**2 - t_eNu_eE(eNu, eE)) 
-	   
-	# AM, BM and CM for approximate calculation of absMsquared,
-	# AM1, BM1 and CM1 for more precise calculation
-	def AM(eNu, eE):
-		return (mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t_eNu_eE(eNu, eE)-mE**2)) - (mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2)) - (2 * mE**2 * mAvg * delta * g1(eNu, eE) *(f1(eNu, eE)+f2(eNu, eE)))
-	def AM1(eNu, eE):
-		return  1./16 * ( 
-		(t_eNu_eE(eNu, eE) - mE**2) * (
-			4 * f1(eNu, eE)**2 * (4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
-			+ 4 * g1(eNu, eE)**2 * (-4*mAvg**2 + t_eNu_eE(eNu, eE) + mE**2)
-			+ f2(eNu, eE)**2 * ((t_eNu_eE(eNu, eE)**2)/(mAvg**2) + 4*t_eNu_eE(eNu, eE) + 4*mE**2)
-			+ 4*mE**2 * t_eNu_eE(eNu, eE) * g2(eNu, eE)**2 / mAvg**2
-			+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) + mE**2)
-			+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
-		- delta**2 * (
-			(4*f1(eNu, eE)**2 + t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2) *
-			(4*mAvg**2 + t_eNu_eE(eNu, eE) - mE**2)
-			+ 4*g1(eNu, eE)**2 * (4*mAvg**2 - t_eNu_eE(eNu, eE) + mE**2)
-			+ 4*mE**2 * g2(eNu, eE)**2 * (t_eNu_eE(eNu, eE) - mE**2) / mAvg**2
-			+ 8*f1(eNu, eE)*f2(eNu, eE) * (2*t_eNu_eE(eNu, eE) - mE**2)
-			+ 16*mE**2 * g1(eNu, eE)*g2(eNu, eE))
-		- 32*mE**2 * mAvg * delta * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE)))
-	def BM(eNu, eE):
-		return t_eNu_eE(eNu, eE)*g1(eNu, eE)*(f1(eNu, eE)+f2(eNu, eE))
-	def BM1(eNu, eE):
-		return 1./16 * (
-		16*t_eNu_eE(eNu, eE) * g1(eNu, eE)*(f1(eNu, eE) + f2(eNu, eE))
-		+ 4*mE**2 * delta * (f2(eNu, eE)**2 + f1(eNu, eE)*f2(eNu, eE) + 2*g1(eNu, eE)*g2(eNu, eE))/mAvg)
-	def CM(eNu, eE):
-		return ((f1(eNu, eE)**2) + (g1(eNu, eE)**2))/4
-	def CM1(eNu, eE):
-		return 1./16 * (4*(f1(eNu, eE)**2 + g1(eNu, eE)**2) - t_eNu_eE(eNu, eE) * f2(eNu, eE)**2 / mAvg**2)
-	def sMinusU(eNu, eE):
-		return 2*mP*(eNu+eE) - mE**2
-	def absMsquared(eNu, eE):
-		return AM(eNu, eE) - sMinusU(eNu, eE) * BM(eNu, eE) + sMinusU(eNu, eE)**2 * CM(eNu, eE)
-	def dSigmadE(eNu, eE):
-		return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
+	alpha = (2*a**2 - eNuSquared) / (eNuSquared - a**2)
 	
-	# calculate the energy-dependent flux per ms
-	alpha = (2*a**2-eNuSquared)/(eNuSquared-a**2)
-	def gamma_dist(eNu): # distribution of neutrino energies
-		return eNu**alpha / gamma(alpha+1) * ((alpha+1)/a)**(alpha+1) * exp(-(alpha+1) * eNu/a)
-	def dFluxdE(eNu):
-		return 1/(4*pi*dSquared)*((L*624.151)/a)*gamma_dist(eNu)
-	
-	# calculate range for eE from eNu in center-of-mass (cm) frame
-	def s(eNu):
-		return 2*mP*eNu + mP**2
-	def pE_cm(eNu):
-		return (sqrt((s(eNu)-(mN-mE)**2)*(s(eNu)-(mN+mE)**2)))/(2*sqrt(s(eNu)))
-	def eE_cm(eNu):
-		return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
-	def eE_Min(eNu):
-		return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
-	def eE_Max(eNu):
-		return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
-	
-	# integrate over eE and eNu to obtain event rate at time t
-	def f(eE, eNu):
-		return dSigmadE(eNu, eE)*dFluxdE(eNu)
-	def bounds_eNu():
-		return [eThr,100]
-	def bounds_eE(eNu):
-		return [eE_Min(eNu)+1, eE_Max(eNu)+1]
-	
-	# calculate the detector event rate at time t
-	simnevt = nP * integrate.nquad(f, [bounds_eE, bounds_eNu]) [0]
+	# integrate over eE and then eNu to obtain the event rate at time t
+	simnevt = nP * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu]) [0]
 	
 	# create a list of event rates at time t for input into interpolation function
 	nevtValues.append(simnevt)
 
-# interpolate the mean energy and mean squared energy
+# interpolate the mean energy, mean squared energy and event rate
 interpolatedEnergy = interpolate.pchip(tValues, aValues)
 interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
+interpolatedNevt = interpolate.pchip(tValues, nevtValues)
 
-# interpolate the event rate            
-interpolatedNevt = interpolate.pchip(tValues, nevtValues) 
 
+'''
+Event generation section.
+* For each time bin, get number of events from a Poisson distribution.
+* Generate random events with appropriate distribution of time/energy/direction.
+* Write them to output file.
+'''
 binWidth = 1 # bin width in ms
 binNr = np.arange(1, floor(duration/binWidth)+1) # number of full-width bins
 if verbose:
