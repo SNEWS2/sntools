@@ -172,24 +172,6 @@ def f2(eNu, eE):
 def f3(eNu, eE):
 	return ((eE/l(eNu)) * log ( (eE + l(eNu))/mE) - 1) * 2 * log(1 - z(eNu, eE) - mE/(eE + l(eNu)))
 
-# return direction of scattered electron, if incoming neutrino moves in z direction
-def direction(eNu):
-	pMax = 0
-	nCosTBins = 500
-	cosTBinWidth = 1./nCosTBins
-	# find the largest value of p
-	for j in range(nCosTBins):
-		cosT = cosTBinWidth * (j+0.5) # 500 steps in the interval [0,1)
-		p = dSigmadCosT(eNu, cosT)
-		if p > pMax:
-			pMax = p
-	while (True):
-		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
-		if dSigmadCosT(eNu, cosT) > pMax * np.random.random():
-			sinT = sin(np.arccos(cosT))
-			phi = 2 * pi * np.random.random() # randomly distributed in [0, 2 pi)
-			break
-	return (sinT*cos(phi), sinT*sin(phi), cosT)
 
 # energy of electron scattered into direction cosT by a neutrino with energy eNu
 def eneE(eNu, cosT):
@@ -284,6 +266,32 @@ Event generation section.
 * Generate random events with appropriate distribution of time/energy/direction.
 * Write them to output file.
 '''
+# Use rejection sampling to get a value from the distribution dist
+def rejection_sample(dist, min_val, max_val, n_bins):
+	p_max = 0
+	bin_width = float(max_val - min_val) / n_bins
+	
+	for j in range(n_bins):
+		val = min_val + bin_width * (j + 0.5)
+		p = dist(val)
+		if p > p_max:
+			p_max = p
+	
+	while True:
+		val = min_val + (max_val - min_val) * np.random.random()
+		if p_max * np.random.random() < dist(val):
+			break
+	
+	return val
+
+# return direction of scattered electron, if incoming neutrino moves in z direction
+def get_direction(eNu):
+	dist = lambda x: dSigmadCosT(eNu, x)
+	cosT = rejection_sample(dist, 0, 1, 500)
+	sinT = sin(np.arccos(cosT))
+	phi = 2 * pi * np.random.random() # randomly distributed in [0, 2 pi)
+	return (sinT*cos(phi), sinT*sin(phi), cosT)
+
 binWidth = 1 # bin width in ms
 binNr = np.arange(1, floor(duration/binWidth)+1) # number of full-width bins
 if verbose:
@@ -321,7 +329,7 @@ for i in binNr:
 		# Define properties of the particle
 		t = boundsMin + np.random.random() * binWidth
 		eNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
-		(dirx, diry, dirz) = direction(eNu)
+		(dirx, diry, dirz) = get_direction(eNu)
 		ene = eneE(eNu, dirz)
 		# print out [t, pid, energy, dirx, diry, dirz] to file
 		outfile.write("%f, 11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
