@@ -126,10 +126,10 @@ def dSigmadT(eNu, eE):
 	return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (1/137.0/pi) * f1(eNu, eE)) + gR(eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*((1/137.0)/pi))- gR(eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + ((1/137.)/pi) * f3(eNu, eE)))
 
 # Appendix A: Radiative Corrections
-def l(eNu):
-	return sqrt(eNu**2 - mE**2)
-def beta(eNu):
-	return l(eNu)/eNu
+def l(eE):
+	return sqrt(eE**2 - mE**2)
+def beta(eNu, eE):
+	return l(eE)/eNu
 def T(eE):# kinetic energy of recoil electron: total energy minus rest mass
 	return eE - mE
 def z(eNu, eE):
@@ -164,13 +164,13 @@ def gR(eE):
 # Appendix B: QED Effects
 # f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z)
 def spence(n):
-	return integrate.quad(lambda n: log(1-n)/n, 0, n) [0]
+	return integrate.quad(lambda t: log(abs(1-t))/t, 0, n) [0]
 def f1(eNu, eE):
-	return ((eE/l(eNu)) * log((eE+l(eNu))/mE) - 1) * (2.0*log(1-z(eNu, eE) - mE/(eE+l(eNu))) - log(1.0-z(eNu, eE)) - (1/2.0)*log(z(eNu, eE)) - 5/12.0) + (1/2.0) * (spence(z(eNu, eE)) - spence(beta(eNu))) - (1/2.0) * (log(1-z(eNu, eE)))**2 - (11/12.0 + z(eNu, eE)/2.0) * log(1-z(eNu, eE)) + z(eNu, eE)* (log(z(eNu, eE)) + (1/2.0)*log((2*a)/mE)) - (31/18.0 + (1/12.0)*log(z(eNu, eE)))* beta(eNu) - (11/12.0) * z(eNu, eE) + (z(eNu, eE)**2)/24.0
+	return ((eE/l(eE)) * log((eE+l(eE))/mE) - 1) * (2.0*log(1-z(eNu, eE) - mE/(eE+l(eE))) - log(1.0-z(eNu, eE)) - (1/2.0)*log(z(eNu, eE)) - 5/12.0) + (1/2.0) * (spence(z(eNu, eE)) - spence(beta(eNu, eE))) - (1/2.0) * (log(1-z(eNu, eE)))**2 - (11/12.0 + z(eNu, eE)/2.0) * log(1-z(eNu, eE)) + z(eNu, eE)* (log(z(eNu, eE)) + (1/2.0)*log((2*a)/mE)) - (31/18.0 + (1/12.0)*log(z(eNu, eE)))* beta(eNu, eE) - (11/12.0) * z(eNu, eE) + (z(eNu, eE)**2)/24.0
 def f2(eNu, eE):
-	return ((eE/l(eNu)) * log ((eE + l(eNu))/mE) - 1.) * (((1. - z(eNu, eE))**2) * (2*log(1. - z(eNu, eE) - (mE/(eE+l(eNu))))-log(1.-z(eNu, eE)) - (log (z(eNu, eE)))/2.0 - 2/3.0) - (z(eNu, eE)**2 * log (z(eNu, eE)) + 1 - z(eNu, eE))/2.0 ) - ((1-z(eNu, eE))**2 / 2.0)*((log(1-z(eNu, eE)))**2 + beta(eNu) * (spence(1-z(eNu, eE)) - log(z(eNu, eE))*log(1-z(eNu, eE)))) + log (1-z(eNu, eE)) * (((z(eNu, eE)**2) / 2.0) * log(z(eNu, eE)) + ((1 - z(eNu, eE))/3.0) * (2*z(eNu, eE) - 1/2.0)) - (z(eNu, eE)**2 / 2.0) * spence(1-z(eNu, eE)) - (z(eNu, eE) * (1-2*z(eNu, eE))/3.0) * log (z(eNu, eE)) - z(eNu, eE) * ((1- z(eNu, eE))/6.0) - (beta(eNu)/12.0)* (log(z(eNu, eE)) + (1 - z(eNu, eE)) * ((115 - 109 * z(eNu, eE))/6.0))
+	return ((eE/l(eE)) * log ((eE + l(eE))/mE) - 1.) * (((1. - z(eNu, eE))**2) * (2*log(1. - z(eNu, eE) - (mE/(eE+l(eE))))-log(1.-z(eNu, eE)) - (log (z(eNu, eE)))/2.0 - 2/3.0) - (z(eNu, eE)**2 * log (z(eNu, eE)) + 1 - z(eNu, eE))/2.0 ) - ((1-z(eNu, eE))**2 / 2.0)*((log(1-z(eNu, eE)))**2 + beta(eNu, eE) * (spence(1-z(eNu, eE)) - log(z(eNu, eE))*log(1-z(eNu, eE)))) + log (1-z(eNu, eE)) * (((z(eNu, eE)**2) / 2.0) * log(z(eNu, eE)) + ((1 - z(eNu, eE))/3.0) * (2*z(eNu, eE) - 1/2.0)) - (z(eNu, eE)**2 / 2.0) * spence(1-z(eNu, eE)) - (z(eNu, eE) * (1-2*z(eNu, eE))/3.0) * log (z(eNu, eE)) - z(eNu, eE) * ((1- z(eNu, eE))/6.0) - (beta(eNu, eE)/12.0)* (log(z(eNu, eE)) + (1 - z(eNu, eE)) * ((115 - 109 * z(eNu, eE))/6.0))
 def f3(eNu, eE):
-	return ((eE/l(eNu)) * log ( (eE + l(eNu))/mE) - 1) * 2 * log(1 - z(eNu, eE) - mE/(eE + l(eNu)))
+	return ((eE/l(eE)) * log ( (eE + l(eE))/mE) - 1) * 2 * log(1 - z(eNu, eE) - mE/(eE + l(eE)))
 
 
 # energy of electron scattered into direction cosT by a neutrino with energy eNu
