@@ -214,19 +214,19 @@ def ddEventRate(eE, eNu):
 	else:
 		return 0
 
-# Bounds for integration over eE (from Super-K code)
-eE_Min = 0.7 # Cherenkov threshold
-def eE_Max(eNu):
-	return ((2*eNu**2)/(2*eNu + mE)) + mE # also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf; also eE_Max(cosT) = (2*mE)/(arccos(cosT))**2
+# Bounds for integration over eE
+eE_min = 0.77 # Cherenkov threshold in water (refraction index n=1.34)
+def eE_max(eNu):
+	return ((2*eNu**2)/(2*eNu + mE)) + mE # this is eneE(eNu, cosT=1); also eE_max(cosT) = (2*mE)/(arccos(cosT))**2
+def bounds_eE(eNu):
+	return [eE_min, eE_max(eNu)]
 
 # Bounds for integration over eNu
 def eNu_min(eE):
-	return (T(eE)/2.)*(1 + sqrt(1 + (2*mE)/T(eE))) # from SuperK code, also explained at //www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.pdf
-
+	return (T(eE)/2.)*(1 + sqrt(1 + (2*mE)/T(eE))) # inversion of eE_max(eNu)
+eNu_max = 50
 def bounds_eNu():
-	return [eNu_min(0.9), 50] # actual minimum 0.33370763820956262 at eE=0.7 MeV calculated using eNu_min(eE) equation
-def bounds_eE(eNu):
-	return [eE_Min + 1, eE_Max(eNu) + 1]
+	return [eNu_min(eE_min), eNu_max]
 
 nevtValues=[]
 tValues=[]
