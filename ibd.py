@@ -168,36 +168,12 @@ def dSigmadE(eNu, eE):
 	return 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2 * eNu**2) * absMsquared(eNu, eE)
 
 
-# return direction of outgoing positron, if incoming neutrino moves in z direction
-def direction(eneNu):
-	pMax = 0
-	cosT = 0
-	nCosTBins = 1000
-	cosTBinWidth = 2./nCosTBins
-	for j in range(nCosTBins):
-		cosT = -1 + cosTBinWidth*(j+0.5) # 1000 steps in the interval [-1,1]
-		p = dir_nuebar_p_sv(eneNu, cosT)
-		if p > pMax:
-			pMax = p
-	
-	while (True):
-		cosT = 2*np.random.random() - 1 # randomly distributed in interval [-1,1)
-		if dir_nuebar_p_sv(eneNu, cosT) > pMax*np.random.random():
-			sinT = sin(np.arccos(cosT))
-			phi = 2 * pi * np.random.random() - pi # randomly distributed in [-pi, pi)
-			break
-	
-	return (sinT*cos(phi), sinT*sin(phi), cosT)
-
 # probability distribution for the angle at which the positron is emitted
 # numerical values are from Ishino-san's code for SK, based on email from Vissani
-def dir_nuebar_p_sv(eneNu, cosT):
-	def dir_f1(eneNu):
-		return -0.05396 + 0.35824 * (eneNu/100) + 0.03309 * (eneNu/100)**2
-	def dir_f2(eneNu):
-		return  0.00050 - 0.02390 * (eneNu/100) + 0.14537 * (eneNu/100)**2
-	
-	return 0.5 + dir_f1(eneNu) * cosT + dir_f2(eneNu) * (cosT**2 -1./3)
+def dir_nuebar_p_sv(eNu, cosT):
+	c1 = -0.05396 + 0.35824 * (eNu/100) + 0.03309 * (eNu/100)**2
+	c2 =  0.00050 - 0.02390 * (eNu/100) + 0.14537 * (eNu/100)**2
+	return 0.5 + c1 * cosT + c2 * (cosT**2 -1./3)
 
 
 '''
@@ -210,11 +186,11 @@ Astrophysics section.
 dSquared = (1.563738e+33)**2 
 
 # energy distribution of neutrinos
-def gamma_dist(eNu):
+def gamma_dist(eNu, alpha, a):
 	return eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
 
-def dFluxdE(eNu, luminosity):
-	return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu)
+def dFluxdE(eNu, luminosity, alpha, a):
+	return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu, alpha, a)
 
 
 '''
@@ -224,8 +200,8 @@ Preparation section.
 * Interpolate to get event rate as a function of time.
 '''
 # double differential event rate
-def ddEventRate(eE, eNu):
-	return dSigmadE(eNu, eE)*dFluxdE(eNu, L)
+def ddEventRate(eE, eNu, alpha, a):
+	return dSigmadE(eNu, eE)*dFluxdE(eNu, L, alpha, a)
 
 # calculate range for eE from eNu in center-of-mass (cm) frame
 def s(eNu):
@@ -235,19 +211,18 @@ def pE_cm(eNu):
 def eE_cm(eNu):
 	return (s(eNu)-mN**2+mE**2)/(2*sqrt(s(eNu)))
 
-# Bounds for integration over eE and eNu
-delta_cm = (mN**2 - mP**2 - mE**2)/(2*mP)
-eThr=((mN+mE)**2 - mP**2)/(2*mP) # threshold energy for IBD
-
-def eE_Min(eNu):
+# Bounds for integration over eE
+delta_cm = (mN**2 - mP**2 - mE**2) / (2*mP)
+def eE_min(eNu):
 	return eNu - delta_cm - (eNu/sqrt(s(eNu)) * (eE_cm(eNu) + pE_cm(eNu)))
-def eE_Max(eNu):
+def eE_max(eNu):
 	return eNu - delta_cm - (eNu/sqrt(s(eNu)) *(eE_cm(eNu) - pE_cm(eNu)))
+def bounds_eE(eNu, *args): # ignore additional arguments handed over by integrate.nquad()
+	return [eE_min(eNu)+1, eE_max(eNu)+1]
 
-def bounds_eE(eNu):
-	return [eE_Min(eNu)+1, eE_Max(eNu)+1]
-def bounds_eNu():
-	return [eThr,100]
+# Bounds for integration over eNu
+eThr = ((mN+mE)**2 - mP**2) / (2*mP) # threshold energy for IBD
+bounds_eNu = [eThr, 100]
 
 nevtValues=[]
 tValues=[]
@@ -270,7 +245,7 @@ for line in indata:
 	alpha = (2*a**2 - eNuSquared) / (eNuSquared - a**2)
 	
 	# integrate over eE and then eNu to obtain the event rate at time t
-	simnevt = nP * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu]) [0]
+	simnevt = nP * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=(alpha, a)) [0]
 	
 	# create a list of event rates at time t for input into interpolation function
 	nevtValues.append(simnevt)
@@ -287,6 +262,38 @@ Event generation section.
 * Generate random events with appropriate distribution of time/energy/direction.
 * Write them to output file.
 '''
+# Use rejection sampling to get a value from the distribution dist
+def rejection_sample(dist, min_val, max_val, n_bins):
+	p_max = 0
+	bin_width = float(max_val - min_val) / n_bins
+	
+	for j in range(n_bins):
+		val = min_val + bin_width * (j + 0.5)
+		p = dist(val)
+		if p > p_max:
+			p_max = p
+	
+	while True:
+		val = min_val + (max_val - min_val) * np.random.random()
+		if p_max * np.random.random() < dist(val):
+			break
+	
+	return val
+
+# return energy of interacting neutrino
+def get_eNu(alpha, a):
+	dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, alpha, a))[0]
+	eNu = rejection_sample(dist, *bounds_eNu, n_bins=200)
+	return eNu
+
+# return direction of outgoing positron, if incoming neutrino moves in z direction
+def get_direction(eNu):
+	dist = lambda x: dir_nuebar_p_sv(eNu, x)
+	cosT = rejection_sample(dist, -1, 1, 1000)
+	sinT = sin(np.arccos(cosT))
+	phi = 2 * pi * np.random.random() # randomly distributed in [0, 2 pi)
+	return (sinT*cos(phi), sinT*sin(phi), cosT)
+
 binWidth = 1 # bin width in ms
 binNr = np.arange(1, floor(duration/binWidth)+1) # number of full-width bins
 if verbose:
@@ -325,16 +332,16 @@ for i in binNr:
 		
 		# generate a neutrino energy above eThr
 		while (True):
-			eneNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
-			if eneNu > eThr:
+			eNu = get_eNu(binnedAlpha, binnedEnergy)
+			if eNu > eThr:
 				break
 		
 		# generate direction of positron at given neutrino energy
-		(dirx, diry, dirz) = direction(eneNu)
+		(dirx, diry, dirz) = get_direction(eNu)
 		# generate positron energy at given neutrino energy and cosT (Strumia & Vissani, 2003)
-		epsilon = eneNu/mP
+		epsilon = eNu/mP
 		kappa = (1 + epsilon)**2 - (epsilon * dirz)**2
-		ene = ((eneNu - delta_cm) * (1 + epsilon) + epsilon * dirz * sqrt((eneNu - delta_cm)**2 - mE**2 * kappa)) / kappa
+		ene = ((eNu - delta_cm) * (1 + epsilon) + epsilon * dirz * sqrt((eNu - delta_cm)**2 - mE**2 * kappa)) / kappa
 		# print out [t, PID, energy, dirx, diry, dirz] to file
 		outfile.write("%f, -11, %f, %f, %f, %f\n" % (t, ene, dirx, diry, dirz))
 
