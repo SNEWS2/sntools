@@ -166,7 +166,7 @@ def gR(eE):
 def spence(n):
 	return integrate.quad(lambda t: log(abs(1-t))/t, 0, n) [0]
 def f1(eNu, eE):
-	return ((eE/l(eE)) * log((eE+l(eE))/mE) - 1) * (2.0*log(1-z(eNu, eE) - mE/(eE+l(eE))) - log(1.0-z(eNu, eE)) - (1/2.0)*log(z(eNu, eE)) - 5/12.0) + (1/2.0) * (spence(z(eNu, eE)) - spence(beta(eNu, eE))) - (1/2.0) * (log(1-z(eNu, eE)))**2 - (11/12.0 + z(eNu, eE)/2.0) * log(1-z(eNu, eE)) + z(eNu, eE)* (log(z(eNu, eE)) + (1/2.0)*log((2*a)/mE)) - (31/18.0 + (1/12.0)*log(z(eNu, eE)))* beta(eNu, eE) - (11/12.0) * z(eNu, eE) + (z(eNu, eE)**2)/24.0
+	return ((eE/l(eE)) * log((eE+l(eE))/mE) - 1) * (2.0*log(1-z(eNu, eE) - mE/(eE+l(eE))) - log(1.0-z(eNu, eE)) - (1/2.0)*log(z(eNu, eE)) - 5/12.0) + (1/2.0) * (spence(z(eNu, eE)) - spence(beta(eNu, eE))) - (1/2.0) * (log(1-z(eNu, eE)))**2 - (11/12.0 + z(eNu, eE)/2.0) * log(1-z(eNu, eE)) + z(eNu, eE)* (log(z(eNu, eE)) + (1/2.0)*log((2*eNu)/mE)) - (31/18.0 + (1/12.0)*log(z(eNu, eE)))* beta(eNu, eE) - (11/12.0) * z(eNu, eE) + (z(eNu, eE)**2)/24.0
 def f2(eNu, eE):
 	return ((eE/l(eE)) * log ((eE + l(eE))/mE) - 1.) * (((1. - z(eNu, eE))**2) * (2*log(1. - z(eNu, eE) - (mE/(eE+l(eE))))-log(1.-z(eNu, eE)) - (log (z(eNu, eE)))/2.0 - 2/3.0) - (z(eNu, eE)**2 * log (z(eNu, eE)) + 1 - z(eNu, eE))/2.0 ) - ((1-z(eNu, eE))**2 / 2.0)*((log(1-z(eNu, eE)))**2 + beta(eNu, eE) * (spence(1-z(eNu, eE)) - log(z(eNu, eE))*log(1-z(eNu, eE)))) + log (1-z(eNu, eE)) * (((z(eNu, eE)**2) / 2.0) * log(z(eNu, eE)) + ((1 - z(eNu, eE))/3.0) * (2*z(eNu, eE) - 1/2.0)) - (z(eNu, eE)**2 / 2.0) * spence(1-z(eNu, eE)) - (z(eNu, eE) * (1-2*z(eNu, eE))/3.0) * log (z(eNu, eE)) - z(eNu, eE) * ((1- z(eNu, eE))/6.0) - (beta(eNu, eE)/12.0)* (log(z(eNu, eE)) + (1 - z(eNu, eE)) * ((115 - 109 * z(eNu, eE))/6.0))
 def f3(eNu, eE):
