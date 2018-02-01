@@ -194,11 +194,11 @@ Astrophysics section.
 dSquared = (1.563738e+33)**2 
 
 # energy distribution of neutrinos
-def gamma_dist(eNu):
+def gamma_dist(eNu, alpha, a):
 	return eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
 
-def dFluxdE(eNu, luminosity):
-	return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu)
+def dFluxdE(eNu, luminosity, alpha, a):
+	return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu, alpha, a)
 
 
 '''
@@ -208,9 +208,9 @@ Preparation section.
 * Interpolate to get event rate as a function of time.
 '''
 # double differential event rate
-def ddEventRate(eE, eNu):
+def ddEventRate(eE, eNu, alpha, a):
 	if eNu>=eNu_min(eE):
-		return dSigmadT(eNu, eE)*dFluxdE(eNu, L)
+		return dSigmadT(eNu, eE)*dFluxdE(eNu, L, alpha, a)
 	else:
 		return 0
 
@@ -218,15 +218,14 @@ def ddEventRate(eE, eNu):
 eE_min = 0.77 # Cherenkov threshold in water (refraction index n=1.34)
 def eE_max(eNu):
 	return ((2*eNu**2)/(2*eNu + mE)) + mE # this is eneE(eNu, cosT=1); also eE_max(cosT) = (2*mE)/(arccos(cosT))**2
-def bounds_eE(eNu):
+def bounds_eE(eNu, *args): # ignore additional arguments handed over by integrate.nquad()
 	return [eE_min, eE_max(eNu)]
 
 # Bounds for integration over eNu
 def eNu_min(eE):
 	return (T(eE)/2.)*(1 + sqrt(1 + (2*mE)/T(eE))) # inversion of eE_max(eNu)
 eNu_max = 50
-def bounds_eNu():
-	return [eNu_min(eE_min), eNu_max]
+bounds_eNu = [eNu_min(eE_min), eNu_max]
 
 nevtValues=[]
 tValues=[]
@@ -249,7 +248,7 @@ for line in indata:
 	alpha = (2*a**2 - eNuSquared) / (eNuSquared - a**2)
 	
 	# integrate over eE and then eNu to obtain the event rate at time t
-	simnevt = nE * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu]) [0]
+	simnevt = nE * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=(alpha, a)) [0]
 	
 	# create a list of nevt values at time t for input into interpolation function
 	nevtValues.append(simnevt)
@@ -283,6 +282,12 @@ def rejection_sample(dist, min_val, max_val, n_bins):
 			break
 	
 	return val
+
+# return energy of interacting neutrino
+def get_eNu(alpha, a):
+	dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, alpha, a))[0]
+	eNu = rejection_sample(dist, *bounds_eNu, n_bins=200)
+	return eNu
 
 # return direction of scattered electron, if incoming neutrino moves in z direction
 def get_direction(eNu):
@@ -328,7 +333,7 @@ for i in binNr:
 	for i in range(binnedNevtRnd):
 		# Define properties of the particle
 		t = boundsMin + np.random.random() * binWidth
-		eNu = np.random.gamma(binnedAlpha + 1, binnedEnergy/(binnedAlpha + 1))
+		eNu = get_eNu(binnedAlpha, binnedEnergy)
 		(dirx, diry, dirz) = get_direction(eNu)
 		ene = eneE(eNu, dirz)
 		# print out [t, pid, energy, dirx, diry, dirz] to file
