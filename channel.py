@@ -127,7 +127,7 @@ Import section
 * Import channel-specific stuff from separate files
 '''
 from importlib import import_module
-channel_module = import_module(channel + "_") # TODO
+channel_module = import_module(channel)
 
 if channel == "ibd":
 	dSigmadT = getattr(channel_module,"dSigmadE")
