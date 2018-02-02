@@ -1,4 +1,7 @@
-# ignore input and output files (come from supernova simulation, may not be openly available)
+# ignore input and output files
 infile_*.txt
 tmp_*.txt
 outfile.kin
+
+# ignore compiled python scripts
+*.pyc
