@@ -45,6 +45,14 @@ parser.add_option("-d", "--detector", dest="detector",
                       % (optchoices, optdefault),
                   choices=optchoices, default=optdefault)
 
+optchoices = ["ibd", "es"]
+optdefault = "ibd"
+parser.add_option("-c", "--channel", dest="channel",
+                  help="Interaction channel to use. Currently, inverse beta decay (ibd) and electron scattering (es) are supported. Choices: %s. Default: %s" \
+                      % (optchoices, optdefault),
+                  metavar="INTCHANNEL",
+                  choices=optchoices, default=optdefault)
+
 optdefault = "e"
 parser.add_option("-f", "--flavor", dest="flavor",
                   help="Neutrino flavor. Choices: 'e', 'eb', 'x', 'xb'. Default: '%s'." \
@@ -72,10 +80,19 @@ if (normalization <= 0 or normalization > 2):
 	print("Error: Normalization factor should be in the interval (0,2]. Aborting ...")
 	exit()
 
+channel = options.channel
+if channel not in ("ibd", "es"):
+	print("Error: Channel needs to be one of 'ibd', 'es'. Aborting ...")
+	exit()
+
 flavor = options.flavor
 if flavor not in ("e", "eb", "x", "xb"):
 	print("Error: flavor needs to be one of 'e', 'eb', 'x', 'xb'. Aborting ...")
 	exit()
+# This is a temporary way of making the flavor accessible in `es_.py`
+# TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
+import __builtin__
+__builtin__._flavor = flavor
 
 # read data from input file, remove lines with comments and empty lines
 with open(options.input) as infile:
@@ -110,10 +127,9 @@ Import section
 * Import channel-specific stuff from separate files
 '''
 from importlib import import_module
-channel = "es_" # TODO
-channel_module = import_module(channel)
+channel_module = import_module(channel + "_") # TODO
 
-if channel == "ibd_":
+if channel == "ibd":
 	dSigmadT = getattr(channel_module,"dSigmadE")
 	eneE = getattr(channel_module,"get_eE")
 	direction_distribution = getattr(channel_module,"dir_nuebar_p_sv")
@@ -122,8 +138,7 @@ if channel == "ibd_":
 	targets_per_molecule = getattr(channel_module,"targets_per_molecule")
 	pid = getattr(channel_module,"pid")
 
-elif channel == "es_":
-	print "Getting cross sections from 'es_.py' ..."
+elif channel == "es":
 	dSigmadT = getattr(channel_module,"dSigmadT")
 	eneE = getattr(channel_module,"eneE")
 	direction_distribution = getattr(channel_module,"dSigmadCosT")
@@ -131,7 +146,6 @@ elif channel == "es_":
 	bounds_eNu = getattr(channel_module,"bounds_eNu")
 	targets_per_molecule = getattr(channel_module,"targets_per_molecule")
 	pid = getattr(channel_module,"pid")
-	print "Done!"
 
 
 '''
@@ -167,7 +181,7 @@ tValues=[]
 aValues=[]
 eNuSquaredValues=[]
 totnevt = 0
-n_targets = targets_per_molecule * detectors[options.detector] / 2
+n_targets = targets_per_molecule * detectors[options.detector] / 2 # TODO
 
 for line in indata:
 	# get time, mean energy, mean squared energy, luminosity

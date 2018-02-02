@@ -2,7 +2,8 @@ from math import pi, sqrt, log
 from scipy import integrate
 
 
-flavor = "e" # TODO
+# get flavor from `__builtin__._flavor`, which is set in `channel.py`
+flavor = _flavor # TODO
 
 targets_per_molecule = 10 # number of electrons per water molecule
 pid = 11

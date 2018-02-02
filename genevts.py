@@ -118,7 +118,7 @@ tmpfiles = []
 def execute(this_channel, original_flavor, n, detected_flavor=""):
 	tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
 	infile = "%s_%s.txt" % (input, original_flavor)
-	cmd = "python %s.py --input=%s --output=%s --normalization=%s --detector=%s" % (this_channel, infile, tmpfile, n, detector)
+	cmd = "python channel.py --channel=%s --input=%s --output=%s --normalization=%s --detector=%s" % (this_channel, infile, tmpfile, n, detector)
 	if this_channel == "es": cmd = cmd + " --flavor=%s" % detected_flavor
 	if starttime: cmd = cmd + " --starttime=%s" % starttime
 	if endtime: cmd = cmd + " --endtime=%s" % endtime
