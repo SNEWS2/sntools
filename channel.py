@@ -35,9 +35,9 @@ parser.add_option("-n", "--normalization", dest="normalization",
                   metavar="NORMALIZATION",
                   default=optdefault)
 
-# number of free protons (i.e. H nuclei) in each detector 
-detectors = {"SuperK": 2.1e+33,
-             "HyperK": 1.4e+34} # one-tank configuration
+# inner detector mass, in metric kt
+detectors = {"SuperK": 32.5,
+             "HyperK": 220} # one-tank configuration
 optchoices = detectors.keys() # list(detectors.keys()) in python3
 optdefault = detectors.keys()[0]
 parser.add_option("-d", "--detector", dest="detector",
@@ -181,7 +181,8 @@ tValues=[]
 aValues=[]
 eNuSquaredValues=[]
 totnevt = 0
-n_targets = targets_per_molecule * detectors[options.detector] / 2 # TODO
+molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
+n_targets = targets_per_molecule * molecules_per_kt * detectors[options.detector]
 
 for line in indata:
 	# get time, mean energy, mean squared energy, luminosity
