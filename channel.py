@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
 def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normalization=1.0, detector="SuperK", starttime=None, endtime=None, verbose=True):
-	from math import pi, sin, cos, gamma, exp, floor, ceil
+	from math import pi, sin, cos, acos, gamma, exp, floor, ceil
 	from scipy import integrate, interpolate
 	import numpy as np
+	import random
 
 
 	'''
@@ -155,8 +156,8 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 				p_max = p
 	
 		while True:
-			val = min_val + (max_val - min_val) * np.random.random()
-			if p_max * np.random.random() < dist(val):
+			val = min_val + (max_val - min_val) * random.random()
+			if p_max * random.random() < dist(val):
 				break
 	
 		return val
@@ -171,8 +172,8 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	def get_direction(eNu):
 		dist = lambda x: direction_distribution(eNu, x)
 		cosT = rejection_sample(dist, -1, 1, 200)
-		sinT = sin(np.arccos(cosT))
-		phi = 2 * pi * np.random.random() # randomly distributed in [0, 2 pi)
+		sinT = sin(acos(cosT))
+		phi = 2 * pi * random.random() # randomly distributed in [0, 2 pi)
 		return (sinT*cos(phi), sinT*sin(phi), cosT)
 
 	binWidth = 1 # bin width in ms
@@ -191,7 +192,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 		# (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
 		binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
 		# randomly select number of events in this bin from Poisson distribution around binnedNevt:
-		binnedNevtRnd = np.random.choice(np.random.poisson(binnedNevt, size=1000))
+		binnedNevtRnd = np.random.poisson(binnedNevt)
 		# find the total number of events over all bins
 		totnevt += binnedNevtRnd
 	
@@ -210,7 +211,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 		# define particle for each event in time interval
 		for i in range(binnedNevtRnd):
 			# Define properties of the particle
-			t = boundsMin + np.random.random() * binWidth
+			t = boundsMin + random.random() * binWidth
 			eNu = get_eNu(binnedAlpha, binnedEnergy)
 			(dirx, diry, dirz) = get_direction(eNu)
 			ene = eneE(eNu, dirz)
