@@ -4,9 +4,10 @@
 # $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile.kin -d [SuperK|HyperK]
 # where the input files are called infile_{e,eb,x}.txt and the output file is outfile.kin
 
-from os import system
 import random
 from optparse import OptionParser
+import __builtin__
+import channel as chnl
 
 
 '''
@@ -74,9 +75,6 @@ parser.add_option("-v", "--verbose", dest="verbose",
 hierarchy = options.hierarchy
 channel = options.channel
 input = options.input
-in_e = input + "_e.txt"
-in_eb = input + "_eb.txt"
-in_x = input + "_x.txt"
 output = options.output
 detector = options.detector
 starttime = options.starttime
@@ -86,7 +84,7 @@ verbose = options.verbose
 if verbose:
 	print "channel   =", channel
 	print "hierarchy =", hierarchy
-	print "inputs    =", in_e, in_eb, in_x
+	print "inputs    =", input + "_e.txt", input + "_eb.txt", input + "_x.txt"
 	print "output    =", output
 	print "detector  =", detector
 	print "starttime =", starttime
@@ -116,17 +114,17 @@ cos2t12 = 1 - sin2t12
 tmpfiles = []
 
 def execute(this_channel, original_flavor, n, detected_flavor=""):
-	tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
+	
+	# TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
+	if this_channel == "es": __builtin__._flavor = detected_flavor
+	
 	infile = "%s_%s.txt" % (input, original_flavor)
-	cmd = "python channel.py --channel=%s --input=%s --output=%s --normalization=%s --detector=%s" % (this_channel, infile, tmpfile, n, detector)
-	if this_channel == "es": cmd = cmd + " --flavor=%s" % detected_flavor
-	if starttime: cmd = cmd + " --starttime=%s" % starttime
-	if endtime: cmd = cmd + " --endtime=%s" % endtime
-	if verbose:
-		cmd = cmd + " --verbose" # inherit verbosity
-		print "Now executing:", cmd
-	system(cmd)
+	tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
 	tmpfiles.append(tmpfile)
+	
+	cmd = "chnl.main(channel='%s', input='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" % (this_channel, infile, tmpfile, n, detector, starttime, endtime, verbose)
+	if verbose: print "Now executing:", cmd
+	exec(cmd)
 
 if (hierarchy == "noosc"):
 	if (channel == "ibd" or channel == "all"):

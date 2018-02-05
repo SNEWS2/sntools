@@ -1,9 +1,7 @@
 from math import pi, sqrt, log
 from scipy import integrate
 
-
-# get flavor from `__builtin__._flavor`, which is set in `channel.py`
-flavor = _flavor # TODO
+# Note: `es.py` uses `__builtin__._flavor` (which is set in `genevts.py`)
 
 targets_per_molecule = 10 # number of electrons per water molecule
 pid = 11
@@ -43,9 +41,9 @@ def x(eE):
 def I(eE):
 	return 1/6.0 * (1/3.0 + (3 - x(eE)**2) * (x(eE)/2.0 *log((x(eE) + 1)/(x(eE) - 1)) - 1))
 def k(eE):
-	if flavor in ("e", "eb"):
+	if _flavor in ("e", "eb"):
 		return 0.9791 + 0.0097 * I(eE) #+/-0.0025
-	if flavor in ("x", "xb"):
+	if _flavor in ("x", "xb"):
 		return 0.9970 - 0.00037 * I(eE) #+/-0.0025
 
 def g1(eE):
@@ -54,16 +52,16 @@ def g2(eE):
 	return -rho_NC * k(eE) * sin2theta_w
 
 def gL(eE):
-	if   flavor == "e":  return g1(eE) - 1
-	elif flavor == "eb": return g2(eE)
-	elif flavor == "x":  return g1(eE)
-	elif flavor == "xb": return g2(eE)
+	if   _flavor == "e":  return g1(eE) - 1
+	elif _flavor == "eb": return g2(eE)
+	elif _flavor == "x":  return g1(eE)
+	elif _flavor == "xb": return g2(eE)
 
 def gR(eE):
-	if   flavor == "e":  return g2(eE)
-	elif flavor == "eb": return g1(eE) - 1
-	elif flavor == "x":  return g2(eE)
-	elif flavor == "xb": return g1(eE)
+	if   _flavor == "e":  return g2(eE)
+	elif _flavor == "eb": return g1(eE) - 1
+	elif _flavor == "x":  return g2(eE)
+	elif _flavor == "xb": return g1(eE)
 
 # Appendix B: QED Effects
 # f1 = fMinus(z), f2 = (1-z**2)*fPlus(z), f3 = fPlusMinus(z)
