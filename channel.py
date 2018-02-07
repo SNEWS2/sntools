@@ -61,7 +61,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	if channel == "ibd":
 		dSigmadT = getattr(channel_module,"dSigmadE")
 		eneE = getattr(channel_module,"get_eE")
-		direction_distribution = getattr(channel_module,"dir_nuebar_p_sv")
+		direction_distribution = getattr(channel_module,"dSigmadCosT")
 		bounds_eE = getattr(channel_module,"bounds_eE")
 		bounds_eNu = getattr(channel_module,"bounds_eNu")
 		targets_per_molecule = getattr(channel_module,"targets_per_molecule")

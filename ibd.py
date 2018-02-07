@@ -63,13 +63,13 @@ def dSigmadE(eNu, eE): # eqs. (11), (3)
 	return sigma0 / eNu**2 * absMsquared(eNu, eE) * rad_correction(eE)
 
 
-
 # probability distribution for the angle at which the positron is emitted
-# numerical values are from Ishino-san's code for SK, based on email from Vissani
-def dir_nuebar_p_sv(eNu, cosT):
-	c1 = -0.05396 + 0.35824 * (eNu/100) + 0.03309 * (eNu/100)**2
-	c2 =  0.00050 - 0.02390 * (eNu/100) + 0.14537 * (eNu/100)**2
-	return 0.5 + c1 * cosT + c2 * (cosT**2 -1./3)
+def dSigmadCosT(eNu, cosT): # eq. (20)
+	epsilon = eNu/mP
+	eE = get_eE(eNu, cosT)
+	pE = sqrt(eE**2 - mE**2)
+	dEdCosT = pE * epsilon / (1 + epsilon * (1 - cosT * eE / pE))
+	return dEdCosT * dSigmadE(eNu, eE)
 
 
 def get_eE(eNu, cosT): # eq. (21)
