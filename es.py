@@ -20,12 +20,13 @@ see https://www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.
 Careful: This uses different conventions (e.g. minus signs) from Bahcall et al.!
 '''
 sin2theta_w = 0.2317 # weak mixing angle
+alpha = 1 / 137.036 # fine structure constant
 mE = 0.5109989 # electron mass (MeV)
 gF = 1.16637e-11 # Fermi coupling constant
 rho_NC = 1.0126 # numerical factor from Bahcall et al.
 
 def dSigmadT(eNu, eE):
-	return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (1/137.0/pi) * f1(eNu, eE)) + gR(eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*((1/137.0)/pi))- gR(eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + ((1/137.)/pi) * f3(eNu, eE)))
+	return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (alpha/pi) * f1(eNu, eE)) + gR(eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*(alpha/pi))- gR(eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + (alpha/pi) * f3(eNu, eE)))
 
 # Appendix A: Radiative Corrections
 def l(eE):
