@@ -62,7 +62,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	* Import channel-specific stuff from separate files
 	'''
 	from importlib import import_module
-	channel_module = import_module(channel)
+	channel_module = import_module("interaction-channels." + channel)
 
 	if channel == "ibd":
 		dSigmadT = getattr(channel_module,"dSigmadE")
