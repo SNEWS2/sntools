@@ -24,11 +24,11 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	# read data from input file, remove lines with comments and empty lines
 	with open(input) as infile:
 		if verbose: print "Reading neutrino simulation data from", input, "..."
-		indata = [line for line in infile if not (line.startswith("#") or line.isspace())]
+		raw_indata = [map(float, line.split(",")) for line in infile if not (line.startswith("#") or line.isspace())]
 
 	# if start time and end time are not given as command line arguments, get them from 1st/last line of input file
-	_starttime = float(indata[0].split(",")[0])
-	_endtime = float(indata[-1].split(",")[0])
+	_starttime = raw_indata[0][0]
+	_endtime = raw_indata[-1][0]
 
 	if not starttime:
 		starttime = _starttime
@@ -41,6 +41,16 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	elif endtime > _endtime:
 		print("Error: End time must be less than time in last line of input file. Aborting ...")
 		exit()
+
+	# remove entries outside the requested range 
+	indata = []
+	for (i, entry) in enumerate(raw_indata):
+		if i == 0: continue
+		if entry[0] > starttime:
+			indata.append(raw_indata[i-1])
+			if entry[0] > endtime:
+				indata.append(entry)
+				break
 
 	starttime = ceil(float(starttime) * 1000) # convert to ms
 	endtime = floor(float(endtime) * 1000)
@@ -99,7 +109,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	* Interpolate to get event rate as a function of time.
 	'''
 	# double differential event rate
-	def ddEventRate(eE, eNu, alpha, a):
+	def ddEventRate(eE, eNu, alpha, a, L):
 		return dSigmadT(eNu, eE)*dFluxdE(eNu, L, alpha, a)
 
 
@@ -111,21 +121,17 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
 	n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
 
-	for line in indata:
+	for (t, a, eNuSquared, L) in indata:
 		# get time, mean energy, mean squared energy, luminosity
-		t, a, eNuSquared, L = line.split(",")
-		t=float(t) * 1000 # convert to ms
-		tValues.append(t)
-		a=float(a)
+		tValues.append(1000 * t) # convert to ms
 		aValues.append(a)
-		eNuSquared = float(eNuSquared)
 		eNuSquaredValues.append(eNuSquared)
-		L=float(L) * 624.151 # convert from erg/s to MeV/ms
+		L = L * 624.151 # convert from erg/s to MeV/ms
 	
 		alpha = (2*a**2 - eNuSquared) / (eNuSquared - a**2)
 	
 		# integrate over eE and then eNu to obtain the event rate at time t
-		simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=(alpha, a)) [0]
+		simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=(alpha, a, L)) [0]
 	
 		# create a list of nevt values at time t for input into interpolation function
 		nevtValues.append(simnevt)
@@ -162,7 +168,8 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 
 	# return energy of interacting neutrino
 	def get_eNu(alpha, a):
-		dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, alpha, a))[0]
+		# L is a constant factor so, for the purpose of rejection sampling, we can set it to 1.
+		dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, alpha, a, 1.))[0]
 		eNu = rejection_sample(dist, *bounds_eNu, n_bins=200)
 		return eNu
 
@@ -193,17 +200,18 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 		# find the total number of events over all bins
 		totnevt += binnedNevtRnd
 	
-		# create binned values for energy, mean squared energy and shape parameter
-		binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
-		binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
-		binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
-	
 		if verbose:
 			print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
 			print "Nevt (theor.) =", binnedNevt
 			print "Nevt (actual) =", binnedNevtRnd
-			print "mean energy   =", binnedEnergy, "MeV"
 			print "**************************************"
+		
+		if binnedNevtRnd == 0: continue
+		
+		# create binned values for energy, mean squared energy and shape parameter
+		binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
+		binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
+		binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
 	
 		# define particle for each event in time interval
 		for i in range(binnedNevtRnd):
