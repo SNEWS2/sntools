@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normalization=1.0, detector="SuperK", starttime=None, endtime=None, verbose=True):
+def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normalization=1.0, detector="SuperK", starttime=None, endtime=None, verbose=False):
 	from math import pi, sin, cos, acos, gamma, exp, floor, ceil
 	from scipy import integrate, interpolate
 	import numpy as np

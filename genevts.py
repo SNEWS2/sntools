@@ -77,8 +77,8 @@ channel = options.channel
 input = options.input
 output = options.output
 detector = options.detector
-starttime = options.starttime
-endtime = options.endtime
+starttime = options.starttime if options.starttime else None
+endtime = options.endtime if options.endtime else None
 verbose = options.verbose
 
 if verbose:
