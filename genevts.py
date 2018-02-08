@@ -58,6 +58,13 @@ parser.add_option("-d", "--detector", dest="detector",
                   metavar="DETECTOR",
                   choices=optchoices, default=optdefault)
 
+optdefault = 10.0
+parser.add_option("--distance", dest="distance",
+                  help="Distance of the supernova in kiloparsec. Default: '%s'." \
+                      % (optdefault),
+                  metavar="DISTANCE",
+                  default=optdefault)
+
 parser.add_option("--starttime", dest="starttime",
                   help="Start generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
                   metavar="T")
@@ -77,8 +84,9 @@ channel = options.channel
 input = options.input
 output = options.output
 detector = options.detector
-starttime = options.starttime if options.starttime else None
-endtime = options.endtime if options.endtime else None
+distance = float(options.distance)
+starttime = float(options.starttime) if options.starttime else None
+endtime = float(options.endtime) if options.endtime else None
 verbose = options.verbose
 
 if verbose:
@@ -87,6 +95,7 @@ if verbose:
 	print "inputs    =", input + "_e.txt", input + "_eb.txt", input + "_x.txt"
 	print "output    =", output
 	print "detector  =", detector
+	print "distance  =", distance
 	print "starttime =", starttime
 	print "endtime   =", endtime
 
@@ -117,6 +126,8 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
 	
 	# TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
 	if this_channel == "es": __builtin__._flavor = detected_flavor
+	
+	n = n * (10.0/distance)**2 # flux is proportional to 1/distance**2
 	
 	infile = "%s_%s.txt" % (input, original_flavor)
 	tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)

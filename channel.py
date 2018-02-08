@@ -17,10 +17,6 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	detectors = {"SuperK": 32.5,
 				 "HyperK": 220} # one-tank configuration
 
-	if (normalization <= 0 or normalization > 2):
-		print("Error: Normalization factor should be in the interval (0,2]. Aborting ...")
-		exit()
-
 	if channel not in ("ibd", "es"):
 		print("Error: Channel needs to be one of 'ibd', 'es'. Aborting ...")
 		exit()
@@ -91,7 +87,9 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 		return eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
 
 	def dFluxdE(eNu, luminosity, alpha, a):
-		return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu, alpha, a)
+		# The `normalization` factor takes into account the oscillation probability
+		# as well as the distance (if not equal to 10 kpc).
+		return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu, alpha, a) * normalization
 
 
 	'''
@@ -188,9 +186,8 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 		boundsMin = starttime + (i-1)*binWidth
 		boundsMax = starttime + i*binWidth
 	
-		# calculate expected number of events in this bin and multiply with a normalization factor
-		# (1, sin^2(theta_12), cos^2(theta_12)) to take neutrino oscillations into account
-		binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0] * normalization
+		# calculate expected number of events in this bin
+		binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0]
 		# randomly select number of events in this bin from Poisson distribution around binnedNevt:
 		binnedNevtRnd = np.random.poisson(binnedNevt)
 		# find the total number of events over all bins
