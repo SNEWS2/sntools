@@ -25,10 +25,10 @@ parser.add_option("-H", "--hierarchy", dest="hierarchy",
                   metavar="HIERARCHY",
                   choices=optchoices, default=optdefault)
 
-optchoices = ["all", "ibd", "es"]
+optchoices = ["all", "ibd", "es", "oxy-nue"]
 optdefault = "all"
 parser.add_option("-c", "--channel", dest="channel",
-                  help="Interaction channels to consider. Currently, inverse beta decay (ibd) and electron scattering (es) are supported. Choices: %s. Default: %s" \
+                  help="Interaction channels to consider. Currently, inverse beta decay (ibd), electron scattering (es) and nu_e + oxygen CC (oxy-nue) are supported. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
                   metavar="INTCHANNEL",
                   choices=optchoices, default=optdefault)
@@ -145,6 +145,8 @@ if (hierarchy == "noosc"):
 		execute("es", "eb", 1, "eb")
 		execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
 		execute("es", "x",  2, "xb") # anti-nu_x have different cross section then nu_x but use same input file
+	if (channel == "oxy-nue" or channel == "all"):
+		execute("oxy-nue", "e", 1)
 
 if (hierarchy == "normal"):
 	if (channel == "ibd" or channel == "all"):
@@ -158,6 +160,8 @@ if (hierarchy == "normal"):
 		execute("es", "x",  1, "x") # nu_x that originated as nu_x
 		execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
 		execute("es", "x",  1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
+	if (channel == "oxy-nue" or channel == "all"):
+		execute("oxy-nue", "x", 1)
 
 if (hierarchy == "inverted"):
 	if (channel == "ibd" or channel == "all"):
@@ -170,6 +174,9 @@ if (hierarchy == "inverted"):
 		execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
 		execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
 		execute("es", "x",  1, "xb") # anti-nu_x that originated as anti-nu_x
+	if (channel == "oxy-nue" or channel == "all"):
+		execute("oxy-nue", "e", sin2t12)
+		execute("oxy-nue", "x", cos2t12)
 
 
 '''

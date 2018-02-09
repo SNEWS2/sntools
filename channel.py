@@ -5,21 +5,17 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	from scipy import integrate, interpolate
 	import numpy as np
 	import random
+	from importlib import import_module
 
 
 	'''
 	Setup section.
-	* Define command line options.
-	* Parse input options (and perform some sanity checks).
-	* Read in data from input file.
+	* Read in data from input file and apply start & end time.
+	* Import channel-specific functions and parameters from separate files
 	'''
 	# inner detector mass, in metric kt
 	detectors = {"SuperK": 32.5,
 				 "HyperK": 220} # one-tank configuration
-
-	if channel not in ("ibd", "es"):
-		print("Error: Channel needs to be one of 'ibd', 'es'. Aborting ...")
-		exit()
 
 	# read data from input file, remove lines with comments and empty lines
 	with open(input) as infile:
@@ -56,31 +52,14 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	endtime = floor(float(endtime) * 1000)
 	duration = endtime - starttime
 
-
-	'''
-	Import section
-	* Import channel-specific stuff from separate files
-	'''
-	from importlib import import_module
 	channel_module = import_module("interaction-channels." + channel)
-
-	if channel == "ibd":
-		dSigmadT = getattr(channel_module,"dSigmadE")
-		eneE = getattr(channel_module,"get_eE")
-		direction_distribution = getattr(channel_module,"dSigmadCosT")
-		bounds_eE = getattr(channel_module,"bounds_eE")
-		bounds_eNu = getattr(channel_module,"bounds_eNu")
-		targets_per_molecule = getattr(channel_module,"targets_per_molecule")
-		pid = getattr(channel_module,"pid")
-
-	elif channel == "es":
-		dSigmadT = getattr(channel_module,"dSigmadT")
-		eneE = getattr(channel_module,"eneE")
-		direction_distribution = getattr(channel_module,"dSigmadCosT")
-		bounds_eE = getattr(channel_module,"bounds_eE")
-		bounds_eNu = getattr(channel_module,"bounds_eNu")
-		targets_per_molecule = getattr(channel_module,"targets_per_molecule")
-		pid = getattr(channel_module,"pid")
+	dSigmadE = getattr(channel_module,"dSigmadE")
+	get_eE = getattr(channel_module,"get_eE")
+	dSigmadCosT = getattr(channel_module,"dSigmadCosT")
+	bounds_eE = getattr(channel_module,"bounds_eE")
+	bounds_eNu = getattr(channel_module,"bounds_eNu")
+	targets_per_molecule = getattr(channel_module,"targets_per_molecule")
+	pid = getattr(channel_module,"pid")
 
 
 	'''
@@ -110,7 +89,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 	'''
 	# double differential event rate
 	def ddEventRate(eE, eNu, alpha, a, L):
-		return dSigmadT(eNu, eE)*dFluxdE(eNu, L, alpha, a)
+		return dSigmadE(eNu, eE)*dFluxdE(eNu, L, alpha, a)
 
 
 	nevtValues=[]
@@ -175,7 +154,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 
 	# return direction of scattered electron, if incoming neutrino moves in z direction
 	def get_direction(eNu):
-		dist = lambda x: direction_distribution(eNu, x)
+		dist = lambda x: dSigmadCosT(eNu, x)
 		cosT = rejection_sample(dist, -1, 1, 200)
 		sinT = sin(acos(cosT))
 		phi = 2 * pi * random.random() # randomly distributed in [0, 2 pi)
@@ -219,7 +198,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt", normaliz
 			t = boundsMin + random.random() * binWidth
 			eNu = get_eNu(binnedAlpha, binnedEnergy)
 			(dirx, diry, dirz) = get_direction(eNu)
-			ene = eneE(eNu, dirz)
+			ene = get_eE(eNu, dirz)
 			# write [t, pid, energy, dirx, diry, dirz] out to file
 			outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, pid, ene, dirx, diry, dirz))
 

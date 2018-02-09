@@ -25,7 +25,7 @@ mE = 0.5109989 # electron mass (MeV)
 gF = 1.16637e-11 # Fermi coupling constant
 rho_NC = 1.0126 # numerical factor from Bahcall et al.
 
-def dSigmadT(eNu, eE):
+def dSigmadE(eNu, eE):
 	return (2*mE*gF**2)/pi * (gL(eE)**2 * (1 + (alpha/pi) * f1(eNu, eE)) + gR(eE)**2 * ((1-z(eNu, eE))**2 + f2(eNu, eE)*(alpha/pi))- gR(eE) * gL(eE) * (mE/eNu) * z(eNu, eE) * (1 + (alpha/pi) * f3(eNu, eE)))
 
 # Appendix A: Radiative Corrections
@@ -77,7 +77,7 @@ def f3(eNu, eE):
 
 
 # energy of electron scattered into direction cosT by a neutrino with energy eNu
-def eneE(eNu, cosT):
+def get_eE(eNu, cosT):
 	return mE + (2 * mE * eNu**2 * cosT**2) / ((mE + eNu)**2 - eNu**2 * cosT**2)
 
 # distribution of scattering angles
@@ -85,15 +85,15 @@ def dSigmadCosT(eNu, cosT):
 	if cosT < 0: # backward scattering is kinematically impossible
 		return 0
 	
-	dTdCosT = 4 * mE * eNu**2 * (mE+eNu)**2 * cosT / ((mE+eNu)**2 - eNu**2 * cosT**2)**2
-	eE = eneE(eNu, cosT)
-	return dTdCosT * dSigmadT(eNu, eE)
+	dEdCosT = 4 * mE * eNu**2 * (mE+eNu)**2 * cosT / ((mE+eNu)**2 - eNu**2 * cosT**2)**2
+	eE = get_eE(eNu, cosT)
+	return dEdCosT * dSigmadE(eNu, eE)
 
 
 # Bounds for integration over eE
 eE_min = 0.77 # Cherenkov threshold in water (refraction index n=1.34)
 def eE_max(eNu):
-	return ((2*eNu**2)/(2*eNu + mE)) + mE # this is eneE(eNu, cosT=1); also eE_max(cosT) = (2*mE)/(arccos(cosT))**2
+	return ((2*eNu**2)/(2*eNu + mE)) + mE # this is get_eE(eNu, cosT=1); also eE_max(cosT) = (2*mE)/(arccos(cosT))**2
 def bounds_eE(eNu, *args): # ignore additional arguments handed over by integrate.nquad()
 	return [eE_min, eE_max(eNu)]
 
