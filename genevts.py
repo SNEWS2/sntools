@@ -4,9 +4,10 @@
 # $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile.kin -d [SuperK|HyperK]
 # where the input files are called infile_{e,eb,x}.txt and the output file is outfile.kin
 
-import random
-from optparse import OptionParser
 import __builtin__
+from optparse import OptionParser
+import random
+
 import channel as chnl
 
 
@@ -90,14 +91,14 @@ endtime = float(options.endtime) if options.endtime else None
 verbose = options.verbose
 
 if verbose:
-	print "channel   =", channel
-	print "hierarchy =", hierarchy
-	print "inputs    =", input + "_e.txt", input + "_eb.txt", input + "_x.txt"
-	print "output    =", output
-	print "detector  =", detector
-	print "distance  =", distance
-	print "starttime =", starttime
-	print "endtime   =", endtime
+    print "channel   =", channel
+    print "hierarchy =", hierarchy
+    print "inputs    =", input + "_e.txt", input + "_eb.txt", input + "_x.txt"
+    print "output    =", output
+    print "detector  =", detector
+    print "distance  =", distance
+    print "starttime =", starttime
+    print "endtime   =", endtime
 
 
 '''
@@ -123,60 +124,59 @@ cos2t12 = 1 - sin2t12
 tmpfiles = []
 
 def execute(this_channel, original_flavor, n, detected_flavor=""):
-	
-	# TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
-	if this_channel == "es": __builtin__._flavor = detected_flavor
-	
-	n = n * (10.0/distance)**2 # flux is proportional to 1/distance**2
-	
-	infile = "%s_%s.txt" % (input, original_flavor)
-	tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
-	tmpfiles.append(tmpfile)
-	
-	cmd = "chnl.main(channel='%s', input='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" % (this_channel, infile, tmpfile, n, detector, starttime, endtime, verbose)
-	if verbose: print "Now executing:", cmd
-	exec(cmd)
+
+    # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
+    if this_channel == "es": __builtin__._flavor = detected_flavor
+
+    n = n * (10.0/distance)**2 # flux is proportional to 1/distance**2
+    infile = "%s_%s.txt" % (input, original_flavor)
+    tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
+    tmpfiles.append(tmpfile)
+
+    cmd = "chnl.main(channel='%s', input='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" % (this_channel, infile, tmpfile, n, detector, starttime, endtime, verbose)
+    if verbose: print "Now executing:", cmd
+    exec(cmd)
 
 if (hierarchy == "noosc"):
-	if (channel == "ibd" or channel == "all"):
-		execute("ibd", "eb", 1)
-	if (channel == "es" or channel == "all"):
-		execute("es", "e",  1, "e")
-		execute("es", "eb", 1, "eb")
-		execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
-		execute("es", "x",  2, "xb") # anti-nu_x have different cross section then nu_x but use same input file
-	if (channel == "oxy-nue" or channel == "all"):
-		execute("oxy-nue", "e", 1)
+    if (channel == "ibd" or channel == "all"):
+        execute("ibd", "eb", 1)
+    if (channel == "es" or channel == "all"):
+        execute("es", "e",  1, "e")
+        execute("es", "eb", 1, "eb")
+        execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
+        execute("es", "x",  2, "xb") # anti-nu_x have different cross section then nu_x but use same input file
+    if (channel == "oxy-nue" or channel == "all"):
+        execute("oxy-nue", "e", 1)
 
 if (hierarchy == "normal"):
-	if (channel == "ibd" or channel == "all"):
-		execute("ibd", "eb", cos2t12)
-		execute("ibd", "x",  sin2t12)
-	if (channel == "es" or channel == "all"):
-		execute("es", "x",  1, "e") # nu_e that originated as nu_x
-		execute("es", "eb", cos2t12, "eb") # anti-nu_e that originated as anti-nu_e
-		execute("es", "x",  sin2t12, "eb") # anti-nu_e that originated as anti-nu_x
-		execute("es", "e",  1, "x") # nu_x that originated as nu_e
-		execute("es", "x",  1, "x") # nu_x that originated as nu_x
-		execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
-		execute("es", "x",  1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
-	if (channel == "oxy-nue" or channel == "all"):
-		execute("oxy-nue", "x", 1)
+    if (channel == "ibd" or channel == "all"):
+        execute("ibd", "eb", cos2t12)
+        execute("ibd", "x",  sin2t12)
+    if (channel == "es" or channel == "all"):
+        execute("es", "x",  1, "e") # nu_e that originated as nu_x
+        execute("es", "eb", cos2t12, "eb") # anti-nu_e that originated as anti-nu_e
+        execute("es", "x",  sin2t12, "eb") # anti-nu_e that originated as anti-nu_x
+        execute("es", "e",  1, "x") # nu_x that originated as nu_e
+        execute("es", "x",  1, "x") # nu_x that originated as nu_x
+        execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
+        execute("es", "x",  1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
+    if (channel == "oxy-nue" or channel == "all"):
+        execute("oxy-nue", "x", 1)
 
 if (hierarchy == "inverted"):
-	if (channel == "ibd" or channel == "all"):
-		execute("ibd", "x", 1)
-	if (channel == "es" or channel == "all"):
-		execute("es", "e",  sin2t12, "e") # nu_e that originated as nu_e
-		execute("es", "x",  cos2t12, "e") # nu_e that originated as nu_x
-		execute("es", "x",  1, "eb") # anti-nu_e that originated as anti-nu_x
-		execute("es", "e",  cos2t12, "x") # nu_x that originated as nu_e
-		execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
-		execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
-		execute("es", "x",  1, "xb") # anti-nu_x that originated as anti-nu_x
-	if (channel == "oxy-nue" or channel == "all"):
-		execute("oxy-nue", "e", sin2t12)
-		execute("oxy-nue", "x", cos2t12)
+    if (channel == "ibd" or channel == "all"):
+        execute("ibd", "x", 1)
+    if (channel == "es" or channel == "all"):
+        execute("es", "e",  sin2t12, "e") # nu_e that originated as nu_e
+        execute("es", "x",  cos2t12, "e") # nu_e that originated as nu_x
+        execute("es", "x",  1, "eb") # anti-nu_e that originated as anti-nu_x
+        execute("es", "e",  cos2t12, "x") # nu_x that originated as nu_e
+        execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
+        execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
+        execute("es", "x",  1, "xb") # anti-nu_x that originated as anti-nu_x
+    if (channel == "oxy-nue" or channel == "all"):
+        execute("oxy-nue", "e", sin2t12)
+        execute("oxy-nue", "x", cos2t12)
 
 
 '''
@@ -185,47 +185,46 @@ Output section.
 * Distribute them randomly in the detector volume.
 * Write NUANCE formatted events into output file.
 '''
-events = [] # this will become a list of lists: one entry per event, which is a list of time, energy, etc.
+events = []
 # read in all events:
 for filename in tmpfiles:
-	f = open(filename)
-	for line in f:
-		event = map(float, line.split(",")) # list(map(float, line.split(","))) in python3
-		# `event` has the format `[t, pid, energy, dirx, diry, dirz]`
-		events.append(event)
-	f.close()
+    with open(filename) as f:
+        for line in f:
+            event = map(float, line.split(",")) # list(map(float, line.split(","))) in python3
+            # `event` has the format `[t, pid, energy, dirx, diry, dirz]`
+            events.append(event)
 
-# sort events by first element of the list (i.e. by time)
+# sort events by time (i.e. the first element of the list)
 events.sort()
 
 # ... and write the events to vector file (`outfile`) in this nuance-like format
 outfile = open(output, 'w')
 for i in range(len(events)):
-	event = events[i]
-	t   = event[0]
-	pid = int(event[1])
-	ene = event[2]
-	(dirx, diry, dirz) = (event[3], event[4], event[5])
-	
-	if verbose: print "events[%d] = %s" %(i, event)
-	
-	# create random vertex position inside the detector volume
-	rad    = detectors[options.detector][0] - 20.
-	height = detectors[options.detector][1] - 20.
-	while True:
-		x = random.uniform(-rad, rad)
-		y = random.uniform(-rad, rad)
-		if x**2 + y**2 < rad**2: break
-	z = random.uniform(-height/2, height/2)
-	
-	outfile.write("$ begin\n")
-	outfile.write("$ nuance 0\n")
-	outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
-	outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
-	outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
-	outfile.write("$ info 0 0 %i\n" % i)
-	outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
-	outfile.write("$ end\n")
+    event = events[i]
+    t = event[0]
+    pid = int(event[1])
+    ene = event[2]
+    (dirx, diry, dirz) = (event[3], event[4], event[5])
+
+    if verbose: print "events[%d] = %s" %(i, event)
+
+    # create random vertex position inside the detector volume
+    rad    = detectors[options.detector][0] - 20.
+    height = detectors[options.detector][1] - 20.
+    while True:
+        x = random.uniform(-rad, rad)
+        y = random.uniform(-rad, rad)
+        if x**2 + y**2 < rad**2: break
+    z = random.uniform(-height/2, height/2)
+
+    outfile.write("$ begin\n")
+    outfile.write("$ nuance 0\n")
+    outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
+    outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
+    outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
+    outfile.write("$ info 0 0 %i\n" % i)
+    outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
+    outfile.write("$ end\n")
 
 outfile.write("$ stop\n")
 outfile.close()

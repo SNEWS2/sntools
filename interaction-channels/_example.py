@@ -26,7 +26,7 @@ pid = None
 
 
 '''
-dSigmadE(eNu, eE):
+dSigma_dE(eNu, eE):
 Differential cross section.
 Input:
     eNu: neutrino energy
@@ -34,12 +34,12 @@ Input:
 Output:
     one floating point number
 '''
-def dSigmadE(eNu, eE):
-	return None
+def dSigma_dE(eNu, eE):
+    return None
 
 
 '''
-dSigmadCosT(eNu, cosT):
+dSigma_dCosT(eNu, cosT):
 Distribution of the angle at which the outgoing (detected) particle is emitted.
 Input:
     eNu:  neutrino energy (MeV)
@@ -47,11 +47,11 @@ Input:
 Output:
     one floating point number
 '''
-def dSigmadCosT(eNu, cosT):
-	return None
-# 	eE = get_eE(eNu, cosT)
-# 	dEdCosT = None
-# 	return dEdCosT * dSigmadE(eNu, eE)
+def dSigma_dCosT(eNu, cosT):
+    return None
+#     eE = get_eE(eNu, cosT)
+#     dE_dCosT = None
+#     return dE_dCosT * dSigma_dE(eNu, eE)
 
 
 '''
@@ -64,7 +64,7 @@ Output:
     one floating point number
 '''
 def get_eE(eNu, cosT):
-	return None
+    return None
 
 
 '''
@@ -77,14 +77,14 @@ Output:
     list with minimum & maximum allowed energy of outgoing (detected) particle
 '''
 def bounds_eE(eNu, *args):
-	return [None, None]
-# 	return [eE_min(eNu), eE_max(eNu)]
-# 
+    return [None, None]
+#     return [eE_min(eNu), eE_max(eNu)]
+#
 # def eE_min(eNu):
-# 	return None
-# 
+#     return None
+#
 # def eE_max(eNu):
-# 	return None
+#     return None
 
 
 '''
@@ -108,4 +108,4 @@ Some commonly needed constants are already provided.
 # mP = 938.2721 # proton mass (MeV)
 # mE = 0.5109989 # electron mass (MeV)
 # alpha = 1 / 137.036 # fine structure constant
-# gF=1.16637e-11 # Fermi coupling constant
+# gF = 1.16637e-11 # Fermi coupling constant
