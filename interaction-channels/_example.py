@@ -72,7 +72,7 @@ bounds_eE(eNu, *args):
 Kinematical bounds for integration over eE.
 Input:
     eNu:  neutrino energy (MeV)
-    args: [ignore this]
+    args: [implementation detail; ignore this]
 Output:
     list with minimum & maximum allowed energy of outgoing (detected) particle
 '''
