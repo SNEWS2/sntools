@@ -98,7 +98,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     tValues = []
     aValues = []
     eNuSquaredValues = []
-    totnevt = 0
+    total_nevt = 0
     molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
     n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
 
@@ -173,48 +173,50 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         phi = 2 * pi * random.random() # randomly distributed in [0, 2 pi)
         return (sinT*cos(phi), sinT*sin(phi), cosT)
 
-    binWidth = 1 # bin width in ms
-    binNr = np.arange(1, floor(duration/binWidth)+1) # number of full-width bins
+    bin_width = 1 # bin width in ms
+    n_bins = int(duration/bin_width) # number of full-width bins; int() implies floor()
     if verbose:
-        print "Now generating events in %s ms bins between %s-%s ms" % (binWidth, starttime, endtime)
+        print "Now generating events in %s ms bins between %s-%s ms" % (bin_width, starttime, endtime)
         print "**************************************"
 
-    outfile = open(output, 'w')
-    # integrate event rate and energy over each bin
-    for i in binNr:
-        boundsMin = starttime + (i-1)*binWidth
-        boundsMax = starttime + i*binWidth
+    # scipy is optimized for parallel operation on large arrays, making
+    # it orders of magnitude faster to evaluate these interpolated
+    # functions for all bins at the same time.
+    binned_t = [starttime + (i+0.5)*bin_width for i in range(n_bins)]
+    binned_nevt = interpolatedNevt(binned_t)
+    binned_e = interpolatedEnergy(binned_t)
+    binned_e_sq = interpolatedMSEnergy(binned_t)
 
-        # calculate expected number of events in this bin
-        binnedNevt = interpolatedNevt(boundsMin + 0.5*binWidth)
-        # randomly select number of events in this bin from Poisson distribution around binnedNevt:
-        binnedNevtRnd = np.random.poisson(binnedNevt)
-        # find the total number of events over all bins
-        totnevt += binnedNevtRnd
+    outfile = open(output, 'w')
+    # Iterate over bins to generate events.
+    for i in range(n_bins):
+        boundsMin = starttime + i * bin_width
+        boundsMax = starttime + (i+1) * bin_width
+
+        # Get random number of events in this bin from Poisson distribution
+        nevt = np.random.poisson(binned_nevt[i])
+        total_nevt += nevt
 
         if verbose:
             print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
-            print "Nevt (theor.) =", binnedNevt
-            print "Nevt (actual) =", binnedNevtRnd
+            print "Nevt (theor.) =", binned_nevt[i]
+            print "Nevt (actual) =", nevt
             print "**************************************"
 
-        if binnedNevtRnd == 0: continue
+        if nevt == 0: continue
 
-        # create binned values for energy, mean squared energy and shape parameter
-        binnedEnergy = interpolatedEnergy(boundsMin + 0.5*binWidth)
-        binnedMSEnergy = interpolatedMSEnergy(boundsMin + 0.5*binWidth)
-        binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
+        alpha = (2*binned_e[i]**2 - binned_e_sq[i])/(binned_e_sq[i] - binned_e[i]**2)
 
         # define particle for each event in time interval
-        for i in range(binnedNevtRnd):
+        for _ in range(nevt):
             # Define properties of the particle
-            t = boundsMin + random.random() * binWidth
-            eNu = get_eNu(binnedAlpha, binnedEnergy)
+            t = boundsMin + random.random() * bin_width
+            eNu = get_eNu(alpha, binned_e[i])
             (dirx, diry, dirz) = get_direction(eNu)
             ene = get_eE(eNu, dirz)
             # write [t, pid, energy, dirx, diry, dirz] out to file
             outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, pid, ene, dirx, diry, dirz))
 
-    print(("Wrote %i particles to " % totnevt) + output)
+    print(("Wrote %i particles to " % total_nevt) + output)
 
     outfile.close()
