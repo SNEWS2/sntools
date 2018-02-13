@@ -132,9 +132,20 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     # Use rejection sampling to get a value from the distribution dist
     def rejection_sample(dist, min_val, max_val, n_bins=100):
         p_max = 0
+        j_max = 0
         bin_width = float(max_val - min_val) / n_bins
 
-        for j in range(n_bins):
+        # Iterative approach to speed up finding the maximum of `dist`.
+        # Assumes that `dist` does not oscillate very quickly.
+        # First, use coarse binning to find the approximate maximum:
+        for j in range(0, n_bins, 10):
+            val = min_val + bin_width * (j + 0.5)
+            p = dist(val)
+            if p > p_max:
+                p_max = p
+                j_max = j
+        # Then, use finer binning around the approximate maximum.
+        for j in range(max(j_max-9, 0), min(j_max+10, n_bins)):
             val = min_val + bin_width * (j + 0.5)
             p = dist(val)
             if p > p_max:
@@ -175,7 +186,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         boundsMax = starttime + i*binWidth
 
         # calculate expected number of events in this bin
-        binnedNevt = integrate.quad(interpolatedNevt, boundsMin, boundsMax)[0]
+        binnedNevt = interpolatedNevt(boundsMin + 0.5*binWidth)
         # randomly select number of events in this bin from Poisson distribution around binnedNevt:
         binnedNevtRnd = np.random.poisson(binnedNevt)
         # find the total number of events over all bins
@@ -190,8 +201,8 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         if binnedNevtRnd == 0: continue
 
         # create binned values for energy, mean squared energy and shape parameter
-        binnedEnergy = integrate.quad(interpolatedEnergy, boundsMin, boundsMax)[0] / binWidth
-        binnedMSEnergy = integrate.quad(interpolatedMSEnergy, boundsMin, boundsMax)[0] / binWidth
+        binnedEnergy = interpolatedEnergy(boundsMin + 0.5*binWidth)
+        binnedMSEnergy = interpolatedMSEnergy(boundsMin + 0.5*binWidth)
         binnedAlpha = (2*binnedEnergy**2 - binnedMSEnergy)/(binnedMSEnergy - binnedEnergy**2)
 
         # define particle for each event in time interval
