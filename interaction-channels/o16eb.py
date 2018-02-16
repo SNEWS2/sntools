@@ -1,10 +1,11 @@
 '''
-Implementation of nu_e + 16O -> X + e-
+Implementation of anti-nu_e + 16O -> X + e+
 
-Based on Appendix B.3 of hep-ph/0307050.
-That paper only gives the toal cross section sigma(eNu), not the differential
-c.s. dSigma/dE (eNu, eE), but since we assume eE = eNu - 15 MeV, we can write
-the differential c.s. as sigma(eNu) * delta(eNu - 15 - eE).
+Very schematic implementation. Based on data in PRD 66,013007 and
+somewhat analogous to Appendix B.3 of hep-ph/0307050.
+That paper only gives the total cross section sigma(eNu), not the differential
+c.s. dSigma/dE (eNu, eE), but since we assume eE = eNu - 11.4 MeV, we can write
+the differential c.s. as sigma(eNu) * delta(eNu - 11.4 - eE).
 However, numpy doesn't implement a delta distribution and numpy's (numerical)
 integration doesn't play nice with sympy's (symbolic) DiracDelta, see:
 https://stackoverflow.com/questions/36755487/diracdelta-not-giving-correct-result#36755974
@@ -12,7 +13,7 @@ Instead, below we implement an approximation to DiracDelta: a function that's
 2*epsilon wide and 1/(2*epsilon) high, so that the integral is 1.
 '''
 
-e_thr = 15 # energy threshold for this reaction (~nuclear binding energy in 16O)
+e_thr = 11.4 # energy threshold for this reaction
 epsilon = 0.001 # for approximating DiracDelta distribution below
 
 
@@ -29,7 +30,7 @@ pid:
 ID of the outgoing (detected) particle, using Particle Data Group conventions
 (e.g. electron = 11, positron = -11)
 '''
-pid = 11
+pid = -11
 
 
 '''
@@ -76,14 +77,24 @@ Input:
 Output:
     one floating point number
 '''
-def dSigma_dE(eNu, eE): # eq. (B6)
+def dSigma_dE(eNu, eE):
     if abs(get_eE(eNu) - eE) > epsilon:
         # This should never be called since we set bounds_eE() accordingly above
         # ... but just in case:
         return 0
 
-    sigma0 = 4.7E-40 * (5.067731E10)**2 # convert cm^2 to MeV^-2, see http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
-    sigma = sigma0 * (eNu**0.25 - 15**0.25)**6
+    # parameters from my own fit to data in PRD 66,013007 (Table 1)
+    if eNu < 54:
+        sigma0 = 9.35E-44
+        a = 0.497
+        b = 4.753
+    else:
+        sigma0 = 7.91E-41
+        a = 0.2616
+        b = 5.18
+    # see http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
+    cm2mev = 5.067731E10
+    sigma = sigma0 * (eNu**a - e_thr**a)**b * cm2mev**2
     return sigma / (2*epsilon) # Ensure that integration over eE yields sigma
 
 
@@ -96,6 +107,8 @@ Input:
 Output:
     one floating point number
 '''
-def dSigma_dCosT(eNu, cosT): # eq. (B7)
+def dSigma_dCosT(eNu, cosT):
+    # Plots in PRD 36,2283 show this behaves roughly similar to the analogous
+    # nu_e reaction, so we use the same approximation. (hep-ph/0307050, eq. B7)
     x = (get_eE(eNu, cosT) / 25)**4
     return 1 - cosT * (1+x)/(3+x)

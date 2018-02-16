@@ -26,10 +26,10 @@ parser.add_option("-H", "--hierarchy", dest="hierarchy",
                   metavar="HIERARCHY",
                   choices=optchoices, default=optdefault)
 
-optchoices = ["all", "ibd", "es", "oxy-nue"]
+optchoices = ["all", "ibd", "es", "o16e", "o16eb"]
 optdefault = "all"
 parser.add_option("-c", "--channel", dest="channel",
-                  help="Interaction channels to consider. Currently, inverse beta decay (ibd), electron scattering (es) and nu_e + oxygen CC (oxy-nue) are supported. Choices: %s. Default: %s" \
+                  help="Interaction channels to consider. Currently, inverse beta decay (ibd), electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC (o16eb) are supported. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
                   metavar="INTCHANNEL",
                   choices=optchoices, default=optdefault)
@@ -145,8 +145,10 @@ if (hierarchy == "noosc"):
         execute("es", "eb", 1, "eb")
         execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
         execute("es", "x",  2, "xb") # anti-nu_x have different cross section then nu_x but use same input file
-    if (channel == "oxy-nue" or channel == "all"):
-        execute("oxy-nue", "e", 1)
+    if (channel == "o16e" or channel == "all"):
+        execute("o16e", "e", 1)
+    if (channel == "o16eb" or channel == "all"):
+        execute("o16eb", "eb", 1)
 
 if (hierarchy == "normal"):
     if (channel == "ibd" or channel == "all"):
@@ -160,8 +162,11 @@ if (hierarchy == "normal"):
         execute("es", "x",  1, "x") # nu_x that originated as nu_x
         execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
         execute("es", "x",  1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
-    if (channel == "oxy-nue" or channel == "all"):
-        execute("oxy-nue", "x", 1)
+    if (channel == "o16e" or channel == "all"):
+        execute("o16e", "x", 1)
+    if (channel == "o16eb" or channel == "all"):
+        execute("o16e", "eb", cos2t12)
+        execute("o16e", "x", sin2t12)
 
 if (hierarchy == "inverted"):
     if (channel == "ibd" or channel == "all"):
@@ -174,9 +179,11 @@ if (hierarchy == "inverted"):
         execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
         execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
         execute("es", "x",  1, "xb") # anti-nu_x that originated as anti-nu_x
-    if (channel == "oxy-nue" or channel == "all"):
-        execute("oxy-nue", "e", sin2t12)
-        execute("oxy-nue", "x", cos2t12)
+    if (channel == "o16e" or channel == "all"):
+        execute("o16e", "e", sin2t12)
+        execute("o16e", "x", cos2t12)
+    if (channel == "o16eb" or channel == "all"):
+        execute("o16eb", "x", 1)
 
 
 '''
@@ -206,7 +213,7 @@ for i in range(len(events)):
     ene = event[2]
     (dirx, diry, dirz) = (event[3], event[4], event[5])
 
-    if verbose: print "events[%d] = %s" %(i, event)
+#     if verbose: print "events[%d] = %s" %(i, event)
 
     # create random vertex position inside the detector volume
     rad    = detectors[options.detector][0] - 20.
