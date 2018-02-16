@@ -119,5 +119,5 @@ def bounds_eE(eNu, *args): # ignore additional arguments handed over by integrat
 # Bounds for integration over eNu
 def eNu_min(eE):
     return T(eE)/2. * (1 + sqrt(1 + 2*mE/T(eE))) # inversion of eE_max(eNu)
-eNu_max = 50
+eNu_max = 80
 bounds_eNu = [eNu_min(eE_min), eNu_max]
