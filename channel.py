@@ -73,14 +73,17 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     # see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
     dSquared = (1.563738e+33)**2
 
-    # energy distribution of neutrinos
-    def gamma_dist(eNu, alpha, a):
-        return eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
+    def dFlux_dE(eNu, time):
+        a = e_dict[time]
+        e_sq = e_sq_dict[time]
+        luminosity = lum_dict.get(time, 1) # default to 1 -- we don't need the luminosity for rejection sampling, so we save time by not calculating it
+        alpha = (2*a**2 - e_sq) / (e_sq - a**2)
+        # energy of neutrinos follows a gamma distribution
+        gamma_dist = eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
 
-    def dFlux_dE(eNu, luminosity, alpha, a):
         # The `normalization` factor takes into account the oscillation probability
         # as well as the distance (if not equal to 10 kpc).
-        return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu, alpha, a) * normalization
+        return 1/(4*pi*dSquared) * luminosity/a * gamma_dist * normalization
 
 
     '''
@@ -90,10 +93,13 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     * Interpolate to get event rate as a function of time.
     '''
     # double differential event rate
-    def ddEventRate(eE, eNu, alpha, a, L):
-        return dSigma_dE(eNu, eE) * dFlux_dE(eNu, L, alpha, a)
+    def ddEventRate(eE, eNu, time):
+        return dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
 
 
+    e_dict = {}
+    e_sq_dict = {}
+    lum_dict = {}
     nevtValues = []
     tValues = []
     aValues = []
@@ -101,17 +107,19 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
     n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
 
-    for (t, a, eNuSquared, L) in indata:
+    for (t, mean_e, mean_e_sq, lum) in indata:
         # get time, mean energy, mean squared energy, luminosity
-        tValues.append(1000 * t) # convert to ms
-        aValues.append(a)
-        eNuSquaredValues.append(eNuSquared)
-        L = L * 624.151 # convert from erg/s to MeV/ms
+        t = 1000 * t # convert to ms
+        tValues.append(t)
+        aValues.append(mean_e)
+        eNuSquaredValues.append(mean_e_sq)
 
-        alpha = (2*a**2 - eNuSquared) / (eNuSquared - a**2)
+        e_dict[t] = mean_e
+        e_sq_dict[t] = mean_e_sq
+        lum_dict[t] = lum * 624.151 # convert from erg/s to MeV/ms
 
         # integrate over eE and then eNu to obtain the event rate at time t
-        simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=(alpha, a, L)) [0]
+        simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t]) [0]
 
         # create a list of nevt values at time t for input into interpolation function
         nevtValues.append(simnevt)
@@ -158,9 +166,8 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         return val
 
     # return energy of interacting neutrino
-    def get_eNu(alpha, a):
-        # L is a constant factor so, for the purpose of rejection sampling, we can set it to 1.
-        dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, alpha, a, 1.))[0]
+    def get_eNu(time):
+        dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, time))[0]
         eNu = rejection_sample(dist, *bounds_eNu, n_bins=200)
         return eNu
 
@@ -187,12 +194,16 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     binned_e = interpolatedEnergy(binned_t)
     binned_e_sq = interpolatedMSEnergy(binned_t)
 
+    # save mean (squared) energy to dictionary to look it up based on time later
+    for (t, mean_e, mean_e_sq) in zip(binned_t, binned_e, binned_e_sq):
+        e_dict[t] = mean_e
+        e_sq_dict[t] = mean_e_sq
+
     with open(output, 'w') as outfile:
         # Iterate over bins to generate events.
         for i in range(n_bins):
             boundsMin = starttime + i * bin_width
             boundsMax = starttime + (i+1) * bin_width
-            alpha = (2*binned_e[i]**2 - binned_e_sq[i])/(binned_e_sq[i] - binned_e[i]**2)
 
             if verbose:
                 print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
@@ -204,7 +215,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
             for _ in range(binned_nevt[i]):
                 # Define properties of the particle
                 t = boundsMin + random.random() * bin_width
-                eNu = get_eNu(alpha, binned_e[i])
+                eNu = get_eNu(binned_t[i])
                 (dirx, diry, dirz) = get_direction(eNu)
                 ene = get_eE(eNu, dirz)
                 # write [t, pid, energy, dirx, diry, dirz] out to file
