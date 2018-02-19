@@ -204,34 +204,27 @@ for filename in tmpfiles:
 # sort events by time (i.e. the first element of the list)
 events.sort()
 
-# ... and write the events to vector file (`outfile`) in this nuance-like format
-outfile = open(output, 'w')
-for i in range(len(events)):
-    event = events[i]
-    t = event[0]
-    pid = int(event[1])
-    ene = event[2]
-    (dirx, diry, dirz) = (event[3], event[4], event[5])
+# Write the events out in this nuance-like format
+with open(output, 'w') as outfile:
+    for (i, event) in enumerate(events):
+        (t, pid, ene, dirx, diry, dirz) = event
 
-#     if verbose: print "events[%d] = %s" %(i, event)
+        # create random vertex position inside the detector volume
+        rad    = detectors[options.detector][0] - 20.
+        height = detectors[options.detector][1] - 20.
+        while True:
+            x = random.uniform(-rad, rad)
+            y = random.uniform(-rad, rad)
+            if x**2 + y**2 < rad**2: break
+        z = random.uniform(-height/2, height/2)
 
-    # create random vertex position inside the detector volume
-    rad    = detectors[options.detector][0] - 20.
-    height = detectors[options.detector][1] - 20.
-    while True:
-        x = random.uniform(-rad, rad)
-        y = random.uniform(-rad, rad)
-        if x**2 + y**2 < rad**2: break
-    z = random.uniform(-height/2, height/2)
+        outfile.write("$ begin\n")
+        outfile.write("$ nuance 0\n")
+        outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
+        outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
+        outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
+        outfile.write("$ info 0 0 %i\n" % i)
+        outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
+        outfile.write("$ end\n")
 
-    outfile.write("$ begin\n")
-    outfile.write("$ nuance 0\n")
-    outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
-    outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
-    outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
-    outfile.write("$ info 0 0 %i\n" % i)
-    outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
-    outfile.write("$ end\n")
-
-outfile.write("$ stop\n")
-outfile.close()
+    outfile.write("$ stop\n")

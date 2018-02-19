@@ -55,13 +55,13 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     duration = endtime - starttime
 
     channel_module = import_module("interaction-channels." + channel)
-    dSigma_dE = getattr(channel_module,"dSigma_dE")
-    get_eE = getattr(channel_module,"get_eE")
-    dSigma_dCosT = getattr(channel_module,"dSigma_dCosT")
-    bounds_eE = getattr(channel_module,"bounds_eE")
-    bounds_eNu = getattr(channel_module,"bounds_eNu")
-    targets_per_molecule = getattr(channel_module,"targets_per_molecule")
-    pid = getattr(channel_module,"pid")
+    dSigma_dE = getattr(channel_module, "dSigma_dE")
+    get_eE = getattr(channel_module, "get_eE")
+    dSigma_dCosT = getattr(channel_module, "dSigma_dCosT")
+    bounds_eE = getattr(channel_module, "bounds_eE")
+    bounds_eNu = getattr(channel_module, "bounds_eNu")
+    targets_per_molecule = getattr(channel_module, "targets_per_molecule")
+    pid = getattr(channel_module, "pid")
 
 
     '''
@@ -77,7 +77,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     def gamma_dist(eNu, alpha, a):
         return eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
 
-    def dFluxdE(eNu, luminosity, alpha, a):
+    def dFlux_dE(eNu, luminosity, alpha, a):
         # The `normalization` factor takes into account the oscillation probability
         # as well as the distance (if not equal to 10 kpc).
         return 1/(4*pi*dSquared) * luminosity/a * gamma_dist(eNu, alpha, a) * normalization
@@ -91,14 +91,13 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     '''
     # double differential event rate
     def ddEventRate(eE, eNu, alpha, a, L):
-        return dSigma_dE(eNu, eE)*dFluxdE(eNu, L, alpha, a)
+        return dSigma_dE(eNu, eE) * dFlux_dE(eNu, L, alpha, a)
 
 
     nevtValues = []
     tValues = []
     aValues = []
     eNuSquaredValues = []
-    total_nevt = 0
     molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
     n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
 
@@ -176,47 +175,39 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     bin_width = 1 # bin width in ms
     n_bins = int(duration/bin_width) # number of full-width bins; int() implies floor()
     if verbose:
-        print "Now generating events in %s ms bins between %s-%s ms" % (bin_width, starttime, endtime)
+        print "Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms"
         print "**************************************"
 
     # scipy is optimized for parallel operation on large arrays, making
     # it orders of magnitude faster to evaluate these interpolated
     # functions for all bins at the same time.
     binned_t = [starttime + (i+0.5)*bin_width for i in range(n_bins)]
-    binned_nevt = interpolatedNevt(binned_t)
+    binned_nevt_th = interpolatedNevt(binned_t)
+    binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
     binned_e = interpolatedEnergy(binned_t)
     binned_e_sq = interpolatedMSEnergy(binned_t)
 
-    outfile = open(output, 'w')
-    # Iterate over bins to generate events.
-    for i in range(n_bins):
-        boundsMin = starttime + i * bin_width
-        boundsMax = starttime + (i+1) * bin_width
+    with open(output, 'w') as outfile:
+        # Iterate over bins to generate events.
+        for i in range(n_bins):
+            boundsMin = starttime + i * bin_width
+            boundsMax = starttime + (i+1) * bin_width
+            alpha = (2*binned_e[i]**2 - binned_e_sq[i])/(binned_e_sq[i] - binned_e[i]**2)
 
-        # Get random number of events in this bin from Poisson distribution
-        nevt = np.random.poisson(binned_nevt[i])
-        total_nevt += nevt
+            if verbose:
+                print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+                print "Nevt (theor.) =", binned_nevt_th[i]
+                print "Nevt (actual) =", binned_nevt[i]
+                print "**************************************"
 
-        if verbose:
-            print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
-            print "Nevt (theor.) =", binned_nevt[i]
-            print "Nevt (actual) =", nevt
-            print "**************************************"
+            # define particle for each event in time interval
+            for _ in range(binned_nevt[i]):
+                # Define properties of the particle
+                t = boundsMin + random.random() * bin_width
+                eNu = get_eNu(alpha, binned_e[i])
+                (dirx, diry, dirz) = get_direction(eNu)
+                ene = get_eE(eNu, dirz)
+                # write [t, pid, energy, dirx, diry, dirz] out to file
+                outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, pid, ene, dirx, diry, dirz))
 
-        if nevt == 0: continue
-
-        alpha = (2*binned_e[i]**2 - binned_e_sq[i])/(binned_e_sq[i] - binned_e[i]**2)
-
-        # define particle for each event in time interval
-        for _ in range(nevt):
-            # Define properties of the particle
-            t = boundsMin + random.random() * bin_width
-            eNu = get_eNu(alpha, binned_e[i])
-            (dirx, diry, dirz) = get_direction(eNu)
-            ene = get_eE(eNu, dirz)
-            # write [t, pid, energy, dirx, diry, dirz] out to file
-            outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, pid, ene, dirx, diry, dirz))
-
-    print(("Wrote %i particles to " % total_nevt) + output)
-
-    outfile.close()
+    print "Wrote", sum(binned_nevt), "particles to", output
