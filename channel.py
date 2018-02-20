@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from importlib import import_module
-from math import pi, sin, cos, acos, gamma, exp, floor, ceil
+from math import pi, sin, cos, acos
 import numpy as np
 import random
 from scipy import integrate, interpolate
@@ -19,40 +19,11 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     detectors = {"SuperK": 32.5,
                  "HyperK": 220} # one-tank configuration
 
-    # read data from input file, remove lines with comments and empty lines
-    with open(input) as infile:
-        if verbose: print "Reading neutrino simulation data from", input, "..."
-        raw_indata = [map(float, line.split(",")) for line in infile if not (line.startswith("#") or line.isspace())]
-
-    # if start time and end time are not given as command line arguments, get them from 1st/last line of input file
-    _starttime = raw_indata[0][0]
-    _endtime = raw_indata[-1][0]
-
-    if not starttime:
-        starttime = _starttime
-    elif starttime < _starttime:
-        print("Error: Start time must be greater than time in first line of input file. Aborting ...")
-        exit()
-
-    if not endtime:
-        endtime = _endtime
-    elif endtime > _endtime:
-        print("Error: End time must be less than time in last line of input file. Aborting ...")
-        exit()
-
-    # remove entries outside the requested range
-    indata = []
-    for (i, entry) in enumerate(raw_indata):
-        if i == 0: continue
-        if entry[0] > starttime:
-            indata.append(raw_indata[i-1])
-            if entry[0] > endtime:
-                indata.append(entry)
-                break
-
-    starttime = ceil(float(starttime) * 1000) # convert to ms
-    endtime = floor(float(endtime) * 1000)
-    duration = endtime - starttime
+    # TODO: make the module into an argument
+    mod_flux = import_module("flux-garching")
+    parse_input = getattr(mod_flux, "parse_input")
+    nu_emission = getattr(mod_flux, "nu_emission")
+    prepare_evt_gen = getattr(mod_flux, "prepare_evt_gen")
 
     channel_module = import_module("interaction-channels." + channel)
     dSigma_dE = getattr(channel_module, "dSigma_dE")
@@ -62,6 +33,9 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     bounds_eNu = getattr(channel_module, "bounds_eNu")
     targets_per_molecule = getattr(channel_module, "targets_per_molecule")
     pid = getattr(channel_module, "pid")
+
+    (starttime, endtime, raw_times) = parse_input(input, starttime, endtime)
+    duration = endtime - starttime
 
 
     '''
@@ -74,14 +48,11 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     dSquared = (1.563738e+33)**2
 
     def dFlux_dE(eNu, time):
-        (a, e_sq, luminosity) = flux[time]
-        alpha = (2*a**2 - e_sq) / (e_sq - a**2)
-        # energy of neutrinos follows a gamma distribution
-        gamma_dist = eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
+        emission = nu_emission(eNu, time)
 
         # The `normalization` factor takes into account the oscillation probability
         # as well as the distance (if not equal to 10 kpc).
-        return 1/(4*pi*dSquared) * luminosity/a * gamma_dist * normalization
+        return 1/(4*pi*dSquared) * emission * normalization
 
 
     '''
@@ -95,29 +66,17 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         return dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
 
 
-    flux = {}
-    nevtValues = []
+    raw_nevts = []
     molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
     n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
 
-    for (t, mean_e, mean_e_sq, lum) in indata:
-        # get time, mean energy, mean squared energy, luminosity
-        t = 1000 * t # convert to ms
-        flux[t] = (mean_e, mean_e_sq, lum * 624.151) # convert lum from erg/s to MeV/ms
-
+    for t in raw_times:
         # integrate over eE and then eNu to obtain the event rate at time t
         simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t]) [0]
-
         # create a list of nevt values at time t for input into interpolation function
-        nevtValues.append(simnevt)
+        raw_nevts.append(simnevt)
 
-    _flux = sorted([(k,)+v for (k,v) in flux.items()]) # list of tuples: (t, e, e_sq, lum)
-    (raw_t, raw_e, raw_e_sq) = [[entry[i] for entry in _flux] for i in range(3)]
-
-    # interpolate the mean energy, mean squared energy and event rate
-    interpolatedEnergy = interpolate.pchip(raw_t, raw_e)
-    interpolatedMSEnergy = interpolate.pchip(raw_t, raw_e_sq)
-    interpolatedNevt = interpolate.pchip(raw_t, nevtValues)
+    interpolatedNevt = interpolate.pchip(raw_times, raw_nevts)
 
 
     '''
@@ -181,13 +140,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     binned_t = [starttime + (i+0.5)*bin_width for i in range(n_bins)]
     binned_nevt_th = interpolatedNevt(binned_t)
     binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
-    binned_e = interpolatedEnergy(binned_t)
-    binned_e_sq = interpolatedMSEnergy(binned_t)
-
-    for (t, mean_e, mean_e_sq) in zip(binned_t, binned_e, binned_e_sq):
-        # we don't need to calculate the luminosity -- it's just a constant
-        # factor that doesn't change the result of rejection sampling below
-        flux[t] = (mean_e, mean_e_sq, 1)
+    prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
     with open(output, 'w') as outfile:
         # Iterate over bins to generate events.
