@@ -74,9 +74,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     dSquared = (1.563738e+33)**2
 
     def dFlux_dE(eNu, time):
-        a = e_dict[time]
-        e_sq = e_sq_dict[time]
-        luminosity = lum_dict.get(time, 1) # default to 1 -- we don't need the luminosity for rejection sampling, so we save time by not calculating it
+        (a, e_sq, luminosity) = flux[time]
         alpha = (2*a**2 - e_sq) / (e_sq - a**2)
         # energy of neutrinos follows a gamma distribution
         gamma_dist = eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/a)**(alpha + 1) * exp(-(alpha + 1)* eNu/a)
@@ -97,26 +95,15 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         return dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
 
 
-    e_dict = {}
-    e_sq_dict = {}
-    lum_dict = {}
+    flux = {}
     nevtValues = []
-    tValues = []
-    aValues = []
-    eNuSquaredValues = []
     molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
     n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
 
     for (t, mean_e, mean_e_sq, lum) in indata:
         # get time, mean energy, mean squared energy, luminosity
         t = 1000 * t # convert to ms
-        tValues.append(t)
-        aValues.append(mean_e)
-        eNuSquaredValues.append(mean_e_sq)
-
-        e_dict[t] = mean_e
-        e_sq_dict[t] = mean_e_sq
-        lum_dict[t] = lum * 624.151 # convert from erg/s to MeV/ms
+        flux[t] = (mean_e, mean_e_sq, lum * 624.151) # convert lum from erg/s to MeV/ms
 
         # integrate over eE and then eNu to obtain the event rate at time t
         simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t]) [0]
@@ -124,10 +111,13 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         # create a list of nevt values at time t for input into interpolation function
         nevtValues.append(simnevt)
 
+    _flux = sorted([(k,)+v for (k,v) in flux.items()]) # list of tuples: (t, e, e_sq, lum)
+    (raw_t, raw_e, raw_e_sq) = [[entry[i] for entry in _flux] for i in range(3)]
+
     # interpolate the mean energy, mean squared energy and event rate
-    interpolatedEnergy = interpolate.pchip(tValues, aValues)
-    interpolatedMSEnergy = interpolate.pchip(tValues, eNuSquaredValues)
-    interpolatedNevt = interpolate.pchip(tValues, nevtValues)
+    interpolatedEnergy = interpolate.pchip(raw_t, raw_e)
+    interpolatedMSEnergy = interpolate.pchip(raw_t, raw_e_sq)
+    interpolatedNevt = interpolate.pchip(raw_t, nevtValues)
 
 
     '''
@@ -194,10 +184,10 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     binned_e = interpolatedEnergy(binned_t)
     binned_e_sq = interpolatedMSEnergy(binned_t)
 
-    # save mean (squared) energy to dictionary to look it up based on time later
     for (t, mean_e, mean_e_sq) in zip(binned_t, binned_e, binned_e_sq):
-        e_dict[t] = mean_e
-        e_sq_dict[t] = mean_e_sq
+        # we don't need to calculate the luminosity -- it's just a constant
+        # factor that doesn't change the result of rejection sampling below
+        flux[t] = (mean_e, mean_e_sq, 1)
 
     with open(output, 'w') as outfile:
         # Iterate over bins to generate events.
