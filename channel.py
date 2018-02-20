@@ -10,15 +10,12 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
          normalization=1.0, detector="SuperK", starttime=None, endtime=None,
          verbose=False):
 
-    '''
-    Setup section.
-    * Read in data from input file and apply start & end time.
-    * Import channel-specific functions & parameters from separate files
-    '''
-    # inner detector mass, in metric kt
-    detectors = {"SuperK": 32.5,
-                 "HyperK": 220} # one-tank configuration
+    """Setup.
 
+    * Import module for reading input file.
+    * Import module with interaction channel-specific functions & parameters.
+    * Other setup.
+    """
     # TODO: make the module into an argument
     mod_flux = import_module("flux-garching")
     parse_input = getattr(mod_flux, "parse_input")
@@ -34,15 +31,16 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     targets_per_molecule = getattr(channel_module, "targets_per_molecule")
     pid = getattr(channel_module, "pid")
 
-    (starttime, endtime, raw_times) = parse_input(input, starttime, endtime)
-    duration = endtime - starttime
+    # inner detector mass, in metric kt
+    detectors = {"SuperK": 32.5,
+                 "HyperK": 220} # one-tank configuration
 
 
-    '''
-    Astrophysics section.
-    * neutrinos are well described by a Gamma distribution (arXiv:1211.3920)
-    * calculate energy-dependent flux at a fiducial distance of 10 kpc
-    '''
+    """Helper functions."""
+    # double differential event rate
+    def ddEventRate(eE, eNu, time):
+        return dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
+
     # Convert fiducial distance of 10 kpc into units of MeV**(-1)
     # see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
     dSquared = (1.563738e+33)**2
@@ -54,37 +52,6 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         # as well as the distance (if not equal to 10 kpc).
         return 1/(4*pi*dSquared) * emission * normalization
 
-
-    '''
-    Preparation section.
-    * Parse input data.
-    * For each time step in the input data, calculate instantaneous event rate.
-    * Interpolate to get event rate as a function of time.
-    '''
-    # double differential event rate
-    def ddEventRate(eE, eNu, time):
-        return dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
-
-
-    raw_nevts = []
-    molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
-    n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
-
-    for t in raw_times:
-        # integrate over eE and then eNu to obtain the event rate at time t
-        simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t]) [0]
-        # create a list of nevt values at time t for input into interpolation function
-        raw_nevts.append(simnevt)
-
-    interpolatedNevt = interpolate.pchip(raw_times, raw_nevts)
-
-
-    '''
-    Event generation section.
-    * For each time bin, get number of events from a Poisson distribution.
-    * Generate random events with appropriate distribution of time/energy/direction.
-    * Write them to output file.
-    '''
     # Use rejection sampling to get a value from the distribution dist
     def rejection_sample(dist, min_val, max_val, n_bins=100):
         p_max = 0
@@ -128,28 +95,49 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
         phi = 2 * pi * random.random() # randomly distributed in [0, 2 pi)
         return (sinT*cos(phi), sinT*sin(phi), cosT)
 
+
+    """Main section.
+
+    * Get event rate by interpolating from time steps in the input data.
+    * For each 1ms bin, get number of events from a Poisson distribution.
+    * Generate random events with appropriately distributed energy & direction.
+    * Write them to output file.
+    """
+    (starttime, endtime, raw_times) = parse_input(input, starttime, endtime)
+    duration = endtime - starttime
+
+    raw_nevts = []
+    molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
+    n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
+
+    for t in raw_times:
+        # integrate over eE and then eNu to obtain the event rate at time t
+        simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t]) [0]
+        # create a list of nevt values at time t for input into interpolation function
+        raw_nevts.append(simnevt)
+
+    event_rate = interpolate.pchip(raw_times, raw_nevts)
+
     bin_width = 1 # bin width in ms
     n_bins = int(duration/bin_width) # number of full-width bins; int() implies floor()
     if verbose:
         print "Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms"
         print "**************************************"
 
-    # scipy is optimized for parallel operation on large arrays, making
-    # it orders of magnitude faster to evaluate these interpolated
-    # functions for all bins at the same time.
+    # scipy is optimized for operating on large arrays, making it orders of
+    # magnitude faster to pre-compute all values of the interpolated functions.
     binned_t = [starttime + (i+0.5)*bin_width for i in range(n_bins)]
-    binned_nevt_th = interpolatedNevt(binned_t)
+    binned_nevt_th = event_rate(binned_t)
     binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
     prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
     with open(output, 'w') as outfile:
         # Iterate over bins to generate events.
         for i in range(n_bins):
-            boundsMin = starttime + i * bin_width
-            boundsMax = starttime + (i+1) * bin_width
+            t0 = starttime + i * bin_width
 
             if verbose:
-                print "timebin       = %s-%s ms" % (boundsMin, boundsMax)
+                print "timebin       = %s-%s ms" % (t0, t0 + bin_width)
                 print "Nevt (theor.) =", binned_nevt_th[i]
                 print "Nevt (actual) =", binned_nevt[i]
                 print "**************************************"
@@ -157,7 +145,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
             # define particle for each event in time interval
             for _ in range(binned_nevt[i]):
                 # Define properties of the particle
-                t = boundsMin + random.random() * bin_width
+                t = t0 + random.random() * bin_width
                 eNu = get_eNu(binned_t[i])
                 (dirx, diry, dirz) = get_direction(eNu)
                 ene = get_eE(eNu, dirz)

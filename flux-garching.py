@@ -24,7 +24,7 @@ def parse_input(input, starttime=None, endtime=None):
     """
 
     # Ensure changes to these variables endure beyond this function's scope.
-    global flux, interpolatedEnergy, interpolatedMSEnergy
+    global flux, interpolated_e, interpolated_e_sq
 
     # read data from input file, ignoring lines with comments and empty lines
     with open(input) as infile:
@@ -70,8 +70,8 @@ def parse_input(input, starttime=None, endtime=None):
     (raw_t, raw_e, raw_e_sq) = [[entry[i] for entry in _flux] for i in range(3)]
 
     # interpolate the mean energy and mean squared energy
-    interpolatedEnergy = interpolate.pchip(raw_t, raw_e)
-    interpolatedMSEnergy = interpolate.pchip(raw_t, raw_e_sq)
+    interpolated_e = interpolate.pchip(raw_t, raw_e)
+    interpolated_e_sq = interpolate.pchip(raw_t, raw_e_sq)
 
     return (starttime, endtime, raw_t)
 
@@ -86,8 +86,8 @@ def prepare_evt_gen(binned_t):
     Argument:
     binned_t -- list of time bins for generating events
     """
-    binned_e = interpolatedEnergy(binned_t)
-    binned_e_sq = interpolatedMSEnergy(binned_t)
+    binned_e = interpolated_e(binned_t)
+    binned_e_sq = interpolated_e_sq(binned_t)
 
     for (t, mean_e, mean_e_sq) in zip(binned_t, binned_e, binned_e_sq):
         # Since the event rate is already known, luminosity can now be set to a
