@@ -103,6 +103,7 @@ def main(channel="ibd", input="infile_eb.txt", output="tmp_ibd_eb.txt",
     * Generate random events with appropriately distributed energy & direction.
     * Write them to output file.
     """
+    if verbose: print "Reading neutrino simulation data from", input, "..."
     (starttime, endtime, raw_times) = parse_input(input, starttime, endtime)
     duration = endtime - starttime
 

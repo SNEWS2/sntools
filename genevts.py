@@ -11,11 +11,7 @@ import random
 import channel as chnl
 
 
-'''
-Setup section.
-* Define command line options.
-* Parse input options (and perform some sanity checks).
-'''
+"""Define and parse command line options."""
 parser = OptionParser()
 
 optchoices = ["noosc", "normal", "inverted"]

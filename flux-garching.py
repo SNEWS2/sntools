@@ -10,9 +10,6 @@ See the file 'sample-in.txt' for details.
 from math import ceil, floor, gamma, exp
 from scipy import interpolate
 
-#TODO
-verbose = True
-
 
 def parse_input(input, starttime=None, endtime=None):
     """Read simulations data from input file.
@@ -28,7 +25,6 @@ def parse_input(input, starttime=None, endtime=None):
 
     # read data from input file, ignoring lines with comments and empty lines
     with open(input) as infile:
-        if verbose: print "Reading neutrino simulation data from", input, "..."
         raw_indata = [map(float, line.split(",")) for line in infile if not (line.startswith("#") or line.isspace())]
 
     # Compare start/end time entered by user with first/last line of input file
