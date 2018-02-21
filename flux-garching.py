@@ -11,14 +11,17 @@ from math import ceil, floor, gamma, exp
 from scipy import interpolate
 
 
-def parse_input(input, starttime=None, endtime=None):
+def parse_input(input, inflv, starttime=None, endtime=None):
     """Read simulations data from input file.
 
     Arguments:
-    input -- name of file containing neutrino fluxes
+    input -- prefix of file containing neutrino fluxes
+    inflv -- neutrino flavor to consider
     starttime -- start time set by user via command line option (or None)
     endtime -- end time set by user via command line option (or None)
     """
+    if inflv == "xb": inflv = "x" # there are no separate files for anti-nu_x
+    input = input + "_" + inflv + ".txt"
     # read data from input file, ignoring lines with comments and empty lines
     with open(input) as infile:
         raw_indata = [map(float, line.split(",")) for line in infile if not (line.startswith("#") or line.isspace())]

@@ -2,7 +2,7 @@
 
 # call this as
 # $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile.kin -d [SuperK|HyperK]
-# where the input files are called infile_{e,eb,x}.txt and the output file is outfile.kin
+# where the input files share the prefix 'infile' and the output file is 'outfile.kin'
 
 import __builtin__
 from optparse import OptionParser
@@ -32,8 +32,8 @@ parser.add_option("-c", "--channel", dest="channel",
 
 optdefault = "infile"
 parser.add_option("-i", "--input", dest="input",
-                  help="Common prefix of the input files. Default: '%s', which results in the files '%s_e.txt', '%s_eb.txt' and '%s_x.txt' being read." \
-                      % (optdefault, optdefault, optdefault, optdefault),
+                  help="Common prefix of the input files. Default: '%s'." \
+                      % (optdefault),
                   metavar="PREFIX",
                   default=optdefault)
 
@@ -87,14 +87,14 @@ endtime = float(options.endtime) if options.endtime else None
 verbose = options.verbose
 
 if verbose:
-    print "channel   =", channel
-    print "hierarchy =", hierarchy
-    print "inputs    =", input + "_e.txt", input + "_eb.txt", input + "_x.txt"
-    print "output    =", output
-    print "detector  =", detector
-    print "distance  =", distance
-    print "starttime =", starttime
-    print "endtime   =", endtime
+    print "channel      =", channel
+    print "hierarchy    =", hierarchy
+    print "input prefix =", input
+    print "output       =", output
+    print "detector     =", detector
+    print "distance     =", distance
+    print "starttime    =", starttime
+    print "endtime      =", endtime
 
 
 '''
@@ -125,61 +125,60 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
     if this_channel == "es": __builtin__._flavor = detected_flavor
 
     n = n * (10.0/distance)**2 # flux is proportional to 1/distance**2
-    infile = "%s_%s.txt" % (input, original_flavor)
     tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
     tmpfiles.append(tmpfile)
 
-    cmd = "chnl.main(channel='%s', input='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" % (this_channel, infile, tmpfile, n, detector, starttime, endtime, verbose)
+    cmd = "chnl.main(channel='%s', input='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" % (this_channel, input, original_flavor, tmpfile, n, detector, starttime, endtime, verbose)
     if verbose: print "Now executing:", cmd
     exec(cmd)
 
-if (hierarchy == "noosc"):
+if hierarchy == "noosc":
     if (channel == "ibd" or channel == "all"):
         execute("ibd", "eb", 1)
     if (channel == "es" or channel == "all"):
         execute("es", "e",  1, "e")
         execute("es", "eb", 1, "eb")
         execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
-        execute("es", "x",  2, "xb") # anti-nu_x have different cross section then nu_x but use same input file
+        execute("es", "xb", 2, "xb")
     if (channel == "o16e" or channel == "all"):
         execute("o16e", "e", 1)
     if (channel == "o16eb" or channel == "all"):
         execute("o16eb", "eb", 1)
 
-if (hierarchy == "normal"):
+if hierarchy == "normal":
     if (channel == "ibd" or channel == "all"):
         execute("ibd", "eb", cos2t12)
-        execute("ibd", "x",  sin2t12)
+        execute("ibd", "xb", sin2t12)
     if (channel == "es" or channel == "all"):
         execute("es", "x",  1, "e") # nu_e that originated as nu_x
         execute("es", "eb", cos2t12, "eb") # anti-nu_e that originated as anti-nu_e
-        execute("es", "x",  sin2t12, "eb") # anti-nu_e that originated as anti-nu_x
+        execute("es", "xb", sin2t12, "eb") # anti-nu_e that originated as anti-nu_x
         execute("es", "e",  1, "x") # nu_x that originated as nu_e
         execute("es", "x",  1, "x") # nu_x that originated as nu_x
         execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
-        execute("es", "x",  1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
+        execute("es", "xb", 1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
     if (channel == "o16e" or channel == "all"):
         execute("o16e", "x", 1)
     if (channel == "o16eb" or channel == "all"):
         execute("o16e", "eb", cos2t12)
-        execute("o16e", "x", sin2t12)
+        execute("o16e", "xb", sin2t12)
 
-if (hierarchy == "inverted"):
+if hierarchy == "inverted":
     if (channel == "ibd" or channel == "all"):
-        execute("ibd", "x", 1)
+        execute("ibd", "xb", 1)
     if (channel == "es" or channel == "all"):
         execute("es", "e",  sin2t12, "e") # nu_e that originated as nu_e
         execute("es", "x",  cos2t12, "e") # nu_e that originated as nu_x
-        execute("es", "x",  1, "eb") # anti-nu_e that originated as anti-nu_x
+        execute("es", "xb", 1, "eb") # anti-nu_e that originated as anti-nu_x
         execute("es", "e",  cos2t12, "x") # nu_x that originated as nu_e
         execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
         execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
-        execute("es", "x",  1, "xb") # anti-nu_x that originated as anti-nu_x
+        execute("es", "xb", 1, "xb") # anti-nu_x that originated as anti-nu_x
     if (channel == "o16e" or channel == "all"):
         execute("o16e", "e", sin2t12)
         execute("o16e", "x", cos2t12)
     if (channel == "o16eb" or channel == "all"):
-        execute("o16eb", "x", 1)
+        execute("o16eb", "xb", 1)
 
 
 '''
