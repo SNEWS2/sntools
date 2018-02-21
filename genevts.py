@@ -63,11 +63,11 @@ parser.add_option("--distance", dest="distance",
                   default=optdefault)
 
 parser.add_option("--starttime", dest="starttime",
-                  help="Start generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
+                  help="Start generating events at T milliseconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
                   metavar="T")
 
 parser.add_option("--endtime", dest="endtime",
-                  help="Stop generating events at T seconds. Useful to speed up calculation if you are only interested in a short time window. Default: Last time bin in input file.",
+                  help="Stop generating events at T milliseconds. Useful to speed up calculation if you are only interested in a short time window. Default: Last time bin in input file.",
                   metavar="T")
 
 parser.add_option("-v", "--verbose", dest="verbose",

@@ -19,26 +19,24 @@ def parse_input(input, starttime=None, endtime=None):
     starttime -- start time set by user via command line option (or None)
     endtime -- end time set by user via command line option (or None)
     """
-
-    # Ensure changes to these variables endure beyond this function's scope.
-    global flux, interpolated_e, interpolated_e_sq
-
     # read data from input file, ignoring lines with comments and empty lines
     with open(input) as infile:
         raw_indata = [map(float, line.split(",")) for line in infile if not (line.startswith("#") or line.isspace())]
+    for entry in raw_indata:
+        entry[0] *= 1000 # convert time to ms
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = raw_indata[0][0]
     _endtime = raw_indata[-1][0]
 
     if not starttime:
-        starttime = _starttime
+        starttime = ceil(_starttime)
     elif starttime < _starttime:
         print("Error: Start time must be greater than time in first line of input file. Aborting ...")
         exit()
 
     if not endtime:
-        endtime = _endtime
+        endtime = floor(_endtime)
     elif endtime > _endtime:
         print("Error: End time must be less than time in last line of input file. Aborting ...")
         exit()
@@ -53,23 +51,13 @@ def parse_input(input, starttime=None, endtime=None):
                 indata.append(entry)
                 break
 
-    starttime = ceil(float(starttime) * 1000) # convert to ms
-    endtime = floor(float(endtime) * 1000)
-
+    # save mean energy, mean squared energy, luminosity to dictionary to look up in nu_emission() below
+    global flux
     flux = {}
     for (t, mean_e, mean_e_sq, lum) in indata:
-        # save mean energy, mean squared energy, luminosity to dictionary to look up in nu_emission() below
-        t = 1000 * t # convert to ms
         flux[t] = (mean_e, mean_e_sq, lum * 624.151) # convert lum from erg/s to MeV/ms
 
-    _flux = sorted([(k,)+v for (k,v) in flux.items()]) # list of tuples: (t, e, e_sq, lum)
-    (raw_t, raw_e, raw_e_sq) = [[entry[i] for entry in _flux] for i in range(3)]
-
-    # interpolate the mean energy and mean squared energy
-    interpolated_e = interpolate.pchip(raw_t, raw_e)
-    interpolated_e_sq = interpolate.pchip(raw_t, raw_e_sq)
-
-    return (starttime, endtime, raw_t)
+    return (starttime, endtime, sorted(flux.keys()))
 
 
 def prepare_evt_gen(binned_t):
@@ -82,6 +70,13 @@ def prepare_evt_gen(binned_t):
     Argument:
     binned_t -- list of time bins for generating events
     """
+    _flux = sorted([(k,)+v for (k,v) in flux.items()]) # list of tuples: (t, e, e_sq, lum)
+    (raw_t, raw_e, raw_e_sq) = [[entry[i] for entry in _flux] for i in range(3)]
+
+    # interpolate the mean energy and mean squared energy
+    interpolated_e = interpolate.pchip(raw_t, raw_e)
+    interpolated_e_sq = interpolate.pchip(raw_t, raw_e_sq)
+
     binned_e = interpolated_e(binned_t)
     binned_e_sq = interpolated_e_sq(binned_t)
 
