@@ -102,9 +102,7 @@ def nu_emission(eNu, time):
     (e, e_sq, luminosity) = flux[time]
     alpha = (2 * e**2 - e_sq) / (e_sq - e**2)
 
-    # total number = luminosity / mean energy
-    number = luminosity / e
     # energy of neutrinos follows a gamma distribution
     gamma_dist = eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/e)**(alpha + 1) * exp(-(alpha + 1) * eNu/e)
-
-    return number * gamma_dist
+    # total number = luminosity / mean energy
+    return luminosity / e * gamma_dist

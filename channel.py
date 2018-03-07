@@ -45,12 +45,18 @@ def main(channel="ibd", input="infile", inflv="eb",  output="tmp_ibd_eb.txt",
     # see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
     dSquared = (1.563738e+33)**2
 
+    # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
+    # often with repetitive arguments (when integrating ddEventRate over eE).
+    # To save time, we cache results in a dictionary.
+    cached_flux = {}
     def dFlux_dE(eNu, time):
-        emission = nu_emission(eNu, time)
+        if not cached_flux.has_key((eNu, time)):
+            emission = nu_emission(eNu, time)
+            # The `normalization` factor takes into account the oscillation probability
+            # as well as the distance (if not equal to 10 kpc).
+            cached_flux[(eNu, time)] = 1/(4*pi*dSquared) * emission * normalization
 
-        # The `normalization` factor takes into account the oscillation probability
-        # as well as the distance (if not equal to 10 kpc).
-        return 1/(4*pi*dSquared) * emission * normalization
+        return cached_flux[(eNu, time)]
 
     # Use rejection sampling to get a value from the distribution dist
     def rejection_sample(dist, min_val, max_val, n_bins=100):
