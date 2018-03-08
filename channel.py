@@ -119,8 +119,8 @@ def main(channel="ibd", input="infile", inflv="eb",  output="tmp_ibd_eb.txt",
     for t in raw_times:
         # integrate over eE and then eNu to obtain the event rate at time t
         simnevt = n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t]) [0]
-        # create a list of nevt values at time t for input into interpolation function
-        raw_nevts.append(simnevt)
+         # ignore negative simnevt, that's simply a numerical artefact
+        raw_nevts.append(simnevt if simnevt > 0 else 0)
 
     event_rate = interpolate.pchip(raw_times, raw_nevts)
 

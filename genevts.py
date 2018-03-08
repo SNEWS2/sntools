@@ -47,8 +47,8 @@ parser.add_option("-o", "--output", dest="output",
 # [radius, height] of inner detector in cm
 detectors = {"SuperK":[3368.15/2., 3620.],
              "HyperK":[7080./2., 5480.]}
-optchoices = detectors.keys() # list(detectors.keys()) in python3
-optdefault = detectors.keys()[0]
+optchoices = list(detectors)
+optdefault = optchoices[0]
 parser.add_option("-d", "--detector", dest="detector",
                   help="Detector configuration. Choices: %s. Default: %s" \
                       % (optchoices, optdefault),
