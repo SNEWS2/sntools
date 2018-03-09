@@ -22,52 +22,37 @@ alpha = 1 / 137.036 # fine structure constant
 gF = 1.16637e-11 # Fermi coupling constant
 sigma0 = 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2) # from eqs. (3), (11)
 
-def t(eNu, eE): # above eq. (11)
-    return mN**2 - mP**2 - 2*mP*(eNu-eE)
-def x(eNu, eE):
-    return t(eNu, eE) / (4*mAvg**2)
-def y(eNu, eE):
-    return 1 - t(eNu, eE)/710000
-def z(eNu, eE):
-    return 1 - t(eNu, eE)/1000000
-def f1(eNu, eE): # eq. (7)
-    return (1 - 4.706*x(eNu, eE)) / ((1-x(eNu, eE)) * y(eNu, eE)**2)
-def f2(eNu, eE): # eq. (7)
-    return 3.706 / ((1-x(eNu, eE)) * y(eNu, eE)**2)
-def g1(eNu, eE): # eq. (7)
-    return -1.27 / z(eNu, eE)**2
-def g2(eNu, eE): # eq. (7)
-    return 2 * g1(eNu, eE) * mAvg**2 / (mPi**2 - t(eNu, eE))
-
-# Use NLO approximation (eq. (10)) for A, B and C. This is accurate to
-# better than 0.1% for eNu < 40 MeV (see line 4 in table 2).
-def AM(eNu, eE):
-    return mAvg**2 * (f1(eNu, eE)**2 - g1(eNu, eE)**2) * (t(eNu, eE)-mE**2) \
-           - mAvg**2 * delta**2 * (f1(eNu, eE)**2 + g1(eNu, eE)**2) \
-           - 2 * mE**2 * mAvg * delta * g1(eNu, eE) * (f1(eNu, eE)+f2(eNu, eE))
-
-def BM(eNu, eE):
-    return t(eNu, eE) * g1(eNu, eE) * (f1(eNu, eE)+f2(eNu, eE))
-
-def CM(eNu, eE):
-    return (f1(eNu, eE)**2 + g1(eNu, eE)**2) / 4
-
-def sMinusU(eNu, eE): # above eq. (11)
-    return 2*mP*(eNu+eE) - mE**2
-
-def absMsquared(eNu, eE): # eq. (5)
-    return AM(eNu, eE) - sMinusU(eNu, eE) * BM(eNu, eE) + sMinusU(eNu, eE)**2 * CM(eNu, eE)
-
-def rad_correction(eE): # eq. (14)
-    return 1 + alpha/pi * (6 + 3./2 * log(mP / (2 * eE)) + 1.2 * (mE/eE)**1.5)
-
 def dSigma_dE(eNu, eE): # eqs. (11), (3)
-    return sigma0 / eNu**2 * absMsquared(eNu, eE) * rad_correction(eE)
+    # above eq. (11)
+    s_minus_u = 2*mP*(eNu+eE) - mE**2
+    t = mN**2 - mP**2 - 2*mP*(eNu-eE)
+
+    # eq. (7)
+    x = t / (4*mAvg**2)
+    y = 1 - t/710000
+    z = 1 - t/1000000
+    f1 = (1 - 4.706 * x) / ((1-x) * y**2)
+    f2 = 3.706 / ((1-x) * y**2)
+    g1 = -1.27 / z**2
+    g2 = 2 * g1 * mAvg**2 / (mPi**2 - t)
+
+    # Use NLO approximation (eq. (10)) for A, B and C. This is accurate to
+    # better than 0.1% for eNu < 40 MeV (see line 4 in table 2).
+    A = mAvg**2 * (f1**2 - g1**2) * (t - mE**2) \
+        - mAvg**2 * delta**2 * (f1**2 + g1**2) \
+        - 2 * mE**2 * mAvg * delta * g1 * (f1 + f2)
+    B = t * g1 * (f1 + f2)
+    C = (f1**2 + g1**2) / 4
+
+    abs_M_squared = A - B * s_minus_u + C * s_minus_u**2 # eq. (5)
+    rad_correction = alpha/pi * (6 + 3./2 * log(mP/(2*eE)) + 1.2 * (mE/eE)**1.5) # eq. (14)
+
+    return sigma0 / eNu**2 * abs_M_squared * (1 + rad_correction)
 
 
 # probability distribution for the angle at which the positron is emitted
 def dSigma_dCosT(eNu, cosT): # eq. (20)
-    epsilon = eNu/mP
+    epsilon = eNu / mP
     eE = get_eE(eNu, cosT)
     pE = sqrt(eE**2 - mE**2)
     dE_dCosT = pE * epsilon / (1 + epsilon * (1 - cosT * eE / pE))
@@ -75,7 +60,7 @@ def dSigma_dCosT(eNu, cosT): # eq. (20)
 
 
 def get_eE(eNu, cosT): # eq. (21)
-    epsilon = eNu/mP
+    epsilon = eNu / mP
     kappa = (1 + epsilon)**2 - (epsilon * cosT)**2
     return ((eNu - delta_cm) * (1 + epsilon) + epsilon * cosT * sqrt((eNu - delta_cm)**2 - mE**2 * kappa)) / kappa
 
