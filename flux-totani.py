@@ -146,8 +146,7 @@ def _parse(input, format, flv):
 
     # input files contain information for e, eb & x right next to each other,
     # so depending on the flavor, we might need an offset
-    offset = {"e": 0, "eb": 1, "x": 2, "xb": 2}
-    flv = offset[flv]
+    offset = {"e": 0, "eb": 1, "x": 2, "xb": 2}[flv]
 
     # for each time bin, save data to dictionaries to look up later
     for chunk in chunks:
@@ -156,15 +155,15 @@ def _parse(input, format, flv):
         times.append(time)
 
         # N = total number of neutrinos emitted up to this time
-        N = float(chunk[line_N].split()[flv])
-        if flv == 2: N /= 4 # file contains sum of nu_mu, nu_tau and anti-particles
+        N = float(chunk[line_N].split()[offset])
+        if offset == 2: N /= 4 # file contains sum of nu_mu, nu_tau and anti-particles
         N_dict[time] = N
 
         # number of neutrinos emitted in this time bin, separated into energy bins
         egroup = [zero] # start with 0 neutrinos at 0 MeV bin
         for i in range_egroup:
             line = map(float, chunk[i].split())
-            egroup.append(line[flv-3])
+            egroup.append(line[-3+offset])
 
             # Once, for the very first time bin, save the energy bins:
             if egroup_dict == {}:
