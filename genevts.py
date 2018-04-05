@@ -37,7 +37,7 @@ parser.add_option("-i", "--input", dest="input",
                   metavar="FILE",
                   default=optdefault)
 
-optchoices = ["garching", "totani"]
+optchoices = ["garching", "nakazato", "totani"]
 optdefault = "totani"
 parser.add_option("-f", "--format", dest="format",
                   help="Format of input files. See parsers in folder 'formats/' for details. Choices: %s. Default: %s" \

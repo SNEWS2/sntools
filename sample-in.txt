@@ -1,4 +1,4 @@
-# Sample input file for sntools.
+# Sample input file for sntools (using the `garching` format).
 # Lines starting with `#` are ignored by the script and can contain comments.
 # Data must be in the format
 #   time (s), mean energy (MeV), mean squared energy (MeV^2), luminosity (erg/s)
