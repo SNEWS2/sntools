@@ -6,7 +6,7 @@ import numpy as np
 import random
 from scipy import integrate, interpolate
 
-def main(channel="ibd", input="infile", inflv="eb",  output="tmp_ibd_eb.txt",
+def main(channel="ibd", input="", format="", inflv="eb",  output="tmp_ibd_eb.txt",
          normalization=1.0, detector="SuperK", starttime=None, endtime=None,
          verbose=False):
 
@@ -16,13 +16,12 @@ def main(channel="ibd", input="infile", inflv="eb",  output="tmp_ibd_eb.txt",
     * Import module with interaction channel-specific functions & parameters.
     * Other setup.
     """
-    # TODO: make the module into an argument
-    mod_flux = import_module("flux-garching")
-    parse_input = getattr(mod_flux, "parse_input")
-    nu_emission = getattr(mod_flux, "nu_emission")
-    prepare_evt_gen = getattr(mod_flux, "prepare_evt_gen")
+    format_module = import_module("formats." + format)
+    parse_input = getattr(format_module, "parse_input")
+    nu_emission = getattr(format_module, "nu_emission")
+    prepare_evt_gen = getattr(format_module, "prepare_evt_gen")
 
-    channel_module = import_module("interaction-channels." + channel)
+    channel_module = import_module("interaction_channels." + channel)
     dSigma_dE = getattr(channel_module, "dSigma_dE")
     get_eE = getattr(channel_module, "get_eE")
     dSigma_dCosT = getattr(channel_module, "dSigma_dCosT")

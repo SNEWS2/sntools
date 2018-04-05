@@ -32,10 +32,18 @@ parser.add_option("-c", "--channel", dest="channel",
 
 optdefault = "infile"
 parser.add_option("-i", "--input", dest="input",
-                  help="Common prefix of the input files. Default: '%s'." \
+                  help="Name (or common prefix) of the input file(s). Default: '%s'." \
                       % (optdefault),
-                  metavar="PREFIX",
+                  metavar="FILE",
                   default=optdefault)
+
+optchoices = ["garching", "totani"]
+optdefault = "totani"
+parser.add_option("-f", "--format", dest="format",
+                  help="Format of input files. See parsers in folder 'formats/' for details. Choices: %s. Default: %s" \
+                      % (optchoices, optdefault),
+                  metavar="FORMAT",
+                  choices=optchoices, default=optdefault)
 
 optdefault = "outfile.kin"
 parser.add_option("-o", "--output", dest="output",
@@ -79,6 +87,7 @@ parser.add_option("-v", "--verbose", dest="verbose",
 hierarchy = options.hierarchy
 channel = options.channel
 input = options.input
+format = options.format
 output = options.output
 detector = options.detector
 distance = float(options.distance)
@@ -89,7 +98,7 @@ verbose = options.verbose
 if verbose:
     print "channel      =", channel
     print "hierarchy    =", hierarchy
-    print "input prefix =", input
+    print "input file   =", input, "--- format =", format
     print "output       =", output
     print "detector     =", detector
     print "distance     =", distance
@@ -128,7 +137,8 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
     tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
     tmpfiles.append(tmpfile)
 
-    cmd = "chnl.main(channel='%s', input='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" % (this_channel, input, original_flavor, tmpfile, n, detector, starttime, endtime, verbose)
+    cmd = "chnl.main(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" \
+        % (this_channel, input, format, original_flavor, tmpfile, n, detector, starttime, endtime, verbose)
     if verbose: print "Now executing:", cmd
     exec(cmd)
 
