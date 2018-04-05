@@ -32,8 +32,8 @@ def main(channel="ibd", input="infile", inflv="eb",  output="tmp_ibd_eb.txt",
     pid = getattr(channel_module, "pid")
 
     # inner detector mass, in metric kt
-    detectors = {"SuperK": 32.5,
-                 "HyperK": 220} # one-tank configuration
+    detector_mass = {"SuperK": 32.5,
+                     "HyperK": 220} # one-tank configuration
 
 
     """Helper functions."""
@@ -114,7 +114,7 @@ def main(channel="ibd", input="infile", inflv="eb",  output="tmp_ibd_eb.txt",
 
     raw_nevts = []
     molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
-    n_targets = targets_per_molecule * molecules_per_kt * detectors[detector]
+    n_targets = targets_per_molecule * molecules_per_kt * detector_mass[detector]
 
     for t in raw_times:
         # integrate over eE and then eNu to obtain the event rate at time t

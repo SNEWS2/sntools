@@ -160,8 +160,8 @@ if hierarchy == "normal":
     if (channel == "o16e" or channel == "all"):
         execute("o16e", "x", 1)
     if (channel == "o16eb" or channel == "all"):
-        execute("o16e", "eb", cos2t12)
-        execute("o16e", "xb", sin2t12)
+        execute("o16eb", "eb", cos2t12)
+        execute("o16eb", "xb", sin2t12)
 
 if hierarchy == "inverted":
     if (channel == "ibd" or channel == "all"):

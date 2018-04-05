@@ -74,8 +74,8 @@ def bounds_eE(eNu, *args): # ignore additional arguments handed over by scipy.in
 
     eE_min = eNu - delta_cm - eNu/sqrt(s) * (eE_cm + pE_cm)
     eE_max = eNu - delta_cm - eNu/sqrt(s) * (eE_cm - pE_cm)
-    return [eE_min+1, eE_max+1]
+    return [eE_min, eE_max]
 
 # Bounds for integration over eNu
-eThr = ((mN+mE)**2 - mP**2) / (2*mP) # threshold energy for IBD
+eThr = ((mN+mE)**2 - mP**2) / (2*mP) # threshold energy for IBD: ca. 1.8 MeV
 bounds_eNu = [eThr, 100]
