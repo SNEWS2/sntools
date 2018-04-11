@@ -25,15 +25,17 @@ def parse_input(input, inflv, starttime=None, endtime=None):
     e_bins = [zero] # energy bins are the same for all times; first bin = 0 MeV
     N_dict, egroup_dict, dNLde_dict, log_spectrum = {}, {}, {}, {}
 
-    # _parse() is a helper function to parse the files since their format is
-    # not straightforward. It fills in the global variables defined above.
-#     if inflv == "e":
-#         # nu_e fluxes during the neutronization burst are in a separate file,
-#         # with a somewhat different format
-#         _parse_nb(input + "-nb.txt")
-#
+    # The file format is complicated, so we define helper functions below
     _parse(input + "-early.txt", "early", inflv)
     _parse(input + "-late.txt", "late", inflv)
+    _calculate_dNLde() # calculate number luminosity for early and late files
+
+#     if inflv == "e":
+#         # nu_e fluxes during the neutronization burst are in a separate file,
+#         # with more precise time bins and a different format:
+#         _parse_nb(input + "-nb.txt")
+#         # TODO: need to sort `times` after adding nb times at the end
+#
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = times[0]
@@ -51,7 +53,7 @@ def parse_input(input, inflv, starttime=None, endtime=None):
         print("Error: End time must be less than latest time in input files. Aborting ...")
         exit()
 
-    # if user entered a custom start/end time, find indices of relevant time bins
+    # If user entered a custom start/end time, select only relevant time bins
     i_min, i_max = 0, len(times) - 1
     for (i, time) in enumerate(times):
         if time < starttime:
@@ -59,11 +61,15 @@ def parse_input(input, inflv, starttime=None, endtime=None):
         elif time > endtime:
             i_max = i
             break
+    times = times[i_min:i_max+1]
 
-    # fill in global dictionaries that will get used later
-    _additional_setup()
+    # Get spectra for relevant time bins by log cubic spline interpolation
+    log_group_e = [log10(e_bin) for e_bin in e_bins]
+    for time in times:
+        log_dNLde = [log10(d) for d in dNLde_dict[time]]
+        log_spectrum[time] = interpolate.pchip(log_group_e, log_dNLde)
 
-    return (starttime, endtime, times[i_min:i_max+1])
+    return (starttime, endtime, times)
 
 
 def prepare_evt_gen(binned_t):
@@ -77,9 +83,8 @@ def prepare_evt_gen(binned_t):
     binned_t -- list of time bins for generating events
     """
     for time in binned_t:
-        if dNLde_dict.has_key(time):
-            # we have already computed dNLde and the interpolated spectrum
-            # for this time bin in _additional_setup() below
+        if log_spectrum.has_key(time):
+            # we have already computed the interpolated spectrum at this time
             continue
 
         # find closest time bins -> t0, t1
@@ -98,8 +103,6 @@ def prepare_evt_gen(binned_t):
             # linear interpolation over time each energy bin
             tmp = prev_dNLde[i] + (next_dNLde[i] - prev_dNLde[i]) * (time-t0)/(t1-t0)
             dNLde.append(tmp)
-
-        dNLde_dict[time] = dNLde
 
         # Get emission spectrum by log cubic spline interpolation
         log_group_e = [log10(e_bin) for e_bin in e_bins]
@@ -120,10 +123,7 @@ def nu_emission(eNu, time):
     return 10 ** f(log10(eNu)) # transform log back to actual value
 
 
-"""Helper functions.
-
-(Which I'll need. Because the file format is ... not exactly pretty. -.-)
-"""
+"""Helper functions."""
 def _parse(input, format, flv):
     """Read data from files into dictionaries to look up by time."""
     with open(input) as infile:
@@ -183,8 +183,8 @@ def _parse_nb(input):
     return None
 
 
-def _additional_setup():
-    """Calculate energy spectrum and number luminosity for each time bin."""
+def _calculate_dNLde():
+    """Calculate number luminosity spectrum for each time bin."""
     for (i, time) in enumerate(times):
         # Get energy spectrum per MeV^-1 instead of in (varying-size) energy bins
         E_integ = 0
@@ -202,7 +202,6 @@ def _additional_setup():
 
         # Calculate number luminosity
         if i == 0:
-            # TODO: How does this interact with data from wilson-nb.txt?
             num_lum = zero
         else:
             prev_time = times[i-1]
@@ -211,10 +210,5 @@ def _additional_setup():
         # Calculate differential number luminosity
         dNLde = [num_lum * spectrum for spectrum in spec]
         dNLde_dict[time] = dNLde
-
-        # Get emission spectrum by log cubic spline interpolation
-        log_group_e = [log10(e_bin) for e_bin in e_bins]
-        log_dNLde = [log10(d) for d in dNLde]
-        log_spectrum[time] = interpolate.pchip(log_group_e, log_dNLde)
 
     return None
