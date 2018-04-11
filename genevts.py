@@ -6,6 +6,7 @@
 
 import __builtin__
 from optparse import OptionParser
+from os import remove
 import random
 
 import channel as chnl
@@ -205,6 +206,10 @@ for filename in tmpfiles:
             event = map(float, line.split(",")) # list(map(float, line.split(","))) in python3
             # `event` has the format `[t, pid, energy, dirx, diry, dirz]`
             events.append(event)
+
+    # only keep tmpfiles around in verbose mode, e.g. for verification plots
+    if not verbose:
+        remove(filename)
 
 # sort events by time (i.e. the first element of the list)
 events.sort()
