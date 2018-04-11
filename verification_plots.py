@@ -43,60 +43,59 @@ if options.show_all:
     options.show_evtcount = True
 
 # Get energy and time of generated events.
-energies = []
-times = []
+energy = []
+time = []
 with open(options.input) as data: # for elastic scattering: "tmp_es_ee.txt"
     for line in data:
-        t, _, energy, _, _, _ = line.split(",")
-        energies.append(float(energy))
-        times.append(float(t))
+        t, _, e, _, _, _ = line.split(",")
+        energy.append(float(e))
+        time.append(float(t))
 
 # Get event counts and mean energies for each time bin.
-bin_width = 2 # time interval in ms
-bin_nr = np.arange(1, 500/bin_width, 1)
-mean_energies = []
-n_evts = []
+bin_width = 10 # time interval in ms
+t_max = 320
+bin_nr = t_max / bin_width
+total_energy = [0] * bin_nr
+n_evt = [0] * bin_nr
 
-for i in bin_nr:
-    total_energy = 0
-    n_evt = 0
-    time = 15 + (i*bin_width)
-    boundsMin = time - bin_width
-    boundsMax = time
+for (t, energy) in zip(time, energy):
+    if t >= t_max or t < 0:
+        continue
 
-    for (i, time) in enumerate(times):
-        if boundsMin <= time < boundsMax:
-            total_energy = total_energy + energies[i]
-            n_evt = n_evt + 1
+    j = int(t / bin_width)
+    total_energy[j] += + energy
+    n_evt[j] += 1
 
-    if n_evt == 0:
-        mean_energies.append(total_energy)
+mean_energy = []
+for j in range(bin_nr):
+    if n_evt[j] == 0:
+        mean_energy.append(0)
     else:
-        mean_energies.append(total_energy/n_evt)
-    n_evts.append(n_evt) # create a list of number of events in each time bin of specified width
+        mean_energy.append(total_energy[j] / n_evt[j])
 
-# import data from pre-processed supernova simulation data
-sim_mean_energies = []
-sim_times = []
-with open("infile_eb.txt") as data2: # for elastic scattering: "infile_e.txt"
-    for line in data2:
-        t, mean_energy, _, _ = line.split(",")
-        sim_times.append(float(t) * 1000) # convert to ms
-        sim_mean_energies.append(float(mean_energy))
+
+# import data from pre-processed supernova simulation data (in Garching format)
+# sim_mean_energies = []
+# sim_times = []
+# with open("infile_eb.txt") as data2:
+#     for line in data2:
+#         t, mean_energy, _, _ = line.split(",")
+#         sim_times.append(float(t) * 1000) # convert to ms
+#         sim_mean_energies.append(float(mean_energy))
 
 if options.show_spectrum:
     # plot energy spectrum
     plt.title("Energy spectrum")
     plt.ylabel("Events")
     plt.xlabel("Energy (MeV)")
-    plt.hist(energies, bins=50, histtype="step")
+    plt.hist(energy, bins=50, histtype="step")
     plt.show()
 
     # as above, but with logarithmic y-axis
     plt.title("Energy spectrum (log)")
     plt.ylabel("Events")
     plt.xlabel("Energy (MeV)")
-    plt.hist(energies, bins=50, histtype="step", log=(True))
+    plt.hist(energy, bins=50, histtype="step", log=(True))
     plt.show()
 
 if options.show_meanene:
@@ -104,7 +103,7 @@ if options.show_meanene:
     plt.title("Mean energy of charged particle")
     plt.ylabel("Mean energy (MeV)")
     plt.xlabel("Time (ms)")
-    plt.plot(bin_width*bin_nr+15, mean_energies)
+    plt.plot(range(0, t_max, bin_width), mean_energy)
     # plt.plot(sim_times, sim_mean_energies, 'r') # adds a plot of the neutrino energies direct from the supernova simulation data
     plt.show()
 
@@ -112,5 +111,7 @@ if options.show_evtcount:
     plt.title("Event count per bin")
     plt.ylabel("Events")
     plt.xlabel("Time (ms)")
-    plt.plot(bin_width*bin_nr+15, n_evts)
+    plt.plot(range(0, t_max, bin_width), n_evt)
+    plt.xscale('log')
+    plt.yscale('log')
     plt.show()
