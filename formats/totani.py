@@ -30,12 +30,10 @@ def parse_input(input, inflv, starttime=None, endtime=None):
     _parse(input + "-late.txt", "late", inflv)
     _calculate_dNLde() # calculate number luminosity for early and late files
 
-#     if inflv == "e":
-#         # nu_e fluxes during the neutronization burst are in a separate file,
-#         # with more precise time bins and a different format:
-#         _parse_nb(input + "-nb.txt")
-#         # TODO: need to sort `times` after adding nb times at the end
-#
+    # nu_e fluxes during the neutronization burst are in a separate file,
+    # with more precise time bins and a different format:
+    if inflv == "e": _parse_nb(input + "-nb.txt")
+
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = times[0]
@@ -175,11 +173,51 @@ def _parse(input, format, flv):
 
 
 def _parse_nb(input):
-    # TODO: read in data from wilson-nb.txt and fill dictionaries
-    # Note: that file comes from a different simulation, so ...
-    #       * the simulation time is inconsistent -> use time after bounce!
-    #       * there's a discontinuity between it and data in the early/late file,
-    #         so I have to interpolate (see README.txt)
+    """More granular nu_e data for the neutronization burst ("nb", 40-50ms).
+
+    Note: the nb file comes from a slightly different simulation, therefore we
+    have to deal with a time offset and a scaling factor.
+    """
+    with open(input) as infile:
+        raw_indata = [line for line in infile]
+
+    # 26 lines per time bin, 99 bins in wilson-nb.txt. Bin 7 is equivalent
+    # to 40ms, and bin 57 is 50ms, so we only select the ones in between:
+    chunks = [raw_indata[26*i:26*(i+1)] for i in range(7,56)]
+
+    # for each time bin, save data to dictionaries to look up later
+    for chunk in chunks:
+        # Time offset: 40-50ms in early file corresponds to 507.7-517.5ms here
+        time = float(chunk[0].split()[2]) * 1000 - 467.5 # convert to ms
+        times.append(time)
+
+        luminosity = float(chunk[1].split()[2]) * 624.151 # convert erg/s to MeV/ms
+
+        # number of neutrinos emitted in this time bin, separated into energy bins
+        egroup = [zero] # start with 0 neutrinos at 0 MeV bin
+        for i in range(3,23):
+            line = map(float, chunk[i].split())
+            egroup.append(line[-3])
+
+        # Get energy spectrum per MeV^-1 instead of in (varying-size) energy bins
+        E_integ = 0
+        spec = []
+        for (j, n) in enumerate(egroup):
+            if j == 0 or j == len(egroup)-1:
+                spec.append(zero)
+            else:
+                spec.append(n / (e_bins[j+1] - e_bins[j-1]))
+                E_integ += (spec[j-1] * e_bins[j-1] + spec[j] * e_bins[j]) \
+                            * (e_bins[j] - e_bins[j-1]) / 2
+
+        spec = [x / E_integ * luminosity for x in spec]
+
+        # nb and early/late data come from slightly different simulations and
+        # have a discontinuity, so we scale with a time-dependent factor
+        nb_scale = 1 - 5.23/13.82 * (time - 40) / 10 # 1 at 40ms, 8.59/13.82 at 50ms
+        dNLde_dict[time] = [x * nb_scale for x in spec]
+
+    times.sort() # necessary after appending nb times at the end of the list
     return None
 
 
