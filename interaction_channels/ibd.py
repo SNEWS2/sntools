@@ -28,9 +28,9 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
     t = mN**2 - mP**2 - 2*mP*(eNu-eE)
 
     # eq. (7)
-    x = t / (4*mAvg**2)
-    y = 1 - t/710000
-    z = 1 - t/1000000
+    x = 0 # at NNLO: t / (4*mAvg**2)
+    y = 1 # at NNLO: 1 - t/710000
+    z = 1 # at NNLO: 1 - t/1000000
     f1 = (1 - 4.706 * x) / ((1-x) * y**2)
     f2 = 3.706 / ((1-x) * y**2)
     g1 = -1.27 / z**2
