@@ -28,21 +28,13 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
     t = mN**2 - mP**2 - 2*mP*(eNu-eE)
 
     # eq. (7)
-    x = 0 + t / (4*mAvg**2) # at NLO: 0
-    y = 1 - t/710000 # at NLO: 1
-    z = 1 - t/1000000 # at NLO: 1
+    x = 0 + t / (4*mAvg**2)
+    y = 1 - t/710000
+    z = 1 - t/1000000
     f1 = (1 - 4.706 * x) / ((1-x) * y**2)
     f2 = 3.706 / ((1-x) * y**2)
     g1 = -1.27 / z**2
-    g2 = 2 * g1 * mAvg**2 / (mPi**2 - t) # not relevant at NLO
-
-    # NLO approximation (eq. (10)) for A, B and C. This is accurate to
-    # better than 0.1% for eNu < 40 MeV (see line 4 in table 2).
-    A_NLO = mAvg**2 * (f1**2 - g1**2) * (t - mE**2) \
-        - mAvg**2 * delta**2 * (f1**2 + g1**2) \
-        - 2 * mE**2 * mAvg * delta * g1 * (f1 + f2)
-    B_NLO = t * g1 * (f1 + f2)
-    C_NLO = (f1**2 + g1**2) / 4
+    g2 = 2 * g1 * mAvg**2 / (mPi**2 - t)
 
     A = 1./16 * (
 	        (t - mE**2) * (
