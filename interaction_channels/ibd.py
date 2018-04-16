@@ -28,21 +28,42 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
     t = mN**2 - mP**2 - 2*mP*(eNu-eE)
 
     # eq. (7)
-    x = 0 # at NNLO: t / (4*mAvg**2)
-    y = 1 # at NNLO: 1 - t/710000
-    z = 1 # at NNLO: 1 - t/1000000
+    x = 0 + t / (4*mAvg**2) # at NLO: 0
+    y = 1 - t/710000 # at NLO: 1
+    z = 1 - t/1000000 # at NLO: 1
     f1 = (1 - 4.706 * x) / ((1-x) * y**2)
     f2 = 3.706 / ((1-x) * y**2)
     g1 = -1.27 / z**2
-    g2 = 2 * g1 * mAvg**2 / (mPi**2 - t)
+    g2 = 2 * g1 * mAvg**2 / (mPi**2 - t) # not relevant at NLO
 
-    # Use NLO approximation (eq. (10)) for A, B and C. This is accurate to
+    # NLO approximation (eq. (10)) for A, B and C. This is accurate to
     # better than 0.1% for eNu < 40 MeV (see line 4 in table 2).
-    A = mAvg**2 * (f1**2 - g1**2) * (t - mE**2) \
+    A_NLO = mAvg**2 * (f1**2 - g1**2) * (t - mE**2) \
         - mAvg**2 * delta**2 * (f1**2 + g1**2) \
         - 2 * mE**2 * mAvg * delta * g1 * (f1 + f2)
-    B = t * g1 * (f1 + f2)
-    C = (f1**2 + g1**2) / 4
+    B_NLO = t * g1 * (f1 + f2)
+    C_NLO = (f1**2 + g1**2) / 4
+
+    A = 1./16 * (
+	        (t - mE**2) * (
+                4 * f1**2 * (4*mAvg**2 + t + mE**2)
+                + 4 * g1**2 * (-4*mAvg**2 + t + mE**2)
+                + f2**2 * (t**2 / mAvg**2 + 4*t + 4*mE**2)
+                + 4*mE**2 * t * g2**2 / mAvg**2
+                + 8*f1*f2 * (2*t + mE**2)
+                + 16*mE**2 * g1*g2)
+            - delta**2 * (
+                (4*f1**2 + t * f2**2 / mAvg**2) * (4*mAvg**2 + t - mE**2)
+                + 4*g1**2 * (4*mAvg**2 - t + mE**2)
+                + 4*mE**2 * g2**2 * (t - mE**2) / mAvg**2
+                + 8*f1*f2 * (2*t - mE**2)
+                + 16*mE**2 * g1*g2)
+            - 32*mE**2 * mAvg * delta * g1*(f1 + f2))
+
+    B = 1./16 * (16 * t * g1 * (f1 + f2)
+                  + 4*mE**2 * delta * (f2**2 + f1*f2 + 2*g1*g2)/mAvg)
+
+    C = 1./16 * (4*(f1**2 + g1**2) - t * f2**2 / mAvg**2)
 
     abs_M_squared = A - B * s_minus_u + C * s_minus_u**2 # eq. (5)
     rad_correction = alpha/pi * (6 + 3./2 * log(mP/(2*eE)) + 1.2 * (mE/eE)**1.5) # eq. (14)
