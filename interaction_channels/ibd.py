@@ -12,14 +12,14 @@ Particle physics section.
 
 Based on Strumia/Vissani (2003), arXiv:astro-ph/0302055.
 '''
-mN = 939.5654 # neutron mass (MeV)
-mP = 938.2721 # proton mass (MeV)
-mE = 0.5109989 # electron mass (MeV)
-mPi = 139.57018 # pion mass (MeV)
+mN = 939.56563 # neutron mass (MeV)
+mP = 938.27231 # proton mass (MeV)
+mE = 0.5109907 # electron mass (MeV)
+mPi = 139.56995 # pion mass (MeV)
 delta = mN - mP
 mAvg = (mP+mN) / 2
-alpha = 1 / 137.036 # fine structure constant
-gF = 1.16637e-11 # Fermi coupling constant
+alpha = 1 / 137.035989 # fine structure constant
+gF = 1.16639e-11 # Fermi coupling constant
 sigma0 = 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2) # from eqs. (3), (11)
 
 def dSigma_dE(eNu, eE): # eqs. (11), (3)
@@ -29,8 +29,8 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
 
     # eq. (7)
     x = 0 + t / (4*mAvg**2)
-    y = 1 - t/710000
-    z = 1 - t/1000000
+    y = 1 - t / 710**2
+    z = 1 - t / 1030**2
     f1 = (1 - 4.706 * x) / ((1-x) * y**2)
     f2 = 3.706 / ((1-x) * y**2)
     g1 = -1.27 / z**2
@@ -58,7 +58,7 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
     C = 1./16 * (4*(f1**2 + g1**2) - t * f2**2 / mAvg**2)
 
     abs_M_squared = A - B * s_minus_u + C * s_minus_u**2 # eq. (5)
-    rad_correction = alpha/pi * (6 + 3./2 * log(mP/(2*eE)) + 1.2 * (mE/eE)**1.5) # eq. (14)
+    rad_correction = alpha/pi * (6.00352 + 3./2 * log(mP/(2*eE)) + 1.2 * (mE/eE)**1.5) # eq. (14)
 
     return sigma0 / eNu**2 * abs_M_squared * (1 + rad_correction)
 
