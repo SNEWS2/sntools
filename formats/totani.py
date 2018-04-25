@@ -5,7 +5,7 @@ model used in the Hyper-Kamiokande Design Report.
 """
 
 from math import ceil, floor, gamma, exp, log10
-from scipy import interpolate
+from scipy.interpolate import InterpolatedUnivariateSpline
 
 zero = 1E-99 # not exactly zero to ensure log interpolation is still possible
 
@@ -65,7 +65,7 @@ def parse_input(input, inflv, starttime=None, endtime=None):
     log_group_e = [log10(e_bin) for e_bin in e_bins]
     for time in times:
         log_dNLde = [log10(d) for d in dNLde_dict[time]]
-        log_spectrum[time] = interpolate.pchip(log_group_e, log_dNLde)
+        log_spectrum[time] = InterpolatedUnivariateSpline(log_group_e, log_dNLde)
 
     return (starttime, endtime, times)
 
@@ -105,7 +105,7 @@ def prepare_evt_gen(binned_t):
         # Get emission spectrum by log cubic spline interpolation
         log_group_e = [log10(e_bin) for e_bin in e_bins]
         log_dNLde = [log10(d) for d in dNLde]
-        log_spectrum[time] = interpolate.pchip(log_group_e, log_dNLde)
+        log_spectrum[time] = InterpolatedUnivariateSpline(log_group_e, log_dNLde)
 
     return None
 
