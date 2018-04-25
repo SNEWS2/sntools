@@ -2,6 +2,8 @@
 
 Based on simulation from arXiv:astro-ph/9710203, which is the primary
 model used in the Hyper-Kamiokande Design Report.
+All times are post-bounce, which differs slightly from the simulation time given
+in the raw input files. We fix this when reading from the files in _parse().
 """
 
 from math import ceil, floor, gamma, exp, log10
@@ -19,9 +21,9 @@ def parse_input(input, inflv, starttime=None, endtime=None):
     starttime -- start time set by user via command line option (or None)
     endtime -- end time set by user via command line option (or None)
     """
-    global times, e_bins
+    global times, times_el, times_nb, e_bins
     global N_dict, egroup_dict, dNLde_dict, log_spectrum
-    times = []
+    times_el, times_nb = [], []
     e_bins = [zero] # energy bins are the same for all times; first bin = 0 MeV
     N_dict, egroup_dict, dNLde_dict, log_spectrum = {}, {}, {}, {}
 
@@ -29,11 +31,10 @@ def parse_input(input, inflv, starttime=None, endtime=None):
     _parse(input + "-early.txt", "early", inflv)
     _parse(input + "-late.txt", "late", inflv)
     _calculate_dNLde() # calculate number luminosity for early and late files
-
     # nu_e fluxes during the neutronization burst are in a separate file,
     # with more precise time bins and a different format:
     if inflv == "e": _parse_nb(input + "-nb.txt")
-
+    times = sorted(times_el + times_nb)
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = times[0]
@@ -85,8 +86,14 @@ def prepare_evt_gen(binned_t):
             # we have already computed the interpolated spectrum at this time
             continue
 
+        if 40 <= time <= 50 and times_nb != []:
+            # take fluxes from nb file into account
+            _times = filter(lambda x: x in times, times_nb)
+        else: # use fluxes from early/late file
+            _times = filter(lambda x: x in times, times_el)
+
         # find closest time bins -> t0, t1
-        for t_bin in times:
+        for t_bin in _times:
             if time <= t_bin:
                 t1 = t_bin
                 break
@@ -150,7 +157,8 @@ def _parse(input, format, flv):
     for chunk in chunks:
         # first line contains time
         time = float(chunk[0].split()[0]) * 1000 # convert to ms
-        times.append(time)
+        time -= 2 # change from simulation time into time after core bounce
+        times_el.append(time)
 
         # N = total number of neutrinos emitted up to this time
         N = float(chunk[line_N].split()[offset])
@@ -181,15 +189,15 @@ def _parse_nb(input):
     with open(input) as infile:
         raw_indata = [line for line in infile]
 
-    # 26 lines per time bin, 99 bins in wilson-nb.txt. Bin 7 is equivalent
-    # to 40ms, and bin 57 is 50ms, so we only select the ones in between:
-    chunks = [raw_indata[26*i:26*(i+1)] for i in range(7,56)]
+    # 26 lines per time bin, 99 bins in wilson-nb.txt. Bin 6 is equivalent to
+    # 40ms post-bounce & bin 56 is 50ms, so we only select that range:
+    chunks = [raw_indata[26*i:26*(i+1)] for i in range(6,57)]
 
     # for each time bin, save data to dictionaries to look up later
     for chunk in chunks:
-        # Time offset: 40-50ms in early file corresponds to 507.7-517.5ms here
-        time = float(chunk[0].split()[2]) * 1000 - 467.5 # convert to ms
-        times.append(time)
+        time = float(chunk[0].split()[2]) * 1000 # convert to ms
+        time -= 467.5 # 40-50ms post-bounce equals 507.5-517.5ms in this file
+        times_nb.append(time)
 
         luminosity = float(chunk[1].split()[2]) * 624.151 # convert erg/s to MeV/ms
 
@@ -216,14 +224,12 @@ def _parse_nb(input):
         # have a discontinuity, so we scale with a time-dependent factor
         nb_scale = 1 - 5.23/13.82 * (time - 40) / 10 # 1 at 40ms, 8.59/13.82 at 50ms
         dNLde_dict[time] = [x * nb_scale for x in spec]
-
-    times.sort() # necessary after appending nb times at the end of the list
     return None
 
 
 def _calculate_dNLde():
     """Calculate number luminosity spectrum for each time bin."""
-    for (i, time) in enumerate(times):
+    for (i, time) in enumerate(times_el):
         # Get energy spectrum per MeV^-1 instead of in (varying-size) energy bins
         E_integ = 0
         spec = []
@@ -242,7 +248,7 @@ def _calculate_dNLde():
         if i == 0:
             num_lum = zero
         else:
-            prev_time = times[i-1]
+            prev_time = times_el[i-1]
             num_lum = (N_dict[time] - N_dict[prev_time]) / (time - prev_time)
 
         # Calculate differential number luminosity
