@@ -5,6 +5,7 @@
 # where the input files share the prefix 'infile' and the output file is 'outfile.kin'
 
 import __builtin__
+from datetime import datetime
 from optparse import OptionParser
 from os import remove
 import random
@@ -141,6 +142,7 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
     cmd = "chnl.main(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" \
         % (this_channel, input, format, original_flavor, tmpfile, n, detector, starttime, endtime, verbose)
     if verbose: print "Now executing:", cmd
+    __builtin__._cmd = cmd
     exec(cmd)
 
 if hierarchy == "noosc":
@@ -203,6 +205,7 @@ events = []
 for filename in tmpfiles:
     with open(filename) as f:
         for line in f:
+            if line.startswith("#"): continue # ignore comments
             event = map(float, line.split(",")) # list(map(float, line.split(","))) in python3
             # `event` has the format `[t, pid, energy, dirx, diry, dirz]`
             events.append(event)
@@ -216,6 +219,10 @@ events.sort()
 
 # Write the events out in this nuance-like format
 with open(output, 'w') as outfile:
+    if verbose: # write parameters to file as a comment
+        outfile.write("# Generated on %s with the options:\n" % datetime.now())
+        outfile.write("# " + str(options) + "\n")
+
     for (i, event) in enumerate(events):
         (t, pid, ene, dirx, diry, dirz) = event
 

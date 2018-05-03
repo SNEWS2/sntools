@@ -5,6 +5,7 @@ from math import pi, sin, cos, acos
 import numpy as np
 import random
 from scipy import integrate, interpolate
+from datetime import datetime
 
 def main(channel="ibd", input="", format="", inflv="eb",  output="tmp_ibd_eb.txt",
          normalization=1.0, detector="SuperK", starttime=None, endtime=None,
@@ -137,6 +138,9 @@ def main(channel="ibd", input="", format="", inflv="eb",  output="tmp_ibd_eb.txt
     prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
     with open(output, 'w') as outfile:
+        outfile.write("# Generated on %s with the options:\n" % datetime.now())
+        outfile.write("# " + _cmd + "\n")
+
         # Iterate over bins to generate events.
         for i in range(n_bins):
             t0 = starttime + i * bin_width
