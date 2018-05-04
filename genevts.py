@@ -1,101 +1,74 @@
 #!/usr/bin/python
 
-# call this as
-# $ ./genevts.py --hierarchy [noosc|normal|inverted] --channel [ibd|es|all] -i infile -o outfile.kin -d [SuperK|HyperK]
-# where the input files share the prefix 'infile' and the output file is 'outfile.kin'
-
 import __builtin__
+import argparse
 from datetime import datetime
-from optparse import OptionParser
 from os import remove
 import random
 
-import channel as chnl
+from channel import gen_evts
 
 
 """Define and parse command line options."""
-parser = OptionParser()
+parser = argparse.ArgumentParser()
 
-optchoices = ["noosc", "normal", "inverted"]
-optdefault = "noosc"
-parser.add_option("-H", "--hierarchy", dest="hierarchy",
-                  help="Oscillation scenario to consider. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="HIERARCHY",
-                  choices=optchoices, default=optdefault)
+parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-optchoices = ["all", "ibd", "es", "o16e", "o16eb"]
-optdefault = "all"
-parser.add_option("-c", "--channel", dest="channel",
-                  help="Interaction channels to consider. Currently, inverse beta decay (ibd), electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC (o16eb) are supported. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="INTCHANNEL",
-                  choices=optchoices, default=optdefault)
+choices = ["garching", "nakazato", "totani"]
+default = "totani"
+parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=default,
+                    help="Format of input files. See parsers in folder 'formats/' \
+                          for details. Choices: %s. Default: %s" % (choices, default))
 
-optdefault = "infile"
-parser.add_option("-i", "--input", dest="input",
-                  help="Name (or common prefix) of the input file(s). Default: '%s'." \
-                      % (optdefault),
-                  metavar="FILE",
-                  default=optdefault)
+default = "outfile.kin"
+parser.add_argument("-o", "--output", metavar="FILE", default=default,
+                    help="Name of the output file. Default: '%s'." % default)
 
-optchoices = ["garching", "nakazato", "totani"]
-optdefault = "totani"
-parser.add_option("-f", "--format", dest="format",
-                  help="Format of input files. See parsers in folder 'formats/' for details. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="FORMAT",
-                  choices=optchoices, default=optdefault)
+choices = ["noosc", "normal", "inverted"]
+default = choices[0]
+parser.add_argument("-H", "--hierarchy", metavar="HIERARCHY", choices=choices, default=default,
+                    help="Oscillation scenario. Choices: %s. Default: %s" % (choices, default))
 
-optdefault = "outfile.kin"
-parser.add_option("-o", "--output", dest="output",
-                  help="Name of the output file. Default: '%s'." \
-                      % (optdefault),
-                  metavar="FILENAME",
-                  default=optdefault)
+choices = ["all", "ibd", "es", "o16e", "o16eb"]
+default = choices[0]
+parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default=default,
+                    help="Interaction channels to consider. Currently, inverse beta decay (ibd), \
+                          electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC \
+                          (o16eb) are supported. Choices: %s. Default: %s" % (choices, default))
 
 # [radius, height] of inner detector in cm
 detectors = {"SuperK":[3368.15/2., 3620.],
              "HyperK":[7080./2., 5480.]}
-optchoices = list(detectors)
-optdefault = optchoices[0]
-parser.add_option("-d", "--detector", dest="detector",
-                  help="Detector configuration. Choices: %s. Default: %s" \
-                      % (optchoices, optdefault),
-                  metavar="DETECTOR",
-                  choices=optchoices, default=optdefault)
+choices = list(detectors)
+default = choices[1]
+parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=choices, default=default,
+                    help="Detector configuration. Choices: %s. Default: %s" % (choices, default))
 
-optdefault = 10.0
-parser.add_option("--distance", dest="distance",
-                  help="Distance of the supernova in kiloparsec. Default: '%s'." \
-                      % (optdefault),
-                  metavar="DISTANCE",
-                  default=optdefault)
+default = 10.0
+parser.add_argument("--distance", type=float, default=default,
+                  help="Distance to supernova in kpc. Default: '%s'." % default)
 
-parser.add_option("--starttime", dest="starttime",
-                  help="Start generating events at T milliseconds. Useful to speed up calculation if you are only interested in a short time window. Default: First time bin in input file.",
-                  metavar="T")
+parser.add_argument("--starttime", metavar="T", type=float,
+                  help="Start generating events at T milliseconds. Default: First time bin in input file.")
 
-parser.add_option("--endtime", dest="endtime",
-                  help="Stop generating events at T milliseconds. Useful to speed up calculation if you are only interested in a short time window. Default: Last time bin in input file.",
-                  metavar="T")
+parser.add_argument("--endtime", metavar="T", type=float,
+                  help="Stop generating events at T milliseconds. Default: Last time bin in input file.")
 
-parser.add_option("-v", "--verbose", dest="verbose",
-                  help="Verbose output, e.g. for debugging. Off by default.",
-                  default=False, action="store_true")
+parser.add_argument("-v", "--verbose", action="count",
+                  help="Verbose output, e.g. for debugging. Off by default.")
 
-(options, args) = parser.parse_args()
+args = parser.parse_args()
 
-hierarchy = options.hierarchy
-channel = options.channel
-input = options.input
-format = options.format
-output = options.output
-detector = options.detector
-distance = float(options.distance)
-starttime = float(options.starttime) if options.starttime else None
-endtime = float(options.endtime) if options.endtime else None
-verbose = options.verbose
+hierarchy = args.hierarchy
+channel = args.channel
+input = args.input_file
+format = args.format
+output = args.output
+detector = args.detector
+distance = args.distance
+starttime = args.starttime if args.starttime else None
+endtime = args.endtime if args.endtime else None
+verbose = args.verbose
 
 if verbose:
     print "channel      =", channel
@@ -139,7 +112,7 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
     tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
     tmpfiles.append(tmpfile)
 
-    cmd = "chnl.main(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" \
+    cmd = "gen_evts(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" \
         % (this_channel, input, format, original_flavor, tmpfile, n, detector, starttime, endtime, verbose)
     if verbose: print "Now executing:", cmd
     __builtin__._cmd = cmd
@@ -207,7 +180,6 @@ for filename in tmpfiles:
         for line in f:
             if line.startswith("#"): continue # ignore comments
             event = map(float, line.split(",")) # list(map(float, line.split(","))) in python3
-            # `event` has the format `[t, pid, energy, dirx, diry, dirz]`
             events.append(event)
 
     # only keep tmpfiles around in verbose mode, e.g. for verification plots
@@ -221,14 +193,14 @@ events.sort()
 with open(output, 'w') as outfile:
     if verbose: # write parameters to file as a comment
         outfile.write("# Generated on %s with the options:\n" % datetime.now())
-        outfile.write("# " + str(options) + "\n")
+        outfile.write("# " + str(args) + "\n")
 
     for (i, event) in enumerate(events):
         (t, pid, ene, dirx, diry, dirz) = event
 
         # create random vertex position inside the detector volume
-        rad    = detectors[options.detector][0] - 20.
-        height = detectors[options.detector][1] - 20.
+        rad    = detectors[detector][0] - 20.
+        height = detectors[detector][1] - 20.
         while True:
             x = random.uniform(-rad, rad)
             y = random.uniform(-rad, rad)

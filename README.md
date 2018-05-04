@@ -23,7 +23,7 @@ For details, see the files in `interaction_channels/`.
 A .kin file in the NUANCE format used by the /mygen/vecfile options in WCSim (see http://neutrino.phy.duke.edu/nuance-format/ for the format documentation).
 
 ### Typical Usage:
-`python genevts.py --hierarchy=normal --channel=ibd -i infile --format=garching -o outfile.kin`
+`python genevts.py infile --format=garching -o outfile.kin --hierarchy=normal --channel=ibd`
 This assumes the three input files (in Garching format) are named `infile_e.txt`, `infile_eb.txt` and `infile_x.txt`.
 
-For a list of options, see `python genevts.py -h`.
+See `python genevts.py -h` for a full description of these and other options.
