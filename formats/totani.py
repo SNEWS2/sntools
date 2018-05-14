@@ -12,7 +12,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 zero = 1E-99 # not exactly zero to ensure log interpolation is still possible
 
 
-def parse_input(input, inflv, starttime=None, endtime=None):
+def parse_input(input, inflv, starttime, endtime):
     """Read simulations data from input file.
 
     Arguments:

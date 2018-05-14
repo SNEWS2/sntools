@@ -11,7 +11,7 @@ from math import ceil, floor, gamma, exp
 from scipy import interpolate
 
 
-def parse_input(input, inflv, starttime=None, endtime=None):
+def parse_input(input, inflv, starttime, endtime):
     """Read simulations data from input file.
 
     Arguments:

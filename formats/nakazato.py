@@ -8,7 +8,7 @@ Flux files are available at http://asphwww.ph.noda.tus.ac.jp/snn/index.html
 from math import ceil, floor
 
 
-def parse_input(input, inflv, starttime=None, endtime=None):
+def parse_input(input, inflv, starttime, endtime):
     """Read simulations data from input file.
 
     Arguments:

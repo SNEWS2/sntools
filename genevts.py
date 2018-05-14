@@ -36,9 +36,9 @@ parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, de
                           electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC \
                           (o16eb) are supported. Choices: %s. Default: %s" % (choices, default))
 
-# [radius, height] of inner detector in cm
-detectors = {"SuperK":[3368.15/2., 3620.],
-             "HyperK":[7080./2., 5480.]}
+# radius (cm), height (cm) and mass (kt) of inner detector
+detectors = {"SuperK": (3368.15/2., 3620., 32.5),
+             "HyperK": (7080./2., 5480., 220)}
 choices = list(detectors)
 default = choices[1]
 parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=choices, default=default,
@@ -64,7 +64,7 @@ channel = args.channel
 input = args.input_file
 format = args.format
 output = args.output
-detector = args.detector
+detector = detectors[args.detector]
 distance = args.distance
 starttime = args.starttime if args.starttime else None
 endtime = args.endtime if args.endtime else None
@@ -75,7 +75,7 @@ if verbose:
     print "hierarchy    =", hierarchy
     print "input file   =", input, "--- format =", format
     print "output       =", output
-    print "detector     =", detector
+    print "detector     =", args.detector
     print "distance     =", distance
     print "starttime    =", starttime
     print "endtime      =", endtime
@@ -108,12 +108,13 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
     # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
     if this_channel == "es": __builtin__._flavor = detected_flavor
 
-    n = n * (10.0/distance)**2 # flux is proportional to 1/distance**2
+    n *= (10.0/distance)**2 # flux is proportional to 1/distance**2
+    n *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)
     tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
     tmpfiles.append(tmpfile)
 
-    cmd = "gen_evts(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, detector='%s', starttime=%s, endtime=%s, verbose=%s)" \
-        % (this_channel, input, format, original_flavor, tmpfile, n, detector, starttime, endtime, verbose)
+    cmd = "gen_evts(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, starttime=%s, endtime=%s, verbose=%s)" \
+        % (this_channel, input, format, original_flavor, tmpfile, n, starttime, endtime, verbose)
     if verbose: print "Now executing:", cmd
     __builtin__._cmd = cmd
     exec(cmd)
@@ -199,12 +200,12 @@ with open(output, 'w') as outfile:
         (t, pid, ene, dirx, diry, dirz) = event
 
         # create random vertex position inside the detector volume
-        rad    = detectors[detector][0] - 20.
-        height = detectors[detector][1] - 20.
+        radius = detector[0] - 20
+        height = detector[1] - 20
         while True:
-            x = random.uniform(-rad, rad)
-            y = random.uniform(-rad, rad)
-            if x**2 + y**2 < rad**2: break
+            x = random.uniform(-radius, radius)
+            y = random.uniform(-radius, radius)
+            if x**2 + y**2 < radius**2: break
         z = random.uniform(-height/2, height/2)
 
         outfile.write("$ begin\n")

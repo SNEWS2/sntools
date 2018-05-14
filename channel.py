@@ -7,8 +7,7 @@ import random
 from scipy import integrate, interpolate
 from datetime import datetime
 
-def gen_evts(channel, input, format, inflv, output, normalization, detector,
-         starttime, endtime, verbose):
+def gen_evts(channel, input, format, inflv, output, normalization, starttime, endtime, verbose):
 
     """Setup.
 
@@ -16,33 +15,19 @@ def gen_evts(channel, input, format, inflv, output, normalization, detector,
     * Import module with interaction channel-specific functions & parameters.
     * Other setup.
     """
-    format_module = import_module("formats." + format)
-    parse_input = getattr(format_module, "parse_input")
-    nu_emission = getattr(format_module, "nu_emission")
-    prepare_evt_gen = getattr(format_module, "prepare_evt_gen")
 
-    channel_module = import_module("interaction_channels." + channel)
-    dSigma_dE = getattr(channel_module, "dSigma_dE")
-    get_eE = getattr(channel_module, "get_eE")
-    dSigma_dCosT = getattr(channel_module, "dSigma_dCosT")
-    bounds_eE = getattr(channel_module, "bounds_eE")
-    bounds_eNu = getattr(channel_module, "bounds_eNu")
-    targets_per_molecule = getattr(channel_module, "targets_per_molecule")
-    pid = getattr(channel_module, "pid")
+    format = import_module("formats." + format)
+    channel = import_module("interaction_channels." + channel)
 
-    # inner detector mass, in metric kt
-    detector_mass = {"SuperK": 32.5,
-                     "HyperK": 220} # one-tank configuration
+    # The `normalization` factor includes oscillation probability, distance of
+    # supernova (if not equal to 10 kpc) and number of water molecules in detector.
+    normalization *= channel.targets_per_molecule
 
 
     """Helper functions."""
     # double differential event rate
     def ddEventRate(eE, eNu, time):
-        return dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
-
-    # Convert fiducial distance of 10 kpc into units of MeV**(-1)
-    # see http://www.wolframalpha.com/input/?i=10+kpc%2F(hbar+*+c)+in+MeV%5E(-1)
-    dSquared = (1.563738e+33)**2
+        return channel.dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
 
     # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
     # often with repetitive arguments (when integrating ddEventRate over eE).
@@ -50,11 +35,9 @@ def gen_evts(channel, input, format, inflv, output, normalization, detector,
     cached_flux = {}
     def dFlux_dE(eNu, time):
         if not cached_flux.has_key((eNu, time)):
-            emission = nu_emission(eNu, time)
-            # The `normalization` factor takes into account the oscillation probability
-            # as well as the distance (if not equal to 10 kpc).
-            cached_flux[(eNu, time)] = 1/(4*pi*dSquared) * emission * normalization
-
+            fiducial_distance = 1.563738e+33 # 10 kpc/(hbar * c) in MeV**(-1)
+            emission = format.nu_emission(eNu, time)
+            cached_flux[(eNu, time)] = emission / (4 * pi * fiducial_distance**2)
         return cached_flux[(eNu, time)]
 
     # get a value from an arbitrary distribution dist
@@ -88,13 +71,13 @@ def gen_evts(channel, input, format, inflv, output, normalization, detector,
 
     # use rejection sampling to get the energy of an interacting neutrino
     def get_eNu(time):
-        dist = lambda _eNu: integrate.quad(ddEventRate, *bounds_eE(_eNu), args=(_eNu, time))[0]
-        eNu = rejection_sample(dist, *bounds_eNu, n_bins=200)
+        dist = lambda _eNu: integrate.quad(ddEventRate, *channel.bounds_eE(_eNu), args=(_eNu, time))[0]
+        eNu = rejection_sample(dist, *channel.bounds_eNu, n_bins=200)
         return eNu
 
     # get direction of outgoing particle (incoming neutrino moves in z direction)
     def get_direction(eNu):
-        dist = lambda _cosT: dSigma_dCosT(eNu, _cosT)
+        dist = lambda _cosT: channel.dSigma_dCosT(eNu, _cosT)
         cosT = rejection_sample(dist, -1, 1, 200)
         sinT = sin(acos(cosT))
         phi = 2 * pi * random.random() # randomly distributed in [0, 2 pi)
@@ -108,13 +91,10 @@ def gen_evts(channel, input, format, inflv, output, normalization, detector,
     * Generate these events from time-dependent energy & direction distribution.
     * Write them to output file.
     """
-    (starttime, endtime, raw_times) = parse_input(input, inflv, starttime, endtime)
-
-    molecules_per_kt = 3.343e+31 # number of water molecules in one kt (assuming 18 g/mol)
-    n_targets = targets_per_molecule * molecules_per_kt * detector_mass[detector]
+    (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
 
     # integrate over eE and then eNu to obtain the event rate at time t
-    raw_nevts = [n_targets * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t])[0]
+    raw_nevts = [normalization * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t])[0]
                  for t in raw_times]
     event_rate = interpolate.pchip(raw_times, raw_nevts)
 
@@ -129,7 +109,7 @@ def gen_evts(channel, input, format, inflv, output, normalization, detector,
     binned_t = [starttime + (i+0.5)*bin_width for i in range(n_bins)]
     binned_nevt_th = event_rate(binned_t)
     binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
-    prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
+    format.prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
     with open(output, 'w') as outfile:
         outfile.write("# Generated on %s with the options:\n" % datetime.now())
@@ -146,7 +126,7 @@ def gen_evts(channel, input, format, inflv, output, normalization, detector,
                 t = t0 + random.random() * bin_width
                 eNu = get_eNu(binned_t[i])
                 (dirx, diry, dirz) = get_direction(eNu)
-                ene = get_eE(eNu, dirz)
-                outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, pid, ene, dirx, diry, dirz))
+                ene = channel.get_eE(eNu, dirz)
+                outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, channel.pid, ene, dirx, diry, dirz))
 
     print "Wrote %s particles to %s (expected: %.2f particles)" % (sum(binned_nevt), output,  sum(binned_nevt_th))
