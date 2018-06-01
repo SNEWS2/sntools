@@ -29,12 +29,12 @@ default = choices[0]
 parser.add_argument("-H", "--hierarchy", metavar="HIERARCHY", choices=choices, default=default,
                     help="Oscillation scenario. Choices: %s. Default: %s" % (choices, default))
 
-choices = ["all", "ibd", "es", "o16e", "o16eb"]
-default = choices[0]
-parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default=default,
+possible_flvs = {'ibd': ['eb'], 'es': ['e', 'eb', 'x', 'xb'], 'o16e': ['e'], 'o16eb': ['eb']}
+choices = list(possible_flvs)
+parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
                     help="Interaction channels to consider. Currently, inverse beta decay (ibd), \
                           electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC \
-                          (o16eb) are supported. Choices: %s. Default: %s" % (choices, default))
+                          (o16eb) are supported. Choices: %s. Default: all supported channels" % choices)
 
 # radius (cm), height (cm) and mass (kt) of inner detector
 detectors = {"SuperK": (3368.15/2., 3620., 32.5),
@@ -60,7 +60,7 @@ parser.add_argument("-v", "--verbose", action="count",
 args = parser.parse_args()
 
 hierarchy = args.hierarchy
-channel = args.channel
+channels = list(possible_flvs if args.channel == "all" else [args.channel])
 input = args.input_file
 format = args.format
 output = args.output
@@ -71,7 +71,7 @@ endtime = args.endtime if args.endtime else None
 verbose = args.verbose
 
 if verbose:
-    print "channel      =", channel
+    print "channel(s)   =", channels
     print "hierarchy    =", hierarchy
     print "input file   =", input, "--- format =", format
     print "output       =", output
@@ -119,53 +119,31 @@ def execute(this_channel, original_flavor, n, detected_flavor=""):
     __builtin__._cmd = cmd
     exec(cmd)
 
-if hierarchy == "noosc":
-    if (channel == "ibd" or channel == "all"):
-        execute("ibd", "eb", 1)
-    if (channel == "es" or channel == "all"):
-        execute("es", "e",  1, "e")
-        execute("es", "eb", 1, "eb")
-        execute("es", "x",  2, "x")  # normalization=2 to include both nu_mu and nu_tau
-        execute("es", "xb", 2, "xb")
-    if (channel == "o16e" or channel == "all"):
-        execute("o16e", "e", 1)
-    if (channel == "o16eb" or channel == "all"):
-        execute("o16eb", "eb", 1)
 
-if hierarchy == "normal":
-    if (channel == "ibd" or channel == "all"):
-        execute("ibd", "eb", cos2t12)
-        execute("ibd", "xb", sin2t12)
-    if (channel == "es" or channel == "all"):
-        execute("es", "x",  1, "e") # nu_e that originated as nu_x
-        execute("es", "eb", cos2t12, "eb") # anti-nu_e that originated as anti-nu_e
-        execute("es", "xb", sin2t12, "eb") # anti-nu_e that originated as anti-nu_x
-        execute("es", "e",  1, "x") # nu_x that originated as nu_e
-        execute("es", "x",  1, "x") # nu_x that originated as nu_x
-        execute("es", "eb", sin2t12, "xb") # anti-nu_x that originated as anti-nu_e
-        execute("es", "xb", 1+cos2t12, "xb") # anti-nu_x that originated as anti-nu_x
-    if (channel == "o16e" or channel == "all"):
-        execute("o16e", "x", 1)
-    if (channel == "o16eb" or channel == "all"):
-        execute("o16eb", "eb", cos2t12)
-        execute("o16eb", "xb", sin2t12)
+# tuples consisting of original flavour, weight, detected flavour
+mixings = {"noosc":    (('e', 1, 'e'),
+                        ('eb', 1, 'eb'),
+                        ('x', 2, 'x'), # weight = 2 to include both nu_mu and nu_tau
+                        ('xb', 2, 'xb')),
+           "normal":   (("x",  1, "e"), # nu_e that originated as nu_x
+                        ("eb", cos2t12, "eb"), # anti-nu_e that originated as anti-nu_e
+                        ("xb", sin2t12, "eb"), # anti-nu_e that originated as anti-nu_x
+                        ("e",  1, "x"), # nu_x that originated as nu_e
+                        ("x",  1, "x"), # nu_x that originated as nu_x
+                        ("eb", sin2t12, "xb"), # anti-nu_x that originated as anti-nu_e
+                        ("xb", 1+cos2t12, "xb")), # anti-nu_x that originated as anti-nu_x
+           "inverted": (("e",  sin2t12, "e"), # nu_e that originated as nu_e
+                        ("x",  cos2t12, "e"), # nu_e that originated as nu_x
+                        ("xb", 1, "eb"), # anti-nu_e that originated as anti-nu_x
+                        ("e",  cos2t12, "x"), # nu_x that originated as nu_e
+                        ("x",  1+sin2t12, "x"), # nu_x that originated as nu_x
+                        ("eb", 1, "xb"), # anti-nu_x that originated as anti-nu_e
+                        ("xb", 1, "xb"))} # anti-nu_x that originated as anti-nu_x
 
-if hierarchy == "inverted":
-    if (channel == "ibd" or channel == "all"):
-        execute("ibd", "xb", 1)
-    if (channel == "es" or channel == "all"):
-        execute("es", "e",  sin2t12, "e") # nu_e that originated as nu_e
-        execute("es", "x",  cos2t12, "e") # nu_e that originated as nu_x
-        execute("es", "xb", 1, "eb") # anti-nu_e that originated as anti-nu_x
-        execute("es", "e",  cos2t12, "x") # nu_x that originated as nu_e
-        execute("es", "x",  1+sin2t12, "x") # nu_x that originated as nu_x
-        execute("es", "eb", 1, "xb") # anti-nu_x that originated as anti-nu_e
-        execute("es", "xb", 1, "xb") # anti-nu_x that originated as anti-nu_x
-    if (channel == "o16e" or channel == "all"):
-        execute("o16e", "e", sin2t12)
-        execute("o16e", "x", cos2t12)
-    if (channel == "o16eb" or channel == "all"):
-        execute("o16eb", "xb", 1)
+for channel in channels:
+    for (original_flv, weight, detected_flv) in mixings[hierarchy]:
+        if detected_flv in possible_flvs[channel]:
+            execute(channel, original_flv, weight, detected_flv)
 
 
 '''
