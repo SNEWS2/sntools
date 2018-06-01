@@ -103,23 +103,6 @@ cos2t12 = 1 - sin2t12
 # List of files that contain events for a single channel/flavor combination. Will be combined into `outfile` later.
 tmpfiles = []
 
-def execute(this_channel, original_flavor, n, detected_flavor=""):
-
-    # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
-    if this_channel == "es": __builtin__._flavor = detected_flavor
-
-    n *= (10.0/distance)**2 # flux is proportional to 1/distance**2
-    n *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)
-    tmpfile = "tmp_%s_%s%s.txt" % (this_channel, original_flavor, detected_flavor)
-    tmpfiles.append(tmpfile)
-
-    cmd = "gen_evts(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, starttime=%s, endtime=%s, verbose=%s)" \
-        % (this_channel, input, format, original_flavor, tmpfile, n, starttime, endtime, verbose)
-    if verbose: print "Now executing:", cmd
-    __builtin__._cmd = cmd
-    exec(cmd)
-
-
 # tuples consisting of original flavour, weight, detected flavour
 mixings = {"noosc":    (('e', 1, 'e'),
                         ('eb', 1, 'eb'),
@@ -143,7 +126,20 @@ mixings = {"noosc":    (('e', 1, 'e'),
 for channel in channels:
     for (original_flv, weight, detected_flv) in mixings[hierarchy]:
         if detected_flv in possible_flvs[channel]:
-            execute(channel, original_flv, weight, detected_flv)
+
+            # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
+            if channel == "es": __builtin__._flavor = detected_flv
+
+            weight *= (10.0/distance)**2 # flux is proportional to 1/distance**2
+            weight *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)
+            tmpfile = "tmp_%s_%s%s.txt" % (channel, original_flv, detected_flv)
+            tmpfiles.append(tmpfile)
+
+            cmd = "gen_evts(channel='%s', input='%s', format='%s', inflv='%s', output='%s', normalization=%s, starttime=%s, endtime=%s, verbose=%s)" \
+                % (channel, input, format, original_flv, tmpfile, weight, starttime, endtime, verbose)
+            if verbose: print "Now executing:", cmd
+            __builtin__._cmd = cmd
+            exec(cmd)
 
 
 '''
