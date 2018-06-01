@@ -5,9 +5,8 @@ from math import pi, sin, cos, acos
 import numpy as np
 import random
 from scipy import integrate, interpolate
-from datetime import datetime
 
-def gen_evts(channel, input, format, inflv, output, normalization, starttime, endtime, verbose):
+def gen_evts(channel, input, format, inflv, normalization, starttime, endtime, verbose):
 
     """Setup.
 
@@ -89,7 +88,6 @@ def gen_evts(channel, input, format, inflv, output, normalization, starttime, en
     * Get event rate by interpolating from time steps in the input data.
     * For each 1ms bin, get number of events from a Poisson distribution.
     * Generate these events from time-dependent energy & direction distribution.
-    * Write them to output file.
     """
     (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
 
@@ -111,22 +109,22 @@ def gen_evts(channel, input, format, inflv, output, normalization, starttime, en
     binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
     format.prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
-    with open(output, 'w') as outfile:
-        outfile.write("# Generated on %s with the options:\n" % datetime.now())
-        outfile.write("# " + _cmd + "\n")
+    events = []
+    for i in range(n_bins):
+        t0 = starttime + i * bin_width
 
-        for i in range(n_bins):
-            t0 = starttime + i * bin_width
+        if verbose and i%(10**(4-verbose)) == 0:
+            print "%s-%s ms: %d events (%.5f expected)" % (t0, t0+bin_width, binned_nevt[i], binned_nevt_th[i])
 
-            if verbose and i%(10**(4-verbose)) == 0:
-                print "%s-%s ms: %d events (%.5f expected)" % (t0, t0+bin_width, binned_nevt[i], binned_nevt_th[i])
+        # generate events in this time bin
+        for _ in range(binned_nevt[i]):
+            t = t0 + random.random() * bin_width
+            eNu = get_eNu(binned_t[i])
+            (dirx, diry, dirz) = get_direction(eNu)
+            ene = channel.get_eE(eNu, dirz)
+            if verbose and ene < thr_e: thr_nevt -= 1
+            events.append((t, channel.pid, ene, dirx, diry, dirz))
 
-            # generate events in this time bin
-            for _ in range(binned_nevt[i]):
-                t = t0 + random.random() * bin_width
-                eNu = get_eNu(binned_t[i])
-                (dirx, diry, dirz) = get_direction(eNu)
-                ene = channel.get_eE(eNu, dirz)
-                outfile.write("%f, %d, %f, %f, %f, %f\n" % (t, channel.pid, ene, dirx, diry, dirz))
+    print "Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th))
 
-    print "Wrote %s particles to %s (expected: %.2f particles)" % (sum(binned_nevt), output,  sum(binned_nevt_th))
+    return events
