@@ -34,6 +34,13 @@ pid = -11
 
 
 '''
+possible_flavors:
+which neutrino flavors ("e", "eb", "x", "xb") interact in this channel
+'''
+possible_flavors = ["eb"]
+
+
+'''
 bounds_eNu
 List with minimum & maximum energy of incoming neutrino. The minimum energy is
 typically given by the threshold energy for the interaction, while the maximum

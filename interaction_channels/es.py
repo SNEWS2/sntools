@@ -5,6 +5,7 @@ from scipy import integrate
 
 targets_per_molecule = 10 # number of electrons per water molecule
 pid = 11
+possible_flavors = ["e", "eb", "x", "xb"]
 
 
 '''

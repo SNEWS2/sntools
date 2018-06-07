@@ -3,6 +3,7 @@ from math import pi, sqrt, log
 
 targets_per_molecule = 2 # number of free protons per water molecule
 pid = -11
+possible_flavors = ["eb"]
 
 
 '''

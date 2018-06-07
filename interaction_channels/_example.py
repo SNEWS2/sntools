@@ -2,7 +2,7 @@
 Sample implementation of an interaction channel.
 
 Most of the actual work is done in `channel.py`. Here, you need to provide
-7 constants/functions that characterize this interaction channel.
+8 constants/functions that characterize this interaction channel.
 See the docstrings below for detailed descriptions.
 
 If you need to define helper functions or constants, you can do so at the bottom
@@ -23,6 +23,13 @@ ID of the outgoing (detected) particle, using Particle Data Group conventions
 (e.g. electron = 11, positron = -11)
 '''
 pid = None
+
+
+'''
+possible_flavors:
+which neutrino flavors ("e", "eb", "x", "xb") interact in this channel
+'''
+possible_flavors = ["e"]
 
 
 '''
