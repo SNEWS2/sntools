@@ -50,6 +50,7 @@ def main():
     args = parse_command_line_options()
 
     hierarchy = args.hierarchy
+    global channels
     channels = channels if args.channel == "all" else [args.channel]
     input = args.input_file
     format = args.format
@@ -154,8 +155,8 @@ def write_output(events, outfile, args):
             (t, pid, ene, dirx, diry, dirz) = event
 
             # create random vertex position inside the detector volume
-            radius = detector[0] - 20
-            height = detector[1] - 20
+            radius = detectors[args.detector][0] - 20
+            height = detectors[args.detector][1] - 20
             while True:
                 x = random.uniform(-radius, radius)
                 y = random.uniform(-radius, radius)
