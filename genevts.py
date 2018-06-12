@@ -9,7 +9,7 @@ import random
 from channel import gen_evts
 
 
-channels = ('ibd', 'es', 'o16e', 'o16eb')
+channels = ['ibd', 'es', 'o16e', 'o16eb']
 
 # radius (cm), height (cm) and mass (kt) of inner detector
 detectors = {"SuperK": (3368.15/2., 3620., 32.5),
