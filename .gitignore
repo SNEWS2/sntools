@@ -1,7 +1,11 @@
-# ignore input and output files
-infile_*.txt
-tmp_*.txt
-outfile.kin
+# input and output files
+infile*
+outfile*
 
-# ignore compiled python scripts
+# compiled code
 *.pyc
+*.so
+
+# temporary files and analysis scripts
+tmp*
+ana*

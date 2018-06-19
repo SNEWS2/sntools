@@ -24,6 +24,8 @@ gF = 1.16639e-11 # Fermi coupling constant
 sigma0 = 2 * mP * gF**2 * 0.9746**2 / (8 * pi * mP**2) # from eqs. (3), (11)
 
 def dSigma_dE(eNu, eE): # eqs. (11), (3)
+    if eNu < eThr or eE < bounds_eE(eNu)[0] or eE > bounds_eE(eNu)[1]:
+        return 0
     # above eq. (11)
     s_minus_u = 2*mP*(eNu+eE) - mE**2
     t = mN**2 - mP**2 - 2*mP*(eNu-eE)

@@ -74,19 +74,19 @@ def prepare_evt_gen(binned_t):
     binned_t -- list of time bins for generating events
     """
     _flux = sorted([(k,)+v for (k,v) in flux.items()]) # list of tuples: (t, e, e_sq, lum)
-    (raw_t, raw_e, raw_e_sq) = [[entry[i] for entry in _flux] for i in range(3)]
+    (raw_t, raw_e, raw_e_sq, raw_lum) = [[entry[i] for entry in _flux] for i in range(4)]
 
-    # interpolate the mean energy and mean squared energy
+    # interpolate mean energy, mean squared energy and luminosity ...
     interpolated_e = interpolate.pchip(raw_t, raw_e)
     interpolated_e_sq = interpolate.pchip(raw_t, raw_e_sq)
-
+    interpolated_lum = interpolate.pchip(raw_t, raw_lum)
+    # ... and evaluate them at all relevant times
     binned_e = interpolated_e(binned_t)
     binned_e_sq = interpolated_e_sq(binned_t)
+    binned_lum = interpolated_lum(binned_t)
 
-    for (t, mean_e, mean_e_sq) in zip(binned_t, binned_e, binned_e_sq):
-        # Since the event rate is already known, luminosity can now be set to a
-        # constant. We save time by not calculating it.
-        flux[t] = (mean_e, mean_e_sq, 1)
+    for (t, mean_e, mean_e_sq, mean_lum) in zip(binned_t, binned_e, binned_e_sq, binned_lum):
+        flux[t] = (mean_e, mean_e_sq, mean_lum)
 
     return None
 

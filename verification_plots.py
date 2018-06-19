@@ -47,6 +47,7 @@ energy = []
 time = []
 with open(options.input) as data: # for elastic scattering: "tmp_es_ee.txt"
     for line in data:
+        if line.startswith("#"): continue # ignore comments
         t, _, e, _, _, _ = line.split(",")
         energy.append(float(e))
         time.append(float(t))
@@ -58,12 +59,12 @@ bin_nr = t_max / bin_width
 total_energy = [0] * bin_nr
 n_evt = [0] * bin_nr
 
-for (t, energy) in zip(time, energy):
+for (t, e) in zip(time, energy):
     if t >= t_max or t < 0:
         continue
 
     j = int(t / bin_width)
-    total_energy[j] += + energy
+    total_energy[j] += e
     n_evt[j] += 1
 
 mean_energy = []
@@ -79,6 +80,7 @@ for j in range(bin_nr):
 # sim_times = []
 # with open("infile_eb.txt") as data2:
 #     for line in data2:
+#         if line.startswith("#"): continue # ignore comments
 #         t, mean_energy, _, _ = line.split(",")
 #         sim_times.append(float(t) * 1000) # convert to ms
 #         sim_mean_energies.append(float(mean_energy))

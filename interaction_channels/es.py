@@ -34,6 +34,9 @@ def spence(n):
 
 
 def dSigma_dE(eNu, eE):
+    if eE < bounds_eE(eNu)[0] or eE > bounds_eE(eNu)[1]:
+        return 0
+
     # Appendix A: Radiative Corrections
     L = sqrt(eE**2 - mE**2)
     beta = L / eNu
