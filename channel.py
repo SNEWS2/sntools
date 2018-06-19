@@ -36,6 +36,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     """
     setup(_channel, _format) # import appropriate modules
     scale *= channel.targets_per_molecule
+    thr_e = 3.511 # detection threshold in HK: 3 MeV kinetic energy + rest mass
 
     (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
 
@@ -57,6 +58,14 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
     format.prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
+    if verbose: # compute events above threshold energy `thr_e`
+        thr_bounds_eE = lambda _eNu, *args: [max(thr_e, channel.bounds_eE(_eNu)[0]), max(thr_e, channel.bounds_eE(_eNu)[1])]
+        thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t])[0]
+                         for t in raw_times]
+        thr_event_rate = interpolate.pchip(raw_times, thr_raw_nevts)
+        thr_binned_nevt_th = thr_event_rate(binned_t)
+        thr_nevt = sum(binned_nevt)
+
     events = []
     for i in range(n_bins):
         t0 = starttime + i * bin_width
@@ -74,6 +83,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
             events.append((t, channel.pid, eE, dirx, diry, dirz))
 
     print "Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th))
+    if verbose: print "-> above threshold of %s MeV: %s particles (expected: %.2f)" % (thr_e, thr_nevt, sum(thr_binned_nevt_th))
 
     return events
 
