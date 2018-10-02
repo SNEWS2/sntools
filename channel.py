@@ -17,6 +17,8 @@ def setup(_channel, _format):
     # To save time, we cache results in a dictionary.
     cached_flux = {}
 
+    return channel, format
+
 
 def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose):
     """Generate events.
@@ -55,6 +57,10 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     # magnitude faster to pre-compute all values of the interpolated functions.
     binned_t = [starttime + (i+0.5)*bin_width for i in range(n_bins)]
     binned_nevt_th = event_rate(binned_t)
+    # check for unphysical values of interpolated function event_rate(t)
+    for _i, _n in enumerate(binned_nevt_th):
+        if _n < 0:
+            binned_nevt_th[_i] = 0
     binned_nevt = np.random.poisson(binned_nevt_th) # Get random number of events in each bin from Poisson distribution
     format.prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 

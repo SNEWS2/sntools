@@ -104,6 +104,11 @@ bounds_eNu = [None, 100]
 # bounds_eNu = [e_threshold, 100]
 # e_threshold = 0 # threshold energy for current channel
 
+# minimum/maximum neutrino energy that can produce a given positron energy
+# Optional. Can reduce numerical inaccuracy when integrating over eNu.
+def _bounds_eNu(eE):
+    return bounds_eNu
+
 
 '''
 End of required values.

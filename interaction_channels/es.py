@@ -95,7 +95,7 @@ def dSigma_dE(eNu, eE):
     if result < 0:
         if eNu < 0.8:
             # Approximations in f_* may be imprecise at very low energies.
-            # This is below threshold in HK anyway, so we suppress it for now.
+            # This is below threshold in HK anyway, so we suppress it.
             result = 0
         else:
             raise ValueError("Calculated negative cross section for E_nu=%f, E_e=%f. Aborting..." % (eNu, eE))
