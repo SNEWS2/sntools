@@ -1,3 +1,8 @@
+"""
+Batch convert csv event files to NUANCE-formatted files that can be
+used as input files to WCSim.
+Can generate a WCSim macro file that simulates these NUANCE files.
+"""
 import argparse
 import os
 import random
