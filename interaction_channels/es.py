@@ -67,9 +67,11 @@ def dSigma_dE(eNu, eE):
         gR = g1
 
     # Appendix B: QED Effects
-    f0 = eE/L * log((eE+L)/mE) - 1 # common constant of all three f_*
+    f0 = eE/L * log((eE+L)/mE) - 1 # common factor of all three f_*
+    log_zmE = log(1-z-mE/(eE+L)) # Warning: imprecise at low E, throws ValueError in extreme cases
+
     # fMinus(z)
-    f1 = f0 * (2 * log(1-z-mE/(eE+L)) - log(1-z) - log(z)/2. - 5./12) \
+    f1 = f0 * (2 * log_zmE - log(1-z) - log(z)/2. - 5./12) \
            + 0.5 * (spence(z) - spence(beta)) \
            - 0.5 * log(1-z)**2 - (11./12 + z/2.) * log(1-z) \
            + z * (log(z) + 0.5 * log(2*eNu / mE)) \
@@ -77,19 +79,28 @@ def dSigma_dE(eNu, eE):
            - 11./12 * z + z**2 / 24.
 
     # (1-z)**2 * fPlus(z)
-    f2 = f0 * ((1-z)**2 * (2*log(1-z-mE/(eE+L)) - log(1-z) - log(z)/2. - 2./3) - (z**2 * log(z) + 1 - z)/2.) \
+    f2 = f0 * ((1-z)**2 * (2*log_zmE - log(1-z) - log(z)/2. - 2./3) - (z**2 * log(z) + 1 - z)/2.) \
            - (1-z)**2 / 2. * (log(1-z)**2 + beta * (spence(1-z) - log(z)*log(1-z))) \
            + log(1-z) * (z**2 / 2. * log(z) + (1-z)/3. * (2*z - 0.5)) \
            - z**2 / 2. * spence(1-z) - z * (1-2*z)/3 * log(z) - z * (1-z)/6 \
            - beta/12. * (log(z) + (1-z) * (115 - 109 * z)/6.)
 
     # fPlusMinus(z)
-    f3 = f0 * 2 * log(1-z-mE/(eE+L))
+    f3 = f0 * 2 * log_zmE
 
-    return 2*mE*gF**2 / pi * (gL**2 * (1 + alpha/pi * f1)
+    result = 2*mE*gF**2 / pi * (gL**2 * (1 + alpha/pi * f1)
                               + gR**2 * ((1-z)**2 + alpha/pi * f2)
                               - gR * gL * mE/eNu * z * (1 + alpha/pi * f3)
                               )
+    if result < 0:
+        if eNu < 0.8:
+            # Approximations in f_* may be imprecise at very low energies.
+            # This is below threshold in HK anyway, so we suppress it for now.
+            result = 0
+        else:
+            raise ValueError("Calculated negative cross section for E_nu=%f, E_e=%f. Aborting..." % (eNu, eE))
+
+    return result
 
 
 # energy of electron scattered into direction cosT by a neutrino with energy eNu
@@ -117,5 +128,9 @@ def bounds_eE(eNu, *args): # ignore additional arguments handed over by integrat
 def eNu_min(eE):
     T = eE - mE
     return T/2. * (1 + sqrt(1 + 2*mE/T)) # inversion of eE_max(eNu)
-eNu_max = 80
+eNu_max = 100
 bounds_eNu = [eNu_min(eE_min), eNu_max]
+
+# minimum/maximum neutrino energy that can produce a given positron energy
+def _bounds_eNu(eE):
+    return [eNu_min(eE), eNu_max]

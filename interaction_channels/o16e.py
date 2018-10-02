@@ -106,3 +106,8 @@ Output:
 def dSigma_dCosT(eNu, cosT): # eq. (B7)
     x = (get_eE(eNu, cosT) / 25)**4
     return 1 - cosT * (1+x)/(3+x)
+
+
+# minimum/maximum neutrino energy that can produce a given positron energy
+def _bounds_eNu(eE):
+    return (eE + e_thr - epsilon, eE + e_thr + epsilon)

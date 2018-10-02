@@ -63,7 +63,12 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
     abs_M_squared = A - B * s_minus_u + C * s_minus_u**2 # eq. (5)
     rad_correction = alpha/pi * (6.00352 + 3./2 * log(mP/(2*eE)) + 1.2 * (mE/eE)**1.5) # eq. (14)
 
-    return sigma0 / eNu**2 * abs_M_squared * (1 + rad_correction)
+    result = sigma0 / eNu**2 * abs_M_squared * (1 + rad_correction)
+
+    if result < 0:
+        raise ValueError("Calculated negative cross section for E_nu=%f, E_e=%f. Aborting..." % (eNu, eE))
+
+    return result
 
 
 # probability distribution for the angle at which the positron is emitted
@@ -95,3 +100,11 @@ def bounds_eE(eNu, *args): # ignore additional arguments handed over by scipy.in
 # Bounds for integration over eNu
 eThr = ((mN+mE)**2 - mP**2) / (2*mP) # threshold energy for IBD: ca. 1.8 MeV
 bounds_eNu = [eThr, 100]
+
+
+# minimum/maximum neutrino energy that can produce a given positron energy, eq. (19)
+# Note: This is only an approximation to simplify numerical integration; the precise range has to be enforced separately.
+def _bounds_eNu(eE):
+    eNu_min = eE + delta_cm
+    eNu_max = eNu_min / (1 - 2 * eNu_min/mP)
+    return (eNu_min, eNu_max)
