@@ -88,6 +88,7 @@ def main():
                 cmd = "gen_evts(_channel='%s', input='%s', _format='%s', inflv='%s', scale=%s, starttime=%s, endtime=%s, verbose=%s)" \
                     % (channel, input, format, original_flv, scale, starttime, endtime, verbose)
                 if verbose: print "Now executing:", cmd
+                __builtin__._cmd = cmd # TODO
                 events_by_channel[(channel, original_flv, detected_flv)] = eval(cmd)
 
     # Collect events generated in all interaction channels.
