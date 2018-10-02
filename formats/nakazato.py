@@ -6,6 +6,7 @@ Flux files are available at http://asphwww.ph.noda.tus.ac.jp/snn/index.html
 """
 
 from math import ceil, floor
+from scipy.interpolate import InterpolatedUnivariateSpline as IUSpline
 
 
 def parse_input(input, inflv, starttime, endtime):
@@ -17,11 +18,10 @@ def parse_input(input, inflv, starttime, endtime):
     starttime -- start time set by user via command line option (or None)
     endtime -- end time set by user via command line option (or None)
     """
-    global times, diff_number_flux_dict, diff_luminosity_dict, energy_mesh_dict
+    global times, dNLdE
     times = []
-    diff_number_flux_dict, diff_luminosity_dict, energy_mesh_dict = {}, {}, {}
+    dNLdE = {}
 
-    ### Parse the input files. ###
     with open(input) as infile:
         indata = [map(float, line.split()) for line in infile]
 
@@ -40,15 +40,13 @@ def parse_input(input, inflv, starttime, endtime):
 
         diff_number_flux, diff_luminosity, energy_mesh = [0], [0], [0] # flux, lum = 0 at 0 MeV
         for bin_data in chunk[1:-1]: # exclude first line (time) and last line (empty)
-            number_flux = bin_data[2+offset] / 1000. # convert from /s to /ms
+            number_flux = bin_data[2+offset] / 1000. # convert 1/s to 1/ms
             luminosity = bin_data[5+offset] * 624.151 # convert erg/s to MeV/ms
             diff_number_flux.append(number_flux)
             diff_luminosity.append(luminosity)
             energy_mesh.append(luminosity / number_flux)
 
-        diff_number_flux_dict[time] = diff_number_flux
-        diff_luminosity_dict[time] = diff_luminosity
-        energy_mesh_dict[time] = energy_mesh
+        dNLdE[time] = IUSpline(energy_mesh, diff_number_flux)
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = times[0]
@@ -99,31 +97,13 @@ def nu_emission(eNu, time):
     eNu -- neutrino energy
     time -- time ;)
     """
-    # find previous/next time bin
+    # find previous/next time bin and perform linear interpolation
     for t_prev, t_next in zip(times[:-1], times[1:]):
         if time < t_next:
             break
 
-    # for prev time bin: find energy bins ("low"/"high") around eNu and do linear interpolation
-    for i, (e_low, e_high) in enumerate(zip(energy_mesh_dict[t_prev][:-1],
-                                            energy_mesh_dict[t_prev][1:])):
-        if eNu < e_high:
-            # eNu lies between indices i and i+1
-            break
-
-    dNL_low, dNL_high = diff_number_flux_dict[t_prev][i:i+2]
-    dNL_prev = dNL_low + (dNL_high - dNL_low) * (eNu - e_low) / (e_high - e_low)
-
-    # for next time bin: find energy bins ("low"/"high") around eNu and do linear interpolation
-    for i, (e_low, e_high) in enumerate(zip(energy_mesh_dict[t_next][:-1],
-                                            energy_mesh_dict[t_next][1:])):
-        if e_high > eNu:
-            break
-
-    dNL_low, dNL_high = diff_number_flux_dict[t_next][i:i+2]
-    dNL_next = dNL_low + (dNL_high - dNL_low) * (eNu - e_low) / (e_high - e_low)
-
-    # linear interpolation over time
-    dNL = dNL_prev + (dNL_next - dNL_prev) * (time - t_prev) / (t_next - t_prev)
+    dNLdE_prev = dNLdE[t_prev](eNu)
+    dNLdE_next = dNLdE[t_next](eNu)
+    dNL = dNLdE_prev + (dNLdE_next - dNLdE_prev) * (time - t_prev) / (t_next - t_prev)
 
     return dNL
