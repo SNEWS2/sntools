@@ -25,8 +25,8 @@ def parse_input(input, inflv, starttime, endtime):
     with open(input) as infile:
         indata = [map(float, line.split()) for line in infile]
 
-    # 21 lines (+1 empty line) per time bin, 391 bins
-    chunks = [indata[22*i:22*(i+1)-1] for i in range(391)]
+    # 21 lines (+1 empty line) per time bin
+    chunks = [indata[22*i:22*(i+1)-1] for i in range(len(indata)/22)]
 
     # input files contain information for e, eb & x in neighbouring columns,
     # so depending on the flavor, we might need an offset
