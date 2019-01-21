@@ -1,6 +1,7 @@
 # input and output files
 infile*
-outfile*
+in_*
+out*
 
 # compiled code
 *.pyc

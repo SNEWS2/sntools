@@ -35,8 +35,8 @@ def main():
 
     channel_modules = {ic: import_module("interaction_channels." + ic) for ic in channels}
 
-    # Take into account hierarchy-dependent flavor mixing and let channel.py
-    # generate the actual events for each channel.
+    # Take into account hierarchy-dependent flavor mixing and calculate the
+    # expected number of events for each channel.
     binned_nevt_by_channel = {}
     for channel in channels:
         mod_channel = channel_modules[channel]
@@ -54,11 +54,12 @@ def main():
                 binned_nevt_by_channel[(channel, original_flv, detected_flv)] = eval(cmd)
 
 
+    # For each event to generate, pick a random channel & time bin, then accept
+    # it with a probability proportional to the number of events expected in
+    # that channel at that time.
     events_to_generate = {}
     n_max = max([max(binned_events) for (binned_events, _, _, _) in binned_nevt_by_channel.values()])
     for _ in range(n_total):
-        # pick a random channel & time bin, then accept it with a probability
-        # proportional to the number of events in that time bin
         while True:
             key = random.choice(binned_nevt_by_channel.keys())
             (binned_nevt_th, _, _, _) = binned_nevt_by_channel[key]
@@ -69,17 +70,15 @@ def main():
         events_to_generate[key] = events_to_generate.get(key, []) + [bin]
 
 
-    # iterate over `events_to_generate`
+    # Actually generate the events.
     events = []
     for (key, time_bins) in events_to_generate.iteritems():
-        # TODO: setup stuff based on `key`
+        # setup channel & ensure that we use fluxes for the right flavour
         (channel, original_flv, detected_flv) = key
         mod_channel = channel_modules[channel]
-
-        # ensure that we're using fluxes for the right flavour
         _, binned_t, _starttime, _ = expected_nevts(channel, input, format, original_flv, scale, starttime, endtime, verbose)
 
-        # generate the events
+        # generate events
         for bin in time_bins:
             t = _starttime + (bin + random.random()) * bin_width
             eNu = get_eNu(binned_t[bin])
