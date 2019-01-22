@@ -39,7 +39,7 @@ def dSigma_dE(eNu, eE):
 
     # Appendix A: Radiative Corrections
     L = sqrt(eE**2 - mE**2)
-    beta = L / eNu
+    beta = L / eE
     T = eE - mE # kinetic energy of recoil electron
     z = T / eNu
     x = sqrt(1 + 2*mE/T)
