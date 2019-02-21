@@ -49,9 +49,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
 
     bin_width = 1 # in ms
     n_bins = int((endtime - starttime)/bin_width) # number of full-width bins; int() implies floor()
-    if verbose:
-        print "Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms"
-        print "**************************************"
+    if verbose: print "Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms"
 
     # scipy is optimized for operating on large arrays, making it orders of
     # magnitude faster to pre-compute all values of the interpolated functions.
@@ -89,7 +87,9 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
             events.append((t, channel.pid, eE, dirx, diry, dirz))
 
     print "Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th))
-    if verbose: print "-> above threshold of %s MeV: %s particles (expected: %.2f)" % (thr_e, thr_nevt, sum(thr_binned_nevt_th))
+    if verbose:
+        print "-> above threshold of %s MeV: %s particles (expected: %.2f)" % (thr_e, thr_nevt, sum(thr_binned_nevt_th))
+        print "**************************************"
 
     return events
 

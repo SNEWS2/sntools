@@ -70,6 +70,7 @@ def main():
         print "distance     =", distance
         print "starttime    =", starttime
         print "endtime      =", endtime
+        print "**************************************"
 
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
