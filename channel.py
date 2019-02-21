@@ -18,6 +18,11 @@ def setup(_channel, _format):
     # To save time, we cache results in a dictionary.
     cached_flux = {}
 
+    # Set options for numerical integration. Not needed for all channels, so
+    # default to returning an empty dictionary.
+    if not hasattr(channel, '_opts'):
+        channel._opts = lambda *args: {'points': []}
+
     return channel, format
 
 
@@ -44,7 +49,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
 
     # integrate over eE and then eNu to obtain the event rate at time t
-    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t])[0]
+    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
                  for t in raw_times]
     event_rate = interpolate.pchip(raw_times, raw_nevts)
 
@@ -94,7 +99,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
             bounds_eNu = [max(channel.bounds_eNu[0], channel._bounds_eNu(_e_lower)[0]),
                           min(channel.bounds_eNu[1], channel._bounds_eNu(_e_upper)[1])]
 
-            nevts = [scale * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t])[0]
+            nevts = [scale * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
                      for t in raw_times]
             nevts = interpolate.pchip(raw_times, nevts)
             ebinned_nevts.append(nevts(binned_t))
@@ -113,7 +118,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
 
     if verbose: # compute events above threshold energy `thr_e`
         thr_bounds_eE = lambda _eNu, *args: [max(thr_e, channel.bounds_eE(_eNu)[0]), max(thr_e, channel.bounds_eE(_eNu)[1])]
-        thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t])[0]
+        thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
                          for t in raw_times]
         thr_event_rate = interpolate.pchip(raw_times, thr_raw_nevts)
         thr_binned_nevt_th = thr_event_rate(binned_t)
@@ -187,7 +192,7 @@ def rejection_sample(dist, min_val, max_val, n_bins=100):
 
 # use rejection sampling to get the energy of an interacting neutrino
 def get_eNu(time):
-    dist = lambda _eNu: integrate.quad(ddEventRate, *channel.bounds_eE(_eNu), args=(_eNu, time))[0]
+    dist = lambda _eNu: integrate.quad(ddEventRate, *channel.bounds_eE(_eNu), args=(_eNu, time), points=channel._opts(_eNu)['points'])[0]
     eNu = rejection_sample(dist, *channel.bounds_eNu, n_bins=200)
     return eNu
 

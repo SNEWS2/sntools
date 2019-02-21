@@ -111,7 +111,7 @@ def expected_nevts(_channel, input, _format, inflv, scale, starttime, endtime, v
     (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
 
     # integrate over eE and then eNu to obtain the event rate at time t
-    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t])[0]
+    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
                  for t in raw_times]
     event_rate = interpolate.pchip(raw_times, raw_nevts)
 
