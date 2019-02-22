@@ -69,51 +69,51 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     format.prepare_evt_gen(binned_t) # give flux script a chance to pre-compute values
 
     # FOR GENERATING FILES CONTAINING THE NUMBER OF EXPECTED EVENTS PER ENERGY/TIME BIN
-    with open("nevt_" + _format + "_" + _channel + "-" + inflv + ".txt", 'w') as outfile:
-        outfile.write("# Generated on %s with the options:\n" % datetime.now())
-        outfile.write("# " + _cmd + "\n")
-
-        ebinned_nevts = []
-        ebin_width = 2
-        outfile.write("# Format: time bin, expected number of events (total), <10MeV, ... " + str(ebin_width) + "MeV bins ..., >50MeV\n")
-        for _e_upper in range(10, 51 + ebin_width, ebin_width):
-            _e_lower = _e_upper - ebin_width
-            # energy bins: <10 MeV, 1 MeV bins up to 50 MeV, then >50 MeV
-            e_lower = lambda _eNu, *args: max(_e_lower, channel.bounds_eE(_eNu)[0])
-            e_upper = lambda _eNu, *args: min(_e_upper, channel.bounds_eE(_eNu)[1])
-            if _e_upper == 10:
-                _e_lower = thr_e
-                e_lower = lambda _eNu, *args: max(thr_e, channel.bounds_eE(_eNu)[0])
-            elif _e_upper == 50 + ebin_width:
-                _e_upper = channel.bounds_eNu[1]
-                e_upper = lambda _eNu, *args: channel.bounds_eE(_eNu)[1]
-
-            def bounds_eE(_eNu, *args):
-                e_min = e_lower(_eNu, *args)
-                e_max = e_upper(_eNu, *args)
-                if e_min > e_max: # kinematically forbidden
-                    return [0, 0]
-                else:
-                    return [e_min, e_max]
-
-            bounds_eNu = [max(channel.bounds_eNu[0], channel._bounds_eNu(_e_lower)[0]),
-                          min(channel.bounds_eNu[1], channel._bounds_eNu(_e_upper)[1])]
-
-            nevts = [scale * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
-                     for t in raw_times]
-            nevts = interpolate.pchip(raw_times, nevts)
-            ebinned_nevts.append(nevts(binned_t))
-
-        for i, (t, n) in enumerate(zip(binned_t, binned_nevt_th)):
-            outfile.write("%s, %s" %(t, n))
-            _sum_over_bins = 0
-            for energy_bin in ebinned_nevts:
-                outfile.write(", %s" %(energy_bin[i]))
-                _sum_over_bins += energy_bin[i]
-#             if i < 250 or i%1000 == 0:
-#                 # check that numerical difference of different integrations is small
-#                 print i, (n-_sum_over_bins)/n, n, _sum_over_bins
-            outfile.write("\n")
+#     with open("nevt_" + _format + "_" + _channel + "-" + inflv + ".txt", 'w') as outfile:
+#         outfile.write("# Generated on %s with the options:\n" % datetime.now())
+#         outfile.write("# " + _cmd + "\n")
+#
+#         ebinned_nevts = []
+#         ebin_width = 2
+#         outfile.write("# Format: time bin, expected number of events (total), <10MeV, ... " + str(ebin_width) + "MeV bins ..., >50MeV\n")
+#         for _e_upper in range(10, 51 + ebin_width, ebin_width):
+#             _e_lower = _e_upper - ebin_width
+#             # energy bins: <10 MeV, 1 MeV bins up to 50 MeV, then >50 MeV
+#             e_lower = lambda _eNu, *args: max(_e_lower, channel.bounds_eE(_eNu)[0])
+#             e_upper = lambda _eNu, *args: min(_e_upper, channel.bounds_eE(_eNu)[1])
+#             if _e_upper == 10:
+#                 _e_lower = thr_e
+#                 e_lower = lambda _eNu, *args: max(thr_e, channel.bounds_eE(_eNu)[0])
+#             elif _e_upper == 50 + ebin_width:
+#                 _e_upper = channel.bounds_eNu[1]
+#                 e_upper = lambda _eNu, *args: channel.bounds_eE(_eNu)[1]
+#
+#             def bounds_eE(_eNu, *args):
+#                 e_min = e_lower(_eNu, *args)
+#                 e_max = e_upper(_eNu, *args)
+#                 if e_min > e_max: # kinematically forbidden
+#                     return [0, 0]
+#                 else:
+#                     return [e_min, e_max]
+#
+#             bounds_eNu = [max(channel.bounds_eNu[0], channel._bounds_eNu(_e_lower)[0]),
+#                           min(channel.bounds_eNu[1], channel._bounds_eNu(_e_upper)[1])]
+#
+#             nevts = [scale * integrate.nquad(ddEventRate, [bounds_eE, bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
+#                      for t in raw_times]
+#             nevts = interpolate.pchip(raw_times, nevts)
+#             ebinned_nevts.append(nevts(binned_t))
+#
+#         for i, (t, n) in enumerate(zip(binned_t, binned_nevt_th)):
+#             outfile.write("%s, %s" %(t, n))
+#             _sum_over_bins = 0
+#             for energy_bin in ebinned_nevts:
+#                 outfile.write(", %s" %(energy_bin[i]))
+#                 _sum_over_bins += energy_bin[i]
+# #             if i < 250 or i%1000 == 0:
+# #                 # check that numerical difference of different integrations is small
+# #                 print i, (n-_sum_over_bins)/n, n, _sum_over_bins
+#             outfile.write("\n")
 
 
     if verbose: # compute events above threshold energy `thr_e`
