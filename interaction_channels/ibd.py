@@ -40,7 +40,7 @@ def dSigma_dE(eNu, eE): # eqs. (11), (3)
     g2 = 2 * g1 * mAvg**2 / (mPi**2 - t)
 
     A = 1./16 * (
-	        (t - mE**2) * (
+            (t - mE**2) * (
                 4 * f1**2 * (4*mAvg**2 + t + mE**2)
                 + 4 * g1**2 * (-4*mAvg**2 + t + mE**2)
                 + f2**2 * (t**2 / mAvg**2 + 4*t + 4*mE**2)

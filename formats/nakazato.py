@@ -38,12 +38,11 @@ def parse_input(input, inflv, starttime, endtime):
         time = chunk[0][0] * 1000 # convert to ms
         times.append(time)
 
-        diff_number_flux, diff_luminosity, energy_mesh = [0], [0], [0] # flux, lum = 0 at 0 MeV
+        diff_number_flux, energy_mesh = [0], [0] # flux = 0 at 0 MeV
         for bin_data in chunk[1:-1]: # exclude first line (time) and last line (empty)
             number_flux = bin_data[2+offset] / 1000. # convert 1/s to 1/ms
             luminosity = bin_data[5+offset] * 624.151 # convert erg/s to MeV/ms
             diff_number_flux.append(number_flux)
-            diff_luminosity.append(luminosity)
             energy_mesh.append(luminosity / number_flux)
 
         dNLdE[time] = IUSpline(energy_mesh, diff_number_flux)
