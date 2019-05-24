@@ -161,6 +161,15 @@ def _opts(eNu, *args):
     for g in range(1,5):
         if eNu > fit_parameters[g][0] + epsilon:
             p.append(eNu - fit_parameters[g][0] - epsilon)
-            p.append(eNu - fit_parameters[g][0] + epsilon)
+            p.append(eNu - fit_parameters[g][0] + epsilon) # TODO: this should require only eNu > fit_parameters[g][0] - epsilon; but need to also change bounds_eE() otherwise that crashes
+
+    return {'points': p}
+
+def _opts2(eE, *args):
+    # values of eNu where dSigma_dE(eNu, eE) has a discontinuity, to increase accuracy
+    p = []
+    for g in range(1,5):
+        p.append(eE + fit_parameters[g][0] - epsilon)
+        p.append(eE + fit_parameters[g][0] + epsilon)
 
     return {'points': p}

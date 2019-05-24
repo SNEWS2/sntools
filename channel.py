@@ -22,6 +22,7 @@ def setup(_channel, _format):
     # default to returning an empty dictionary.
     if not hasattr(channel, '_opts'):
         channel._opts = lambda *args: {'points': []}
+        channel._opts2 = lambda *args: {'points': []}
 
     return channel, format
 
