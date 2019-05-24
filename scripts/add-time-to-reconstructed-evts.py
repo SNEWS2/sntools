@@ -5,8 +5,8 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument("input", help="Name of input file containing 1 event per line, each consisting of `time, PID, energy, dirx, diry, dirz`. \
-                                   Requires a .csv and a .reco file with same name to exist.")
+parser.add_argument("input", help="Name (without extension) of files containing 1 event per line. \
+                                   Requires a .csv and a .reco file with this name to exist.")
 args = parser.parse_args()
 input = args.input
 # Check that both input files exist
@@ -39,16 +39,25 @@ recoevents = []
 with open(input + '.reco') as recofile:
     for line in recofile:
         if line.startswith("t,"): # ignore unnecessary hk-BONSAI output
-            recoevents.append(line.split(","))
+            evt = line.split(",")
+            if len(evt) == 6: # old version of the reconstruction script didn't consistently add reconstructed x, y and z coordinates
+                evt.extend([0,0,0])
+            recoevents.append(evt)
+
+# Reconstruction script exits with `(int)0`. If the last line is different, there might be a problem.
+if not line.startswith("(int)0"):
+    print "File %s.reco appears to be incomplete. Found %s events." % (input, len(recoevents))
+
 
 # Set time of reconstructed event to the true time. (Reconstruction uncertainty
 # is at nanosecond level, negligible compared to timescale of SN simulation!)
 for (i, orig) in enumerate(origevents):
     recoevents[i][0] = orig[0]
     recoevents[i][1] = 0 # PID: can't distinguish electron and positron in reconstruction
+    recoevents[i].append(orig[2]) # add truth energy (for debugging)
 
 
 with open(input + '.reco2', 'w') as outfile:
     for (i, event) in enumerate(recoevents):
-        (t, pid, ene, dirx, diry, dirz) = map(float, event)
-        outfile.write("%.5f, %i, %.5f, %.5f, %.5f, %.5f\n" % (t, pid, ene, dirx, diry, dirz))
+        (t, pid, e, dirx, diry, dirz, x, y, z, true_e) = map(float, event)
+        outfile.write("%.5f, %i, %.3f, %.3f, %.3f, %.3f, %i, %i, %i, %.3f\n" % (t, pid, e, dirx, diry, dirz, x, y, z, true_e))

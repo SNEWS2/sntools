@@ -77,7 +77,9 @@ for input in inputs:
     # write events to output file
     with open(output, 'w') as outfile:
         for line in comments:
-            outfile.write(line)
+            # Need to wait until WCSim ignores comment lines.
+            # See https://github.com/WCSim/WCSim/issues/234
+            pass #outfile.write(line)
 
         for (i, event) in enumerate(events):
             (t, pid, ene, dirx, diry, dirz) = event
