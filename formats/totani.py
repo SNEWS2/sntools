@@ -86,7 +86,7 @@ def prepare_evt_gen(binned_t):
             # we have already computed the interpolated spectrum at this time
             continue
 
-        if 40 <= time <= 50 and times_nb != []:
+        if 40 <= time <= 49.99 and times_nb != []:
             # take fluxes from nb file into account
             _times = filter(lambda x: x in times, times_nb)
         else: # use fluxes from early/late file
