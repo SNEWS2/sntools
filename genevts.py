@@ -81,7 +81,7 @@ def main():
             if detected_flv in mod_channel.possible_flavors:
 
                 # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
-                if channel == "es": __builtin__._flavor = detected_flv
+                __builtin__._flavor = detected_flv
 
                 scale *= (10.0/distance)**2 # flux is proportional to 1/distance**2
                 scale *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)
@@ -154,7 +154,7 @@ def write_output(events, outfile, args):
             outfile.write("# " + str(args) + "\n")
 
         for (i, event) in enumerate(events):
-            (t, pid, ene, dirx, diry, dirz) = event
+            (t, pid, ene, dirx, diry, dirz, channel, flavor, eNu) = event
 
             # create random vertex position inside the detector volume
             radius = detectors[args.detector][0] - 20
@@ -165,11 +165,18 @@ def write_output(events, outfile, args):
                 if x**2 + y**2 < radius**2: break
             z = random.uniform(-height/2, height/2)
 
+            flv_code = {'e':12, 'eb':-12, 'x':14, 'xb':-14}[flavor]
+            tgt_code, tgt_mass = {'es':(11, 0.511),
+                                  'ibd':(2212, 938.3),
+                                  'o16e':(8016, 14900),
+                                  'o16eb':(8016, 14900),
+                                  }[channel]
+
             outfile.write("$ begin\n")
             outfile.write("$ nuance 0\n")
             outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
-            outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
-            outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
+            outfile.write("$ track %i %.5f 0.0 0.0 1.0 -1\n" % (flv_code, eNu)) # incoming neutrino
+            outfile.write("$ track %i %.3f 0.0 0.0 1.0 -1\n" % (tgt_code, tgt_mass)) # target
             outfile.write("$ info 0 0 %i\n" % i)
             outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
             outfile.write("$ end\n")
