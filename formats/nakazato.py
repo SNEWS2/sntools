@@ -6,7 +6,7 @@ Flux files are available at http://asphwww.ph.noda.tus.ac.jp/snn/index.html
 """
 
 from math import ceil, floor
-from scipy.interpolate import InterpolatedUnivariateSpline as IUSpline
+from scipy import interpolate
 
 
 def parse_input(input, inflv, starttime, endtime):
@@ -45,7 +45,7 @@ def parse_input(input, inflv, starttime, endtime):
             diff_number_flux.append(number_flux)
             energy_mesh.append(luminosity / number_flux)
 
-        dNLdE[time] = IUSpline(energy_mesh, diff_number_flux)
+        dNLdE[time] = interpolate.pchip(energy_mesh, diff_number_flux)
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = times[0]
