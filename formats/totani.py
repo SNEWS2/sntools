@@ -63,7 +63,7 @@ def parse_input(input, inflv, starttime, endtime):
     # file, with more precise time bins and a different format.
     if inflv == "e" and starttime < 50:
         _parse_nb(input + "-nb.txt")
-        times = sorted(times_el + times_nb)
+        times = sorted(times + times_nb)
 
     # Get spectra for relevant time bins by log cubic spline interpolation
     log_group_e = [log10(e_bin) for e_bin in e_bins]
