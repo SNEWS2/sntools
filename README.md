@@ -3,10 +3,11 @@ Scripts for simulating a supernova neutrino burst in Hyper-Kamiokande.
 
 ### Required Input
 Text file(s) containing information about neutrino fluxes.
+sntools distinguishes between three flavours: nu_e, anti-nu_e and nu_x (where nu_x stands for nu_mu or nu_tau or their respective antineutrinos).
 Multiple input formats are supported; see the source files in the `formats/` directory for details.
 
 #### Garching format:
-Three separate text files (one each for nu_e, anti-nu_e and nu_x - where nu_x stands for nu_mu or nu_tau or their respective antineutrinos), each containing time, mean energy, mean squared energy and luminosity. See `sample-in.txt` for details.
+Text file containing time, mean energy, mean squared energy and luminosity. The flux is assumed to follow a Gamma distribution. See `sample-in.txt` for details.
 
 #### Totani format:
 Used by Totani et al. 1998, which is the baseline model in the [Hyper-Kamiokande Design Report](https://arxiv.org/abs/1805.04163).
@@ -24,12 +25,13 @@ A .kin file in the NUANCE format used by the /mygen/vecfile options in WCSim. Se
 
 ### Typical Usage:
 ```
-python genevts.py infile --format=garching -o outfile.kin --hierarchy=normal --channel=ibd
+python genevts.py sample-in.txt --format=garching -o outfile.kin --hierarchy=normal --channel=ibd
 ```
-This assumes the three input files (in Garching format) are named `infile_e.txt`, `infile_eb.txt` and `infile_x.txt`.
 
 See
 ```
 python genevts.py -h
 ```
 for a full description of these and other options.
+
+sntools currently uses Python 2.7, numpy 1.8 (or higher) and scipy 0.13 (or higher).
