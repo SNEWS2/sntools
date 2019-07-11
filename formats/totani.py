@@ -31,10 +31,7 @@ def parse_input(input, inflv, starttime, endtime):
     _parse(input + "-early.txt", "early", inflv)
     _parse(input + "-late.txt", "late", inflv)
     _calculate_dNLde() # calculate number luminosity for early and late files
-    # nu_e fluxes during the neutronization burst are in a separate file,
-    # with more precise time bins and a different format:
-    if inflv == "e": _parse_nb(input + "-nb.txt")
-    times = sorted(times_el + times_nb)
+    times = times_el
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = times[0]
@@ -61,6 +58,12 @@ def parse_input(input, inflv, starttime, endtime):
             i_max = i
             break
     times = times[i_min:i_max+1]
+
+    # nu_e fluxes during the neutronization burst (40-50 ms) are in a separate
+    # file, with more precise time bins and a different format.
+    if inflv == "e" and starttime < 50:
+        _parse_nb(input + "-nb.txt")
+        times = sorted(times_el + times_nb)
 
     # Get spectra for relevant time bins by log cubic spline interpolation
     log_group_e = [log10(e_bin) for e_bin in e_bins]
