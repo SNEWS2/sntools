@@ -5,8 +5,8 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument("input", help="Name (without extension) of files containing 1 event per line. \
-                                   Requires a .csv and a .reco file with this name to exist.")
+parser.add_argument("input", help="Name of file (without extension) containing 1 event per line, each consisting of `time, PID, energy, dirx, diry, dirz`. \
+                                   Requires a .csv and a .reco file with same name to exist.")
 args = parser.parse_args()
 input = args.input
 # Check that both input files exist
