@@ -22,6 +22,7 @@ def setup(_channel, _format):
     # default to returning an empty dictionary.
     if not hasattr(channel, '_opts'):
         channel._opts = lambda *args: {'points': []}
+        channel._opts2 = lambda *args: {'points': []}
 
     return channel, format
 
@@ -139,7 +140,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
             (dirx, diry, dirz) = get_direction(eNu)
             eE = channel.get_eE(eNu, dirz)
             if verbose and eE < thr_e: thr_nevt -= 1
-            events.append((t, channel.pid, eE, dirx, diry, dirz))
+            events.append((t, channel.pid, eE, dirx, diry, dirz, _channel, _flavor, eNu))
 
     print "Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th))
     if verbose:

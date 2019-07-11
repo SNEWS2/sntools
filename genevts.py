@@ -15,35 +15,39 @@ channels = ['ibd', 'es', 'o16e', 'o16eb']
 detectors = {"SuperK": (3368.15/2., 3620., 32.5),
              "HyperK": (7080./2., 5480., 220)}
 
-# mixing parameters, from C. Patrignani et al. (Particle Data Group), Chin. Phys. C, 40, 100001 (2016)
-sin2t12 = 0.304
-cos2t12 = 1 - sin2t12
+# mixing parameters from M. Tanabashi et al. (Particle Data Group), PRD 98 (2018), 030001
+s12 = 0.307 # sin^2 theta_12
+c12 = 1 - s12
+s13 = 0.0212 # sin^2 theta_13
+c13 = 1 - s13
 
 # While exiting the supernova, neutrinos experience mass hierarchy-dependent
 # flavor transitions via the MSW effect. This dictionary contains 3-tuples of
 #   * original flavor at production (i.e. in input files from computer simulations),
 #   * mixing probability,
 #   * resulting flavor in detector.
-# See p. 266 of the 2018 Hyper-K Design Report (arXiv:1805.04163) for details.
-# We assume adiabatic transition (P_H = 0).
+# See p. 266 of the 2018 Hyper-K Design Report (arXiv:1805.04163v1), but note
+# that this code includes theta_13 and assumes adiabatic transition (P_H = 0).
 mixings = {"noosc":    (('e', 1, 'e'),
                         ('eb', 1, 'eb'),
                         ('x', 2, 'x'), # scale = 2 to include both nu_mu and nu_tau
                         ('xb', 2, 'xb')),
-           "normal":   (("x",  1, "e"), # nu_e that originated as nu_x
-                        ("eb", cos2t12, "eb"), # anti-nu_e that originated as anti-nu_e
-                        ("xb", sin2t12, "eb"), # anti-nu_e that originated as anti-nu_x
-                        ("e",  1, "x"), # nu_x that originated as nu_e
-                        ("x",  1, "x"), # nu_x that originated as nu_x
-                        ("eb", sin2t12, "xb"), # anti-nu_x that originated as anti-nu_e
-                        ("xb", 1+cos2t12, "xb")), # anti-nu_x that originated as anti-nu_x
-           "inverted": (("e",  sin2t12, "e"), # nu_e that originated as nu_e
-                        ("x",  cos2t12, "e"), # nu_e that originated as nu_x
-                        ("xb", 1, "eb"), # anti-nu_e that originated as anti-nu_x
-                        ("e",  cos2t12, "x"), # nu_x that originated as nu_e
-                        ("x",  1+sin2t12, "x"), # nu_x that originated as nu_x
-                        ("eb", 1, "xb"), # anti-nu_x that originated as anti-nu_e
-                        ("xb", 1, "xb"))} # anti-nu_x that originated as anti-nu_x
+           "normal":   (("e", s13, "e"), # nu_e that originated as nu_e
+                        ("x", c13, "e"), # nu_e that originated as nu_x
+                        ("eb", c12*c13, "eb"), # anti-nu_e that originated as anti-nu_e
+                        ("xb", 1 - c12*c13, "eb"), # anti-nu_e that originated as anti-nu_x
+                        ("e",  c13, "x"), # nu_x that originated as nu_e
+                        ("x",  1 + s13, "x"), # nu_x that originated as nu_x
+                        ("eb", 1 - c12*c13, "xb"), # anti-nu_x that originated as anti-nu_e
+                        ("xb", 1 + c12*c13, "xb")), # anti-nu_x that originated as anti-nu_x
+           "inverted": (("e",  s12*c13, "e"), # nu_e that originated as nu_e
+                        ("x",  1 - s12*c13, "e"), # nu_e that originated as nu_x
+                        ("eb", s13, "eb"), # anti-nu_e that originated as anti-nu_e
+                        ("xb", c13, "eb"), # anti-nu_e that originated as anti-nu_x
+                        ("e",  1 - s12*c13, "x"), # nu_x that originated as nu_e
+                        ("x",  1 + s12*c13, "x"), # nu_x that originated as nu_x
+                        ("eb", c13, "xb"), # anti-nu_x that originated as anti-nu_e
+                        ("xb", 1 + s13, "xb"))} # anti-nu_x that originated as anti-nu_x
 
 
 def main():
@@ -81,7 +85,7 @@ def main():
             if detected_flv in mod_channel.possible_flavors:
 
                 # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
-                if channel == "es": __builtin__._flavor = detected_flv
+                __builtin__._flavor = detected_flv
 
                 scale *= (10.0/distance)**2 # flux is proportional to 1/distance**2
                 scale *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)
@@ -154,7 +158,7 @@ def write_output(events, outfile, args):
             outfile.write("# " + str(args) + "\n")
 
         for (i, event) in enumerate(events):
-            (t, pid, ene, dirx, diry, dirz) = event
+            (t, pid, ene, dirx, diry, dirz, channel, flavor, eNu) = event
 
             # create random vertex position inside the detector volume
             radius = detectors[args.detector][0] - 20
@@ -165,11 +169,18 @@ def write_output(events, outfile, args):
                 if x**2 + y**2 < radius**2: break
             z = random.uniform(-height/2, height/2)
 
+            flv_code = {'e':12, 'eb':-12, 'x':14, 'xb':-14}[flavor]
+            tgt_code, tgt_mass = {'es':(11, 0.511),
+                                  'ibd':(2212, 938.3),
+                                  'o16e':(8016, 14900),
+                                  'o16eb':(8016, 14900),
+                                  }[channel]
+
             outfile.write("$ begin\n")
             outfile.write("$ nuance 0\n")
             outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
-            outfile.write("$ track 14 1020.00000 1.00000 0.00000 0.00000 -1\n") # "Neutrino" Track
-            outfile.write("$ track 2212 935.98400 0.00000 0.00000 1.00000 -1\n") # "Target" track
+            outfile.write("$ track %i %.5f 0.0 0.0 1.0 -1\n" % (flv_code, eNu)) # incoming neutrino
+            outfile.write("$ track %i %.3f 0.0 0.0 1.0 -1\n" % (tgt_code, tgt_mass)) # target
             outfile.write("$ info 0 0 %i\n" % i)
             outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
             outfile.write("$ end\n")
