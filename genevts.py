@@ -15,35 +15,39 @@ channels = ['ibd', 'es', 'o16e', 'o16eb']
 detectors = {"SuperK": (3368.15/2., 3620., 32.5),
              "HyperK": (7080./2., 5480., 220)}
 
-# mixing parameters, from C. Patrignani et al. (Particle Data Group), Chin. Phys. C, 40, 100001 (2016)
-sin2t12 = 0.304
-cos2t12 = 1 - sin2t12
+# mixing parameters from M. Tanabashi et al. (Particle Data Group), PRD 98 (2018), 030001
+s12 = 0.307 # sin^2 theta_12
+c12 = 1 - s12
+s13 = 0.0212 # sin^2 theta_13
+c13 = 1 - s13
 
 # While exiting the supernova, neutrinos experience mass hierarchy-dependent
 # flavor transitions via the MSW effect. This dictionary contains 3-tuples of
 #   * original flavor at production (i.e. in input files from computer simulations),
 #   * mixing probability,
 #   * resulting flavor in detector.
-# See p. 266 of the 2018 Hyper-K Design Report (arXiv:1805.04163) for details.
-# We assume adiabatic transition (P_H = 0).
+# See p. 266 of the 2018 Hyper-K Design Report (arXiv:1805.04163v1), but note
+# that this code includes theta_13 and assumes adiabatic transition (P_H = 0).
 mixings = {"noosc":    (('e', 1, 'e'),
                         ('eb', 1, 'eb'),
                         ('x', 2, 'x'), # scale = 2 to include both nu_mu and nu_tau
                         ('xb', 2, 'xb')),
-           "normal":   (("x",  1, "e"), # nu_e that originated as nu_x
-                        ("eb", cos2t12, "eb"), # anti-nu_e that originated as anti-nu_e
-                        ("xb", sin2t12, "eb"), # anti-nu_e that originated as anti-nu_x
-                        ("e",  1, "x"), # nu_x that originated as nu_e
-                        ("x",  1, "x"), # nu_x that originated as nu_x
-                        ("eb", sin2t12, "xb"), # anti-nu_x that originated as anti-nu_e
-                        ("xb", 1+cos2t12, "xb")), # anti-nu_x that originated as anti-nu_x
-           "inverted": (("e",  sin2t12, "e"), # nu_e that originated as nu_e
-                        ("x",  cos2t12, "e"), # nu_e that originated as nu_x
-                        ("xb", 1, "eb"), # anti-nu_e that originated as anti-nu_x
-                        ("e",  cos2t12, "x"), # nu_x that originated as nu_e
-                        ("x",  1+sin2t12, "x"), # nu_x that originated as nu_x
-                        ("eb", 1, "xb"), # anti-nu_x that originated as anti-nu_e
-                        ("xb", 1, "xb"))} # anti-nu_x that originated as anti-nu_x
+           "normal":   (("e", s13, "e"), # nu_e that originated as nu_e
+                        ("x", c13, "e"), # nu_e that originated as nu_x
+                        ("eb", c12*c13, "eb"), # anti-nu_e that originated as anti-nu_e
+                        ("xb", 1 - c12*c13, "eb"), # anti-nu_e that originated as anti-nu_x
+                        ("e",  c13, "x"), # nu_x that originated as nu_e
+                        ("x",  1 + s13, "x"), # nu_x that originated as nu_x
+                        ("eb", 1 - c12*c13, "xb"), # anti-nu_x that originated as anti-nu_e
+                        ("xb", 1 + c12*c13, "xb")), # anti-nu_x that originated as anti-nu_x
+           "inverted": (("e",  s12*c13, "e"), # nu_e that originated as nu_e
+                        ("x",  1 - s12*c13, "e"), # nu_e that originated as nu_x
+                        ("eb", s13, "eb"), # anti-nu_e that originated as anti-nu_e
+                        ("xb", c13, "eb"), # anti-nu_e that originated as anti-nu_x
+                        ("e",  1 - s12*c13, "x"), # nu_x that originated as nu_e
+                        ("x",  1 + s12*c13, "x"), # nu_x that originated as nu_x
+                        ("eb", c13, "xb"), # anti-nu_x that originated as anti-nu_e
+                        ("xb", 1 + s13, "xb"))} # anti-nu_x that originated as anti-nu_x
 
 
 def main():
