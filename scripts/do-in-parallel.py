@@ -5,15 +5,23 @@ import subprocess
 from time import sleep
 
 parser = argparse.ArgumentParser()
-parser.add_argument("step", help="What step of the analysis chain to do. \
-                                  Can be 'generate_dataset', 'reconstruct_energy' or 'readd_time'.")
+parser.add_argument("step", help="What step of the analysis chain to do. Options: \
+                                  1) 'generate_dataset' \
+                                  2) 'split_eventfile' \
+                                  3) 'csv_to_nuance' \
+                                  4) 'simulate_events' \
+                                  5) 'reconstruct_energy' \
+                                  6) 'readd_time'.")
 args = parser.parse_args()
 
 # input files: one per model family (to study explosion mechanism)
 inputs = (
-          ("in_tamborra27", "garching"),
-          ("in_spectob2000.data", "nakazato"),
+          ("in_tamborra27.txt", "garching"),
+          ("in_couch_a0.8_m20.0.dat", "garching"),
+          ("in_spectob2000a.data", "nakazato"),
+          #("in_spectob2000.data", "nakazato"),
           ("in_totani20", "totani"),
+          ("in_vartanyan9.dat", "princeton"),
          )
 
 # input files of different models in same model family (to study progenitor dependence)
@@ -24,11 +32,10 @@ inputs = (
 #           ("in_intp3012.data", "nakazato"),
 #          )
 
-
 hierarchies = ("noosc", "normal", "inverted")
 
-nevts = (100, 300,) #(300, 1000, 3000, 10000, 30000)
-imax = 10 #1000
+nevts = (100, 300)
+imax = 1000
 ntotal = max(nevts) * imax
 detector = 'HyperK' # SuperK, HyperK
 
@@ -70,7 +77,7 @@ def split_eventfile(input, nevt, hierarchy, i):
         raise Exception
 
     nfiles = ntotal / max(nevts)
-    cmd = "python scripts/split_eventfile.py %s -o %s --nevts %s --nfiles %i" % (inpath, path, nevt, nfiles)
+    cmd = "python ../sntools/scripts/split_eventfile.py %s -o %s --nevts %s --nfiles %i" % (inpath, path, nevt, nfiles)
     print cmd
     result = subprocess.call(cmd, shell=True)
     return result
@@ -89,7 +96,7 @@ def csv_to_nuance(input, nevt, hierarchy, i):
         print('File %s/1.kin already exists. Aborting to avoid overwriting it ...' % path)
         raise Exception
 
-    cmd = "python csv2nuance.py %s --wcsim %s/wcsim.mac --detector %s" % (path, path, detector)
+    cmd = "python ../sntools/csv2nuance.py %s --wcsim %s/wcsim.mac --detector %s" % (path, path, detector)
     print cmd
     result = subprocess.call(cmd, shell=True)
     return result
@@ -185,8 +192,7 @@ for input in inputs:
                 print "Adding to pool:", input, str(nevt), hierarchy, str(i)
                 res = pool.apply_async(f, (input, nevt, hierarchy, i))
                 results.append(res)
-                sleep(1) # this appears to fix an issue where the pool would skip some of the first tasks
+                sleep(0.5) # this appears to fix an issue where the pool would skip some of the first tasks
 
 for res in results:
-#     print res.get(timeout=60)
     res.wait()
