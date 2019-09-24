@@ -34,7 +34,7 @@ def parse_input(input, inflv, starttime, endtime):
 
     # luminosity is in 20 bins covering 1-300 MeV (for e), 1-100 MeV (for eb & x)
     emax = 300 if inflv == "e" else 100
-    ebins = [0] + [emax**((i+0.5) * 0.05) for i in range(21)] # add extra bin at start/end for interpolation
+    ebins = [0] + [emax**((i+0.5) * 0.05) for i in range(22)] # add extra bins at start/end for interpolation
 
     # for each time bin, save data to dictionaries to look up later
     for line in indata:
@@ -49,7 +49,9 @@ def parse_input(input, inflv, starttime, endtime):
             if offset == 41: diff_lum /= 4 # file contains sum of nu_mu, nu_tau and anti-particles
             number_flux = diff_lum / emean
             diff_number_flux.append(number_flux)
-        diff_number_flux.append(0) # Set flux at >100 MeV to (almost) zero
+        # Let flux at >100 MeV smoothly go to zero 
+        diff_number_flux.append(diff_number_flux[-1]*0.001) 
+        diff_number_flux.append(0)
 
         dNLdE[time] = interpolate.pchip(ebins, diff_number_flux)
 

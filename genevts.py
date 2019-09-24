@@ -13,7 +13,8 @@ channels = ['ibd', 'es', 'o16e', 'o16eb']
 
 # radius (cm), height (cm) and mass (kt) of inner detector
 detectors = {"SuperK": (3368.15/2., 3620., 32.5),
-             "HyperK": (7080./2., 5480., 220)}
+#              "HyperK": (7080./2., 5480., 216)} # 2018 Design Report
+             "HyperK": (6480./2., 6580., 217)} # 2019 optimized design
 
 # mixing parameters from M. Tanabashi et al. (Particle Data Group), PRD 98 (2018), 030001
 s12 = 0.307 # sin^2 theta_12
