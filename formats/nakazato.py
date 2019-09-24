@@ -23,10 +23,10 @@ def parse_input(input, inflv, starttime, endtime):
     dNLdE = {}
 
     with open(input) as infile:
-        indata = [map(float, line.split()) for line in infile]
+        indata = [map(float, line.split()) for line in infile  if not (line.startswith("#") or line.isspace())]
 
-    # 21 lines (+1 empty line) per time bin
-    chunks = [indata[22*i:22*(i+1)-1] for i in range(len(indata)/22)]
+    # 21 lines per time bin
+    chunks = [indata[21*i:21*(i+1)] for i in range(len(indata)/21)]
 
     # input files contain information for e, eb & x in neighbouring columns,
     # so depending on the flavor, we might need an offset

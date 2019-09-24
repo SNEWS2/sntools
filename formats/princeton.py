@@ -26,7 +26,7 @@ def parse_input(input, inflv, starttime, endtime):
     dNLdE = {}
 
     with open(input) as infile:
-        indata = [map(float, line.split()) for line in infile if not line.startswith("#")]
+        indata = [map(float, line.split()) for line in infile if not (line.startswith("#") or line.isspace())]
 
     # input files contain information for e, eb & x in neighbouring columns,
     # so depending on the flavor, we might need an offset
@@ -49,8 +49,8 @@ def parse_input(input, inflv, starttime, endtime):
             if offset == 41: diff_lum /= 4 # file contains sum of nu_mu, nu_tau and anti-particles
             number_flux = diff_lum / emean
             diff_number_flux.append(number_flux)
-        # Let flux at >100 MeV smoothly go to zero 
-        diff_number_flux.append(diff_number_flux[-1]*0.001) 
+        # Let flux at >100 MeV smoothly go to zero
+        diff_number_flux.append(diff_number_flux[-1]*0.001)
         diff_number_flux.append(0)
 
         dNLdE[time] = interpolate.pchip(ebins, diff_number_flux)
