@@ -122,7 +122,7 @@ def parse_command_line_options():
 
     choices = ["noosc", "normal", "inverted"]
     default = choices[0]
-    parser.add_argument("-H", "--hierarchy", metavar="HIERARCHY", choices=choices, default=default,
+    parser.add_argument("-H", "--hierarchy", "--ordering", metavar="HIERARCHY", choices=choices, default=default,
                         help="Oscillation scenario. Choices: %s. Default: %s" % (choices, default))
 
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=channels, default="all",
