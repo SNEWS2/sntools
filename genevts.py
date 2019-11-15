@@ -110,7 +110,7 @@ def parse_command_line_options():
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-    choices = ["garching", "nakazato", "princeton", "totani"]
+    choices = ["gamma", "nakazato", "princeton", "totani"]
     default = "totani"
     parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=default,
                         help="Format of input files. See parsers in folder 'formats/' \

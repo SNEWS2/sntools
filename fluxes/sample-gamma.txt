@@ -1,4 +1,4 @@
-# Sample input file for sntools (using the `garching` format).
+# Sample input file for sntools (using the `gamma` format).
 # Lines starting with `#` are ignored by the script and can contain comments.
 # Data must be in the following format:
 #   Column 1: time (s)
@@ -9,14 +9,15 @@
 #   Column 8-10: like 2-4, but for nu_x (i.e. one of nu_mu, nu_tau or their antiparticles)
 
 # Example usage:
-# $ python genevts.py sample-in.txt --format garching --starttime 110 --endtime 120 -v
+# $ python genevts.py fluxes/sample-gamma.txt --format gamma --starttime 110 --endtime 120 -v
 
 # The nu_e sample data was generated using
 #   time = 0.1 + 0.0005 * i + 0.00001 * (random() - 0.5))
 #   mean energy = 0.0002*(i-25)**3 - 0.005*(i-25)**2 + 15 + 0.05*random()
 #   mean energy^2 = (0.0002*(i-25)**3 - 0.005*(i-25)**2 + 15.05)**2 + 2.5*(0.0002*(i-25)**3 - 0.005*(i-25)**2 + 15.05) + 0.5*random()
 #   luminosity = -0.001*(i-50)**2 + 0.02*i + 6 + 0.01*random()
-# where random() is between 0 and 1, while data for anti-nu_e and nu_x is arbitrary and constant.
+# where random() is between 0 and 1.
+# Data for anti-nu_e and nu_x is arbitrary and constant.
 # The line at timestamp 0.112395 was modified manually to demonstrate that sntools can deal with irregular time steps.
 
 0.100495, 9.365880, 112.131432, 3.621560e52, 13.0, 200.0, 6e52, 15.0, 260.0, 4e52

@@ -1,10 +1,10 @@
-"""Parse Garching fluxes.
+"""Parse Gamma fluxes.
 
 Input file contains data in the format
   time (s), mean energy (MeV), mean squared energy (MeV^2), luminosity (erg/s)
 with one entry per line. We assume that the data follows a gamma distribution
 (see arXiv:1211.3920), which is fully described by these values.
-See the file 'sample-in.txt' for details.
+See the file 'fluxes/sample-gamma.txt' for details.
 """
 
 from math import ceil, floor, gamma, exp

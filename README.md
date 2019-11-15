@@ -11,8 +11,8 @@ The following input formats are supported; see the source files in the `formats/
 Used by recent simulations by the Nakazato group. Fluxes for 13 and 20 solar mass progenitors are included as `fluxes/intp1301.data` and `fluxes/intp2001.data`. [A description of the format and fluxes for more progenitors are available online.](http://asphwww.ph.noda.tus.ac.jp/snn/index.html)
 If you use these included models in your work, please cite [Nakazato et al., ApJ Supp. 205 (2013) 2](https://arxiv.org/abs/1210.6841).
 
-#### Garching format
-Text file containing time, mean energy, mean squared energy and luminosity. These parameters describe a Gamma distribution, [which is a good fit to the true spectrum](https://arxiv.org/abs/1211.3920). See `fluxes/sample-garching.txt` for an unphysical sample file.
+#### Gamma format
+Text file containing time, mean energy, mean squared energy and luminosity. These parameters describe a Gamma distribution, [which is a good fit to the true spectrum](https://arxiv.org/abs/1211.3920). See `fluxes/sample-gamma.txt` for an unphysical sample file.
 
 #### Princeton format
 Used in [recent simulations](https://arxiv.org/abs/1804.00689) by the Princeton group.

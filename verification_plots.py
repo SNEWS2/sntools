@@ -75,7 +75,7 @@ for j in range(bin_nr):
         mean_energy.append(total_energy[j] / n_evt[j])
 
 
-# import data from pre-processed supernova simulation data (in Garching format)
+# import data from pre-processed supernova simulation data (in Gamma format)
 # sim_mean_energies = []
 # sim_times = []
 # with open("infile_eb.txt") as data2:
