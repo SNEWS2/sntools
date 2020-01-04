@@ -1,3 +1,4 @@
+from __future__ import print_function
 from interaction_channels import ibd
 from scipy import integrate
 
@@ -70,23 +71,22 @@ for eNu in sorted(sigma_th):
     sigma_calc = sigma(eNu)
     delta = 100 * (sigma_calc - sigma_sv) / sigma_sv
     if abs(delta) > 0.05: # 0.05% = max. rounding error for 4 significant digits
-        print "eNu = %.2f: sigma is off by %.2f percent" % (eNu, delta)
+        print("eNu = %.2f: sigma is off by %.2f percent" % (eNu, delta))
         good_agreement = False
 
     eE_sv = sigma_th[eNu][1]
     eE_calc = eE_avg(eNu)
     delta = 100 * (eE_calc - eE_sv) / eE_sv
     if abs(delta) > 0.05:
-        print "eNu = %.2f: eE is off by %.2f percent" % (eNu, delta)
+        print("eNu = %.2f: eE is off by %.2f percent" % (eNu, delta))
         good_agreement = False
 
     cosT_sv = sigma_th[eNu][2]
     cosT_calc = cosT_avg(eNu)
     delta = 100 * (cosT_calc - cosT_sv) / cosT_sv
     if abs(delta) > 0.5:
-        print "eNu = %.2f: cosT is off by %.2f percent" % (eNu, delta)
+        print("eNu = %.2f: cosT is off by %.2f percent" % (eNu, delta))
         good_agreement = False
 
 if good_agreement:
-    print "Integrated cross-section, mean eE & mean cosT are in excellent", \
-          "agreement for eNu between 2 and 100 MeV."
+    print("Integrated cross-section, mean eE & mean cosT are in excellent agreement for eNu between 2 and 100 MeV.")

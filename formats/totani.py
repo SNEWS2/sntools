@@ -85,7 +85,7 @@ def prepare_evt_gen(binned_t):
     binned_t -- list of time bins for generating events
     """
     for time in binned_t:
-        if log_spectrum.has_key(time):
+        if time in log_spectrum:
             # we have already computed the interpolated spectrum at this time
             continue
 

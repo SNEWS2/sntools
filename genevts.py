@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import __builtin__
 import argparse
 from datetime import datetime
@@ -67,15 +69,15 @@ def main():
     verbose = args.verbose
 
     if verbose:
-        print "channel(s)   =", channels
-        print "hierarchy    =", hierarchy
-        print "input file   =", input, "--- format =", format
-        print "output       =", output
-        print "detector     =", args.detector
-        print "distance     =", distance
-        print "starttime    =", starttime
-        print "endtime      =", endtime
-        print "**************************************"
+        print("channel(s) =", channels)
+        print("hierarchy  =", hierarchy)
+        print("input file =", input, "--- format =", format)
+        print("output     =", output)
+        print("detector   =", args.detector)
+        print("distance   =", distance)
+        print("starttime  =", starttime)
+        print("endtime    =", endtime)
+        print("**************************************")
 
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
@@ -93,7 +95,7 @@ def main():
 
                 cmd = "gen_evts(_channel='%s', input='%s', _format='%s', inflv='%s', scale=%s, starttime=%s, endtime=%s, verbose=%s)" \
                     % (channel, input, format, original_flv, scale, starttime, endtime, verbose)
-                if verbose: print "Now executing:", cmd
+                if verbose: print("Now executing:", cmd)
                 events_by_channel[(channel, original_flv, detected_flv)] = eval(cmd)
 
     # Collect events generated in all interaction channels.

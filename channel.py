@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 from importlib import import_module
 from math import pi, sin, cos, acos
 import numpy as np
@@ -54,7 +56,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
 
     bin_width = 1 # in ms
     n_bins = int((endtime - starttime)/bin_width) # number of full-width bins; int() implies floor()
-    if verbose: print "Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms"
+    if verbose: print("Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms")
 
     # scipy is optimized for operating on large arrays, making it orders of
     # magnitude faster to pre-compute all values of the interpolated functions.
@@ -80,7 +82,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
         t0 = starttime + i * bin_width
 
         if verbose and i%(10**(4-verbose)) == 0:
-            print "%s-%s ms: %d events (%.5f expected)" % (t0, t0+bin_width, binned_nevt[i], binned_nevt_th[i])
+            print("%s-%s ms: %d events (%.5f expected)" % (t0, t0+bin_width, binned_nevt[i], binned_nevt_th[i]))
 
         # generate events in this time bin
         for _ in range(binned_nevt[i]):
@@ -91,10 +93,10 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
             if verbose and eE < thr_e: thr_nevt -= 1
             events.append((t, channel.pid, eE, dirx, diry, dirz, _channel, _flavor, eNu))
 
-    print "Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th))
+    print("Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th)))
     if verbose:
-        print "-> above threshold of %s MeV: %s particles (expected: %.2f)" % (thr_e, thr_nevt, sum(thr_binned_nevt_th))
-        print "**************************************"
+        print("-> above threshold of %s MeV: %s particles (expected: %.2f)" % (thr_e, thr_nevt, sum(thr_binned_nevt_th)))
+        print("**************************************")
 
     return events
 
@@ -105,7 +107,7 @@ def ddEventRate(eE, eNu, time):
     return channel.dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
 
 def dFlux_dE(eNu, time):
-    if not cached_flux.has_key((eNu, time)):
+    if (eNu, time) not in cached_flux:
         fiducial_distance = 1.563738e+33 # 10 kpc/(hbar * c) in MeV**(-1)
         emission = format.nu_emission(eNu, time)
         cached_flux[(eNu, time)] = emission / (4 * pi * fiducial_distance**2)
