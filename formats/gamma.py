@@ -22,7 +22,7 @@ def parse_input(input, inflv, starttime, endtime):
     """
     # read data from input file, ignoring lines with comments and empty lines
     with open(input) as infile:
-        raw_indata = [map(float, line.split(",")) for line in infile if not (line.startswith("#") or line.isspace())]
+        raw_indata = [list(map(float, line.split(","))) for line in infile if not (line.startswith("#") or line.isspace())]
     for entry in raw_indata:
         entry[0] *= 1000 # convert time to ms
 

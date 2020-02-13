@@ -2,7 +2,10 @@
 
 from __future__ import print_function
 
-import __builtin__
+try:
+    import __builtin__ as builtins # Python 2.7
+except:
+    import builtins # Python 3
 import argparse
 from datetime import datetime
 from importlib import import_module
@@ -88,7 +91,7 @@ def main():
             if detected_flv in mod_channel.possible_flavors:
 
                 # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
-                __builtin__._flavor = detected_flv
+                builtins._flavor = detected_flv
 
                 scale *= (10.0/distance)**2 # flux is proportional to 1/distance**2
                 scale *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)

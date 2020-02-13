@@ -1,7 +1,7 @@
 from math import pi, sqrt, log
 from scipy import integrate
 
-# Note: `es.py` uses `__builtin__._flavor` (which is set in `genevts.py`)
+# Note: `es.py` uses `builtins._flavor` (which is set in `genevts.py`)
 
 targets_per_molecule = 10 # number of electrons per water molecule
 pid = 11

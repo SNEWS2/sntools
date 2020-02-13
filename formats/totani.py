@@ -91,9 +91,9 @@ def prepare_evt_gen(binned_t):
 
         if 40 <= time <= 49.99 and times_nb != []:
             # take fluxes from nb file into account
-            _times = filter(lambda x: x in times, times_nb)
+            _times = [x for x in times_nb if x in times]
         else: # use fluxes from early/late file
-            _times = filter(lambda x: x in times, times_el)
+            _times = [x for x in times_el if x in times]
 
         # find closest time bins -> t0, t1
         for t_bin in _times:
@@ -171,7 +171,7 @@ def _parse(input, format, flv):
         # number of neutrinos emitted in this time bin, separated into energy bins
         egroup = [zero] # start with 0 neutrinos at 0 MeV bin
         for i in range_egroup:
-            line = map(float, chunk[i].split())
+            line = list(map(float, chunk[i].split()))
             egroup.append(line[-3+offset])
 
             # Once, for the very first time bin, save the energy bins:
@@ -207,7 +207,7 @@ def _parse_nb(input):
         # number of neutrinos emitted in this time bin, separated into energy bins
         egroup = [zero] # start with 0 neutrinos at 0 MeV bin
         for i in range(3,23):
-            line = map(float, chunk[i].split())
+            line = list(map(float, chunk[i].split()))
             egroup.append(line[-3])
 
         # Get energy spectrum per MeV^-1 instead of in (varying-size) energy bins

@@ -26,7 +26,7 @@ def parse_input(input, inflv, starttime, endtime):
     dNLdE = {}
 
     with open(input) as infile:
-        indata = [map(float, line.split()) for line in infile if not (line.startswith("#") or line.isspace())]
+        indata = [list(map(float, line.split())) for line in infile if not (line.startswith("#") or line.isspace())]
 
     # input files contain information for e, eb & x in neighbouring columns,
     # so depending on the flavor, we might need an offset
