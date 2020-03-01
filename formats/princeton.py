@@ -62,14 +62,12 @@ def parse_input(input, inflv, starttime, endtime):
     if not starttime:
         starttime = ceil(_starttime)
     elif starttime < _starttime:
-        print("Error: Start time must be greater than earliest time in input files. Aborting ...")
-        exit()
+        raise ValueError("Start time must be at least %f (first line of input file)." % _starttime)
 
     if not endtime:
         endtime = floor(_endtime)
     elif endtime > _endtime:
-        print("Error: End time must be less than latest time in input files. Aborting ...")
-        exit()
+        raise ValueError("End time must be at least %f (last line of input file)." % _endtime)
 
     # if user entered a custom start/end time, find indices of relevant time bins
     i_min, i_max = 0, len(times) - 1
