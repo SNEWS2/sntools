@@ -1,10 +1,23 @@
 from math import pi, sqrt, log
 from scipy import integrate
 
+from event import Event
+
 # Note: `es.py` uses `builtins._flavor` (which is set in `genevts.py`)
 
+def generate_event(eNu, direction):
+    incoming_flv = {'e':12, 'eb':-12, 'x':14, 'xb':-14}[_flavor]
+    dirx, diry, dirz = direction
+    eE = get_eE(eNu, dirz)
+
+    evt = Event('es-%s' % _flavor)
+    evt.add_incoming_particle([incoming_flv, eNu, 0, 0, 1]) # incoming neutrino
+    evt.add_incoming_particle([11, mE, 0, 0, 1]) # electron at rest
+    evt.add_outgoing_particle([11, eE, dirx, diry, dirz]) # outgoing electron
+
+    return evt
+
 targets_per_molecule = 10 # number of electrons per water molecule
-pid = 11
 possible_flavors = ["e", "eb", "x", "xb"]
 
 

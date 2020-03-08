@@ -16,6 +16,8 @@ Instead, below we implement an approximation to DiracDelta: a function that's
 from math import log10
 import random
 
+from event import Event
+
 epsilon = 0.001 # for approximating DiracDelta distribution below
 
 # Excitation energy and parameters a, b and c (Table 4 of arXiv:1809.08398)
@@ -24,6 +26,16 @@ fit_parameters = {1: [15.21, -40.008, 4.918, 1.036],
                   3: [25.51, -39.655, 5.263, 1.236],
                   4: [29.35, -39.166, 3.947, 0.901]}
 
+
+def generate_event(eNu, direction):
+    dirx, diry, dirz = direction
+    eE = get_eE(eNu, dirz)
+
+    evt = Event('o16e')
+    evt.add_incoming_particle([12, eNu, 0, 0, 1]) # incoming neutrino
+    evt.add_incoming_particle([8016, 14900, 0, 0, 1]) # oxygen nucleus at rest
+    evt.add_outgoing_particle([11, eE, dirx, diry, dirz]) # outgoing electron
+    return evt
 
 '''
 targets_per_molecule:

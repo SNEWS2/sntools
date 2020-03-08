@@ -9,20 +9,34 @@ If you need to define helper functions or constants, you can do so at the bottom
 of this file, where some commonly used constants are already provided.
 '''
 
+from event import Event
+
+'''
+generate_event(eNu, direction):
+Generate .
+Input:
+    eNu: neutrino energy
+    direction: direction of outgoing particle (3-tuple of x,y,z)
+Output:
+    one floating point number
+'''
+def generate_event(eNu, direction):
+    dirx, diry, dirz = direction
+    eE = get_eE(eNu, dirz)
+
+    evt = Event('')
+#     evt.add_incoming_particle([12, eNu, 0, 0, 1]) # incoming neutrino
+#     evt.add_incoming_particle([11, mE, 0, 0, 1]) # electron at rest
+#     evt.add_outgoing_particle([11, eE, dirx, diry, dirz]) # outgoing electron
+    return evt
+
+
 '''
 targets_per_molecule:
 number of interaction targets per water molecule
 (i.e. 2 free protons, 1 oxygen nucleus or 10 electrons)
 '''
 targets_per_molecule = None
-
-
-'''
-pid:
-ID of the outgoing (detected) particle, using Particle Data Group conventions
-(e.g. electron = 11, positron = -11)
-'''
-pid = None
 
 
 '''

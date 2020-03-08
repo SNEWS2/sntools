@@ -86,12 +86,13 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
 
         # generate events in this time bin
         for _ in range(binned_nevt[i]):
-            t = t0 + random.random() * bin_width
             eNu = get_eNu(binned_t[i])
-            (dirx, diry, dirz) = get_direction(eNu)
-            eE = channel.get_eE(eNu, dirz)
-            if verbose and eE < thr_e: thr_nevt -= 1
-            events.append((t, channel.pid, eE, dirx, diry, dirz, _channel, _flavor, eNu))
+            direction = get_direction(eNu) # (dirx, diry, dirz)
+            evt = channel.generate_event(eNu, direction)
+            evt.set_time(t0 + random.random() * bin_width)
+            events.append(evt)
+
+            if verbose and evt.outgoing_particles[0][1] < thr_e: thr_nevt -= 1
 
     print("Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th)))
     if verbose:

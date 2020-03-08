@@ -1,8 +1,22 @@
 from math import pi, sqrt, log
 
+from event import Event
+
+def generate_event(eNu, direction):
+    dirx, diry, dirz = direction
+    eE = get_eE(eNu, dirz)
+    eN = get_eN() # TODO: neutron energy
+    dirxN, diryN, dirzN = 0, 0, 1 # TODO: neutron direction
+
+    evt = Event('ibd')
+    evt.add_incoming_particle([-12, eNu, 0, 0, 1]) # incoming neutrino
+    evt.add_incoming_particle([2212, 938.3, 0, 0, 1]) # proton at rest
+    evt.add_outgoing_particle([-11, eE, dirx, diry, dirz]) # outgoing positron
+    evt.add_outgoing_particle([2112, eN, dirxN, diryN, dirzN]) # outgoing neutron
+
+    return evt
 
 targets_per_molecule = 2 # number of free protons per water molecule
-pid = -11
 possible_flavors = ["eb"]
 
 
@@ -85,6 +99,9 @@ def get_eE(eNu, cosT): # eq. (21)
     kappa = (1 + epsilon)**2 - (epsilon * cosT)**2
     return ((eNu - delta_cm) * (1 + epsilon) + epsilon * cosT * sqrt((eNu - delta_cm)**2 - mE**2 * kappa)) / kappa
 
+
+def get_eN():
+    return mN # TODO
 
 # Bounds for integration over eE
 delta_cm = (mN**2 - mP**2 - mE**2) / (2*mP)

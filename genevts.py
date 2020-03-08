@@ -105,7 +105,7 @@ def main():
 
     # Collect events generated in all interaction channels.
     events = [evt for evtlist in events_by_channel.values() for evt in evtlist]
-    events.sort() # sort by time (i.e. the first element of the list)
+    events.sort(key=lambda evt: evt.time) # sort events by time
 
     # Write events to a nuance-formatted output file
     write_output(events, output, args)
@@ -164,9 +164,7 @@ def write_output(events, outfile, args):
             outfile.write("# Generated on %s with the options:\n" % datetime.now())
             outfile.write("# " + str(args) + "\n")
 
-        for (i, event) in enumerate(events):
-            (t, pid, ene, dirx, diry, dirz, channel, flavor, eNu) = event
-
+        for (i, evt) in enumerate(events):
             # create random vertex position inside the detector volume
             radius = detectors[args.detector][0] - 20
             height = detectors[args.detector][1] - 20
@@ -176,21 +174,8 @@ def write_output(events, outfile, args):
                 if x**2 + y**2 < radius**2: break
             z = random.uniform(-height/2, height/2)
 
-            flv_code = {'e':12, 'eb':-12, 'x':14, 'xb':-14}[flavor]
-            tgt_code, tgt_mass = {'es':(11, 0.511),
-                                  'ibd':(2212, 938.3),
-                                  'o16e':(8016, 14900),
-                                  'o16eb':(8016, 14900),
-                                  }[channel]
-
-            outfile.write("$ begin\n")
-            outfile.write("$ nuance 0\n")
-            outfile.write("$ vertex %.5f %.5f %.5f %.5f\n" % (x, y, z, t))
-            outfile.write("$ track %i %.5f 0.0 0.0 1.0 -1\n" % (flv_code, eNu)) # incoming neutrino
-            outfile.write("$ track %i %.3f 0.0 0.0 1.0 -1\n" % (tgt_code, tgt_mass)) # target
-            outfile.write("$ info 0 0 %i\n" % i)
-            outfile.write("$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, ene, dirx, diry, dirz)) # Outgoing particle track
-            outfile.write("$ end\n")
+            evt.set_vertex(x, y, z)
+            outfile.write(evt.nuance_string(i))
 
         outfile.write("$ stop\n")
 
