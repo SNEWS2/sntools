@@ -2,7 +2,7 @@
 Sample implementation of an interaction channel.
 
 Most of the actual work is done in `channel.py`. Here, you need to provide
-8 constants/functions that characterize this interaction channel.
+constants and functions that characterize this interaction channel.
 See the docstrings below for detailed descriptions.
 
 If you need to define helper functions or constants, you can do so at the bottom
@@ -13,15 +13,14 @@ from event import Event
 
 '''
 generate_event(eNu, direction):
-Generate .
+Generate an event with appropriate incoming/outgoing particles.
 Input:
     eNu: neutrino energy
-    direction: direction of outgoing particle (3-tuple of x,y,z)
+    dirx, diry, dirz: direction of outgoing particle (normalized to 1)
 Output:
-    one floating point number
+    event object
 '''
-def generate_event(eNu, direction):
-    dirx, diry, dirz = direction
+def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
 
     evt = Event('')
@@ -111,12 +110,12 @@ def bounds_eE(eNu, *args):
 '''
 bounds_eNu
 List with minimum & maximum energy of incoming neutrino. The minimum energy is
-typically given by the threshold energy for the interaction, while the maximum
-energy is given by the supernova neutrino flux.
+given by the threshold energy for the interaction (where applicable),
+while the maximum energy is given by the supernova neutrino flux.
 '''
 bounds_eNu = [None, 100]
-# bounds_eNu = [e_threshold, 100]
 # e_threshold = 0 # threshold energy for current channel
+# bounds_eNu = [e_threshold, 100]
 
 # minimum/maximum neutrino energy that can produce a given positron energy
 # Optional. Can reduce numerical inaccuracy when integrating over eNu.
