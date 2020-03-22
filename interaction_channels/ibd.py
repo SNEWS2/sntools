@@ -4,12 +4,11 @@ from event import Event
 
 def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
-    eN = get_eN() # TODO: neutron energy
-    dirxN, diryN, dirzN = 0, 0, 1 # TODO: neutron direction
+    eN, dirxN, diryN, dirzN = get_neutron_kinematics(eNu, eE, dirx, diry, dirz)
 
     evt = Event('ibd')
     evt.incoming_particles.append((-12, eNu, 0, 0, 1)) # incoming neutrino
-    evt.incoming_particles.append((2212, 938.3, 0, 0, 1)) # proton at rest
+    evt.incoming_particles.append((2212, mP, 0, 0, 1)) # proton at rest
     evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing positron
     evt.outgoing_particles.append((2112, eN, dirxN, diryN, dirzN)) # outgoing neutron
     return evt
@@ -98,8 +97,17 @@ def get_eE(eNu, cosT): # eq. (21)
     return ((eNu - delta_cm) * (1 + epsilon) + epsilon * cosT * sqrt((eNu - delta_cm)**2 - mE**2 * kappa)) / kappa
 
 
-def get_eN():
-    return mN # TODO
+def get_neutron_kinematics(eNu, eE, dirx, diry, dirz):
+    eN = mP + eNu - eE # neutron energy
+
+    # calculate 3-momentum of neutron ...
+    pE = sqrt(eE**2 - mE**2)
+    pN_x = - dirx * pE
+    pN_y = - diry * pE
+    pN_z = eNu - dirz * pE
+    # ... and normalize it to get unit vector of neutron direction
+    pN = sqrt(pN_x**2 + pN_y**2 + pN_z**2)
+    return (eN, pN_x/pN, pN_y/pN, pN_z/pN)
 
 # Bounds for integration over eE
 delta_cm = (mN**2 - mP**2 - mE**2) / (2*mP)
