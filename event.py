@@ -1,27 +1,20 @@
-class Event:
+class Event(object):
     """A single neutrino interaction in the detector."""
-    def __init__(self, channel = None):
-        self.channel = channel # ibd, es, o16e, o16eb
-        self.time = None # in ms
-        self.vertex = (None, None, None) # x, y, z coordinates
-        self.incoming_particles = [] # list of particles, each containing pid, energy, direction (xyz)
-        self.outgoing_particles = []
+    def __init__(self, _info=None, time=None, vertex=None, incoming=None, outgoing=None):
+        self._info = _info # ibd, es, o16e, o16eb
+        self.time = time # in ms
+        self.vertex = vertex or (None, None, None) # x, y, z coordinates
+        self.incoming_particles = incoming or [] # list of particles, each is a tuple containing PID, energy, direction (xyz)
+        self.outgoing_particles = outgoing or []
 
-    def set_time(self, t):
-        """Set time of event (in ms)."""
-        self.time = t
+    def __repr__(self):
+        return "Event(_info='%s', time=%s, vertex=%s, incoming=%s, outgoing=%s)" \
+                % (self._info, self.time, self.vertex, self.incoming_particles, self.outgoing_particles)
 
-    def set_vertex(self, x, y, z):
-        """Set x,y,z coordinates of event vertex (in cm)."""
-        self.vertex = (x, y, z)
-
-    def add_incoming_particle(self, p):
-        """Add particle p to list of incoming particles."""
-        self.incoming_particles.append(p)
-
-    def add_outgoing_particle(self, p):
-        """Add particle p to list of outgoing particles."""
-        self.outgoing_particles.append(p)
+    def __setattr__(self, name, value):
+        if name in ('incoming_particles', 'outgoing_particles') and hasattr(self, name):
+            raise AttributeError('%s is a list. Append to it instead of overwriting it.' % name)
+        object.__setattr__(self, name, value)
 
     def nuance_string(self, i):
         """Return NUANCE-formatted representation of event for writing to output file.

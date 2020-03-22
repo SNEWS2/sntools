@@ -88,8 +88,8 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
         for _ in range(binned_nevt[i]):
             eNu = get_eNu(binned_t[i])
             direction = get_direction(eNu) # (dirx, diry, dirz)
-            evt = channel.generate_event(eNu, direction)
-            evt.set_time(t0 + random.random() * bin_width)
+            evt = channel.generate_event(eNu, *direction)
+            evt.time = t0 + random.random() * bin_width
             events.append(evt)
 
             if verbose and evt.outgoing_particles[0][1] < thr_e: thr_nevt -= 1

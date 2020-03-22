@@ -2,18 +2,16 @@ from math import pi, sqrt, log
 
 from event import Event
 
-def generate_event(eNu, direction):
-    dirx, diry, dirz = direction
+def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
     eN = get_eN() # TODO: neutron energy
     dirxN, diryN, dirzN = 0, 0, 1 # TODO: neutron direction
 
     evt = Event('ibd')
-    evt.add_incoming_particle([-12, eNu, 0, 0, 1]) # incoming neutrino
-    evt.add_incoming_particle([2212, 938.3, 0, 0, 1]) # proton at rest
-    evt.add_outgoing_particle([-11, eE, dirx, diry, dirz]) # outgoing positron
-    evt.add_outgoing_particle([2112, eN, dirxN, diryN, dirzN]) # outgoing neutron
-
+    evt.incoming_particles.append((-12, eNu, 0, 0, 1)) # incoming neutrino
+    evt.incoming_particles.append((2212, 938.3, 0, 0, 1)) # proton at rest
+    evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing positron
+    evt.outgoing_particles.append((2112, eN, dirxN, diryN, dirzN)) # outgoing neutron
     return evt
 
 targets_per_molecule = 2 # number of free protons per water molecule

@@ -174,7 +174,7 @@ def write_output(events, outfile, args):
                 if x**2 + y**2 < radius**2: break
             z = random.uniform(-height/2, height/2)
 
-            evt.set_vertex(x, y, z)
+            evt.vertex = (x, y, z)
             outfile.write(evt.nuance_string(i))
 
         outfile.write("$ stop\n")
