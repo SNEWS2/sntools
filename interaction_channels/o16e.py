@@ -37,14 +37,6 @@ def generate_event(eNu, dirx, diry, dirz):
     return evt
 
 '''
-targets_per_molecule:
-number of interaction targets per water molecule
-(i.e. 2 free protons, 1 oxygen nucleus or 10 electrons)
-'''
-targets_per_molecule = 1
-
-
-'''
 pid:
 ID of the outgoing (detected) particle, using Particle Data Group conventions
 (e.g. electron = 11, positron = -11)

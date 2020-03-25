@@ -9,19 +9,10 @@ except:
 import argparse
 from datetime import datetime
 from importlib import import_module
-import random
 
 from channel import gen_evts
+from detectors import Detector, supported_detectors
 
-
-channels = ['ibd', 'es', 'o16e', 'o16eb']
-
-# radius (cm), height (cm) and mass (kt) of inner detector
-detectors = {"SuperK": (3368.15/2., 3620., 32.5),
-#              "HyperK": (7080./2., 5480., 216)} # 2018 Design Report
-             "HyperK": (6480./2., 6580., 217), # 2019 optimized design
-             "WATCHMAN": (1280./2., 1280., 1.65), # arXiv:1502.01132
-            }
 
 # mixing parameters from M. Tanabashi et al. (Particle Data Group), PRD 98 (2018), 030001
 s12 = 0.307 # sin^2 theta_12
@@ -61,13 +52,13 @@ mixings = {"noosc":    (('e', 1, 'e'),
 def main():
     args = parse_command_line_options()
 
+    detector = Detector(args.detector)
+    channels = detector.material["channel_weights"] if args.channel == "all" \
+                                                    else [args.channel]
     hierarchy = args.hierarchy
-    global channels
-    channels = channels if args.channel == "all" else [args.channel]
     input = args.input_file
     format = args.format
     output = args.output
-    detector = detectors[args.detector]
     distance = args.distance
     starttime = args.starttime if args.starttime else None
     endtime = args.endtime if args.endtime else None
@@ -78,7 +69,7 @@ def main():
         print("hierarchy  =", hierarchy)
         print("input file =", input, "--- format =", format)
         print("output     =", output)
-        print("detector   =", args.detector)
+        print("detector   =", detector)
         print("distance   =", distance)
         print("starttime  =", starttime)
         print("endtime    =", endtime)
@@ -96,7 +87,8 @@ def main():
                 builtins._flavor = detected_flv
 
                 scale *= (10.0/distance)**2 # flux is proportional to 1/distance**2
-                scale *= detector[2] * 3.343e+31 # number of water molecules (assuming 18 g/mol)
+                scale *= detector.volume * detector.material["molecular_density"]
+                scale *= detector.material["channel_weights"][channel]
 
                 cmd = "gen_evts(_channel='%s', input='%s', _format='%s', inflv='%s', scale=%s, starttime=%s, endtime=%s, verbose=%s)" \
                     % (channel, input, format, original_flv, scale, starttime, endtime, verbose)
@@ -108,7 +100,14 @@ def main():
     events.sort(key=lambda evt: evt.time) # sort events by time
 
     # Write events to a nuance-formatted output file
-    write_output(events, output, args)
+    with open(output, 'w') as outfile:
+        if verbose: # write parameters to file as a comment
+            outfile.write("# Generated on %s with the options:\n" % datetime.now())
+            outfile.write("# " + str(args) + "\n")
+        for (i, evt) in enumerate(events):
+            evt.vertex = detector.generate_random_vertex()
+            outfile.write(evt.nuance_string(i))
+        outfile.write("$ stop\n")
 
 
 def parse_command_line_options():
@@ -132,15 +131,15 @@ def parse_command_line_options():
     parser.add_argument("-H", "--hierarchy", "--ordering", metavar="HIERARCHY", choices=choices, default=default,
                         help="Oscillation scenario. Choices: %s. Default: %s" % (choices, default))
 
-    parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=channels, default="all",
+    choices = ['ibd', 'es', 'o16e', 'o16eb']
+    parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
                         help="Interaction channels to consider. Currently, inverse beta decay (ibd), \
                               electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC \
-                              (o16eb) are supported. Choices: %s. Default: all supported channels" % channels)
+                              (o16eb) are supported. Choices: %s. Default: all supported channels" % choices)
 
-    choices = list(detectors)
-    default = choices[1]
-    parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=choices, default=default,
-                        help="Detector configuration. Choices: %s. Default: %s" % (choices, default))
+    default = "HyperK"
+    parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default=default,
+                        help="Detector configuration. Choices: %s. Default: %s" % (supported_detectors, default))
 
     default = 10.0
     parser.add_argument("--distance", type=float, default=default,
@@ -156,28 +155,6 @@ def parse_command_line_options():
                       help="Verbose output, e.g. for debugging. Off by default.")
 
     return parser.parse_args()
-
-
-def write_output(events, outfile, args):
-    with open(outfile, 'w') as outfile:
-        if args.verbose: # write parameters to file as a comment
-            outfile.write("# Generated on %s with the options:\n" % datetime.now())
-            outfile.write("# " + str(args) + "\n")
-
-        for (i, evt) in enumerate(events):
-            # create random vertex position inside the detector volume
-            radius = detectors[args.detector][0] - 20
-            height = detectors[args.detector][1] - 20
-            while True:
-                x = random.uniform(-radius, radius)
-                y = random.uniform(-radius, radius)
-                if x**2 + y**2 < radius**2: break
-            z = random.uniform(-height/2, height/2)
-
-            evt.vertex = (x, y, z)
-            outfile.write(evt.nuance_string(i))
-
-        outfile.write("$ stop\n")
 
 
 if __name__ == "__main__":

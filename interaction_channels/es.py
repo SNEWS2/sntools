@@ -15,7 +15,6 @@ def generate_event(eNu, dirx, diry, dirz):
     evt.outgoing_particles.append((11, eE, dirx, diry, dirz)) # outgoing electron
     return evt
 
-targets_per_molecule = 10 # number of electrons per water molecule
 possible_flavors = ["e", "eb", "x", "xb"]
 
 

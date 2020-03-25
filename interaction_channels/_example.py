@@ -31,14 +31,6 @@ def generate_event(eNu, dirx, diry, dirz):
 
 
 '''
-targets_per_molecule:
-number of interaction targets per water molecule
-(i.e. 2 free protons, 1 oxygen nucleus or 10 electrons)
-'''
-targets_per_molecule = None
-
-
-'''
 possible_flavors:
 which neutrino flavors ("e", "eb", "x", "xb") interact in this channel
 '''

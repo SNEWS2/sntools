@@ -13,7 +13,6 @@ def generate_event(eNu, dirx, diry, dirz):
     evt.outgoing_particles.append((2112, eN, dirxN, diryN, dirzN)) # outgoing neutron
     return evt
 
-targets_per_molecule = 2 # number of free protons per water molecule
 possible_flavors = ["eb"]
 
 

@@ -36,13 +36,6 @@ def generate_event(eNu, dirx, diry, dirz):
     evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing electron
     return evt
 
-'''
-targets_per_molecule:
-number of interaction targets per water molecule
-(i.e. 2 free protons, 1 oxygen nucleus or 10 electrons)
-'''
-targets_per_molecule = 1
-
 
 '''
 possible_flavors:

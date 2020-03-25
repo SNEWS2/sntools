@@ -44,7 +44,6 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     endtime -- end time set by user via command line option (or None)
     """
     setup(_channel, _format) # import appropriate modules
-    scale *= channel.targets_per_molecule
     thr_e = 3.511 # detection threshold in HK: 3 MeV kinetic energy + rest mass
 
     (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
