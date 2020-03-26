@@ -131,11 +131,12 @@ def parse_command_line_options():
     parser.add_argument("-H", "--hierarchy", "--ordering", metavar="HIERARCHY", choices=choices, default=default,
                         help="Oscillation scenario. Choices: %s. Default: %s" % (choices, default))
 
-    choices = ['ibd', 'es', 'o16e', 'o16eb']
+    choices = ['ibd', 'es', 'o16e', 'o16eb', 'c12e']
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
                         help="Interaction channels to consider. Currently, inverse beta decay (ibd), \
-                              electron scattering (es), nu_e + oxygen CC (o16e) and nu_e-bar + oxygen CC \
-                              (o16eb) are supported. Choices: %s. Default: all supported channels" % choices)
+                              electron scattering (es), nu_e + oxygen CC (o16e), nu_e-bar + oxygen CC \
+                              (o16eb) and nu_e + carbon CC (c12e) are supported. \
+                              Choices: %s. Default: all supported channels" % choices)
 
     default = "HyperK"
     parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default=default,
