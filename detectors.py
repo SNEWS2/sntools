@@ -7,9 +7,15 @@ water = {"molecular_density": 3.343e+22, # molecules per gram (18.0153 g/mol)
          "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1}
 }
 
+# liquid scintillator: approximated here as CH_2
+ls = {"molecular_density": 4.293e+22, # 14.0266 g/mol
+      "channel_weights": {"ibd": 2, "es": 8}
+      # TODO: add interactions on carbon: {"c12nc": 1, "c12e": 1, "c12eb": 1}
+}
 
-# List of supported detectors
-supported_detectors = ["HyperK", "SuperK", "WATCHMAN"]
+
+# List of supported detector configurations
+supported_detectors = ["HyperK", "SuperK", "WATCHMAN", "WATCHMAN-LS"]
 
 class Detector(object):
     """A neutrino detector."""
@@ -28,6 +34,10 @@ class Detector(object):
             self.height = 1280.
             self.radius = 1280./2
             self.material = water
+        elif name == "WATCHMAN-LS":
+            self.height = 1280.
+            self.radius = 1280./2
+            self.material = ls
         else:
             raise ValueError("Unknown detector name: %s" % name)
 
