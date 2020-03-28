@@ -9,8 +9,7 @@ water = {"molecular_density": 3.343e+22, # molecules per gram (18.0153 g/mol)
 
 # liquid scintillator: approximated here as CH_2
 ls = {"molecular_density": 4.293e+22, # 14.0266 g/mol
-      "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1}
-      # TODO: add interactions on carbon: {"c12nc": 1, "c12eb": 1}
+      "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1}
 }
 
 
