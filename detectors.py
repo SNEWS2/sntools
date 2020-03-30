@@ -12,9 +12,23 @@ ls = {"molecular_density": 4.293e+22, # 14.0266 g/mol
       "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1}
 }
 
+def wbls(x):
+    """Generates dictionary characterizing Water-based Liquid Scintillator.
+
+    Input: Fraction of liquid scintillator.
+    Output: Dictionary, analogous to `water` and `ls` above.
+    """
+    md = x * ls["molecular_density"] + (1-x) * water["molecular_density"]
+    cw = {}
+    for channel in set(list(water["channel_weights"]) + list(ls["channel_weights"])):
+        weight = x * ls["channel_weights"].get(channel, 0) \
+                 + (1-x) * water["channel_weights"].get(channel, 0)
+        cw[channel] = weight
+    return {"molecular_density": md, "channel_weights": cw}
+
 
 # List of supported detector configurations
-supported_detectors = ["HyperK", "SuperK", "WATCHMAN", "WATCHMAN-LS"]
+supported_detectors = ["HyperK", "SuperK", "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS"]
 
 class Detector(object):
     """A neutrino detector."""
@@ -37,6 +51,10 @@ class Detector(object):
             self.height = 1280.
             self.radius = 1280./2
             self.material = ls
+        elif name == "WATCHMAN-WbLS":
+            self.height = 1280.
+            self.radius = 1280./2
+            self.material = wbls(0.03) # 3% LS, 97% water
         else:
             raise ValueError("Unknown detector name: %s" % name)
 
