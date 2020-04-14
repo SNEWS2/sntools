@@ -24,9 +24,9 @@ def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
 
     evt = Event('')
-#     evt.add_incoming_particle([12, eNu, 0, 0, 1]) # incoming neutrino
-#     evt.add_incoming_particle([11, mE, 0, 0, 1]) # electron at rest
-#     evt.add_outgoing_particle([11, eE, dirx, diry, dirz]) # outgoing electron
+#     evt.incoming_particles.append([12, eNu, 0, 0, 1]) # incoming neutrino
+#     evt.incoming_particles.append([11, mE, 0, 0, 1]) # electron at rest
+#     evt.outgoing_particles.append([11, eE, dirx, diry, dirz]) # outgoing electron
     return evt
 
 
@@ -68,7 +68,7 @@ def dSigma_dCosT(eNu, cosT):
 
 '''
 get_eE(eNu, cosT):
-Energy of outgoing (detected particle).
+Energy of outgoing (detected) particle.
 Input:
     eNu:  neutrino energy (MeV)
     cosT: cosine of the angle between neutrino and outgoing (detected) particle

@@ -33,7 +33,7 @@ def generate_event(eNu, dirx, diry, dirz):
     evt = Event('o16eb')
     evt.incoming_particles.append((-12, eNu, 0, 0, 1)) # incoming neutrino
     evt.incoming_particles.append((8016, 14900, 0, 0, 1)) # oxygen nucleus at rest
-    evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing electron
+    evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing positron
     return evt
 
 
@@ -50,7 +50,7 @@ List with minimum & maximum energy of incoming neutrino. The minimum energy is
 typically given by the threshold energy for the interaction, while the maximum
 energy is given by the supernova neutrino flux.
 '''
-bounds_eNu = [fit_parameters[1][0] + 0.8, 100] # 0.8 MeV = Cherenkov threshold of electron
+bounds_eNu = [fit_parameters[1][0] + 0.8, 100] # 0.8 MeV = Cherenkov threshold of positron
 
 
 '''
@@ -76,7 +76,7 @@ def bounds_eE(eNu, *args):
 
 '''
 get_eE(eNu, cosT):
-Energy of outgoing (detected particle).
+Energy of outgoing (detected) particle.
 Input:
     eNu:  neutrino energy (MeV)
     cosT: cosine of the angle between neutrino and outgoing (detected) particle

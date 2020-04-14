@@ -36,13 +36,6 @@ def generate_event(eNu, dirx, diry, dirz):
     evt.outgoing_particles.append((11, eE, dirx, diry, dirz)) # outgoing electron
     return evt
 
-'''
-pid:
-ID of the outgoing (detected) particle, using Particle Data Group conventions
-(e.g. electron = 11, positron = -11)
-'''
-pid = 11
-
 
 '''
 possible_flavors:
@@ -83,7 +76,7 @@ def bounds_eE(eNu, *args):
 
 '''
 get_eE(eNu, cosT):
-Energy of outgoing (detected particle).
+Energy of outgoing (detected) particle.
 Input:
     eNu:  neutrino energy (MeV)
     cosT: cosine of the angle between neutrino and outgoing (detected) particle
