@@ -1,5 +1,5 @@
 # sntools
-Event generator for simulating supernova neutrino bursts in Hyper-Kamiokande (or other water Cherenkov detectors).
+Event generator for simulating supernova neutrino bursts in water Cherenkov or liquid scintillator detectors.
 
 
 ### Input
@@ -22,8 +22,10 @@ Used in [historical simulation by Totani et al.](https://arxiv.org/abs/astro-ph/
 
 
 ### Interaction Channels
-Currently the four main interaction channels in water Cherenkov detectors are supported:
-inverse beta decay, elastic scattering on electrons and charged current interactions of nu_e and anti-nu_e on oxygen-16 nuclei.
+sntools supports the main interaction channels in water and liquid scintillator.
+
+For water Cherenkov detectors, like Hyper-Kamiokande, these are inverse beta decay, elastic scattering on electrons and charged-current interactions of nu_e and anti-nu_e on oxygen-16 nuclei.
+For liquid scintillator detectors, these are inverse beta decay, elastic scattering on electrons, charged-current interactions of nu_e and anti-nu_e on carbon-12 nuclei and neutral-current interactions on carbon-12 nuclei.
 For details, see the files in `interaction_channels/`.
 
 
@@ -33,7 +35,7 @@ A .kin file in the NUANCE format used by the /mygen/vecfile options in WCSim. Se
 
 ### Typical Usage
 ```
-python genevts.py fluxes/intp2001.data --format=nakazato -o outfile.kin --hierarchy=normal --channel=ibd
+python genevts.py fluxes/intp2001.data --format=nakazato -o outfile.kin --hierarchy=normal --detector=HyperK
 ```
 
 See
@@ -42,4 +44,4 @@ python genevts.py -h
 ```
 for a full description of these and other options.
 
-sntools currently uses Python 2.7, numpy 1.8 (or higher) and scipy 0.13 (or higher).
+sntools requires Python 2.7 or 3.x, numpy 1.8 (or higher) and scipy 0.13 (or higher).
