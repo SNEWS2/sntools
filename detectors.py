@@ -3,12 +3,14 @@ import random
 
 
 # Detector Materials
-water = {"molecular_density": 3.343e+22, # molecules per gram (18.0153 g/mol)
-         "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1}
+water = {"molecular_weight": 18.0153, # g/mol
+         "density": 1.0, # g/cm^3
+         "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1} # targets per molecule
 }
 
 # liquid scintillator: approximated here as CH_2
-ls = {"molecular_density": 4.293e+22, # 14.0266 g/mol
+ls = {"molecular_weight": 14.0266, # g/mol
+      "density": 1.0, # g/cm^3
       "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1}
 }
 
@@ -18,13 +20,14 @@ def wbls(x):
     Input: Fraction of liquid scintillator.
     Output: Dictionary, analogous to `water` and `ls` above.
     """
-    md = x * ls["molecular_density"] + (1-x) * water["molecular_density"]
+    mw = x * ls["molecular_weight"] + (1-x) * water["molecular_weight"]
+    d = x * ls["density"] + (1-x) * water["density"]
     cw = {}
     for channel in set(list(water["channel_weights"]) + list(ls["channel_weights"])):
         weight = x * ls["channel_weights"].get(channel, 0) \
                  + (1-x) * water["channel_weights"].get(channel, 0)
         cw[channel] = weight
-    return {"molecular_density": md, "channel_weights": cw}
+    return {"molecular_weight": mw, "density": d, "channel_weights": cw}
 
 
 # List of supported detector configurations
@@ -58,15 +61,18 @@ class Detector(object):
         else:
             raise ValueError("Unknown detector name: %s" % name)
 
-        # volume in cm^3, assuming cylindrical detector shape
-        self.volume = pi * self.radius**2 * self.height
+        # calculate number of target molecules in detector
+        volume = pi * self.radius**2 * self.height
+        number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
+        self.n_molecules = volume * number_density
 
     def __repr__(self):
         return "Detector('%s')" % self.name
 
     def __setattr__(self, attr, value):
-        if attr == "volume" and hasattr(self, attr):
-            raise AttributeError('Volume is determined by height and radius. It cannot be changed.')
+        if attr == "n_molecules" and hasattr(self, attr):
+            raise AttributeError('Number of molecules is determined by detector'
+                                  ' size and material. It cannot be changed.')
         object.__setattr__(self, attr, value)
 
     def generate_random_vertex(self):

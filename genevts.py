@@ -87,7 +87,7 @@ def main():
                 builtins._flavor = detected_flv
 
                 scale *= (10.0/distance)**2 # flux is proportional to 1/distance**2
-                scale *= detector.volume * detector.material["molecular_density"]
+                scale *= detector.n_molecules
                 scale *= detector.material["channel_weights"][channel]
 
                 cmd = "gen_evts(_channel='%s', input='%s', _format='%s', inflv='%s', scale=%s, starttime=%s, endtime=%s, verbose=%s)" \
