@@ -6,6 +6,15 @@ outfile*
 *.pyc
 *.so
 
+# LaTeX documentation
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.toc
+
 # temporary files and analysis scripts
 tmp*
 ana*

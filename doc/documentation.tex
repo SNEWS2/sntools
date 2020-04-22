@@ -1,0 +1,403 @@
+\documentclass[11pt, oneside]{article}
+\usepackage{geometry}
+\geometry{a4paper}
+\usepackage{graphicx}
+\usepackage{amssymb}
+
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{multirow}
+\usepackage{relsize}
+\usepackage{siunitx}
+\usepackage{xspace}
+
+
+\renewcommand{\d}{\mathrm{d}}
+\newcommand{\tdiff}[3][\empty]{\ifx\empty#1
+		\frac{\d\,#2}{\d #3}
+	\else
+		\frac{\d^{#1}\,#2}{\d #3^{#1}}
+	\fi} % (#1-th) total differential (in equations)
+\newcommand{\tdiffx}[3][\empty]{\ifx\empty#1
+		\d #2 / \d #3
+	\else
+		\d^{#1} #2 / \d #3^{#1}
+	\fi} % (#1-th) total differential (in text)
+\newcommand{\mean}[1]{\ensuremath{\langle #1 \rangle}}
+\newcommand{\nue}{\ensuremath{\nu_e}\xspace}
+\newcommand{\numu}{\ensuremath{\nu_\mu}\xspace}
+\newcommand{\nutau}{\ensuremath{\nu_\tau}\xspace}
+\newcommand{\nux}{\ensuremath{\nu_x}\xspace}
+\newcommand{\nuebar}{\ensuremath{\bar{\nu}_e}\xspace}
+\newcommand{\numubar}{\ensuremath{\bar{\nu}_\mu}\xspace}
+\newcommand{\nutaubar}{\ensuremath{\bar{\nu}_\tau}\xspace}
+\newcommand{\nuxbar}{\ensuremath{\bar{\nu}_x}\xspace}
+
+
+\title{sntools Documentation}
+\author{Jost Migenda\footnote{King’s College London, \url{jost.migenda@kcl.ac.uk}}}
+\date{\today}
+
+\begin{document}
+\maketitle
+\setcounter{tocdepth}{2}
+\tableofcontents
+\clearpage
+
+
+\section{Introduction}
+
+sntools is a Monte Carlo event generator for supernova neutrino interactions.
+
+Based on detailed time- and energy-dependent neutrino fluxes provided by various supernova models, it generates interactions within the detector volume and writes them to event files that can be used as an input for a full detector simulation.
+sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and later extended to support different detectors and detector materials.
+
+
+\subsection{Design}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.52]{sntools-overview.pdf}
+	\caption[Overview over the structure of sntools]{Overview over the structure of sntools. See text for a detailed description.}
+	\label{fig-sim-sntools-overview}
+\end{figure}
+
+An overview over the structure of sntools is given in figure~\ref{fig-sim-sntools-overview}.
+sntools is written in Python and uses the scipy and numpy libraries~\cite{Virtanen2020,Walt2011}, which implement many numerical calculations in Fortran for performance reasons.
+Additionally, critical parts of sntools were tuned for increased performance.
+%On a current desktop computer, sntools needs \SI[parse-numbers=false]{\mathcal{O}(10)}{min} to generate events for a supernova at the fiducial distance of \SI{10}{kpc} in Hyper-Kamiokande.
+
+The main user interface is provided by the file \texttt{genevts.py}.
+It requires an input file containing neutrino fluxes from the supernova, while other, optional arguments include the format of the input file, the neutrino mass ordering, the distance to the supernova and many others.
+
+After parsing the arguments, events are generated separately for each combination of interaction channel and input species\footnote{sntools uses the species \nue, \nuebar, \nux and \nuxbar, with \nux (\nuxbar) representing any one of \numu and \nutau (\numubar and \nutaubar). Since the energy of supernova neutrinos is too low to produce $\mu^\pm$ or $\tau^\pm$ in a detector, neutrinos with those two flavours interact in the same ways.} by calling code in the file \texttt{channel.py}.
+The code first calculates the total number of events expected in each \SI{1}{ms} bin, which is given by
+\begin{equation}
+N(t) = \mathop{\mathlarger{\mathlarger{\iint}}} \tdiff{\Phi (t, E_\nu)}{E_\nu} \tdiff{\sigma (E_\nu, E_e)}{E_e}\, \d E_e\,\d E_\nu,
+\end{equation}
+where $\Phi (t, E_\nu)$ is the neutrino flux and $\sigma (E_\nu, E_e)$ is the cross section of the current interaction channel.
+It then picks the actual number of events to generate within that time bin from a Poisson distribution with expectation value $N(t)$.
+Finally, it generates events by rejection sampling from the energy spectrum of neutrino interactions at that time and the distribution of outgoing particle directions.
+
+The event generation code relies on a plug-in architecture to support various different input formats and interaction channels.
+Input format plug-ins provide functions that read in the data from an input file and return the number luminosity as a function of time and energy.
+Interaction channel plug-ins specify properties of the interaction channel, like the neutrino species that undergo this interaction, and provide functions to calculate quantities like the differential cross section $\tdiffx{\sigma (E_\nu, E_e)}{E_e}$ or the kinematically allowed energy range.
+This modular design makes sntools easily extensible, with roughly 100 lines of code required to add a new input format or interaction channel.
+
+Finally, \texttt{genevts.py} collects the events generated in all interaction channels and writes them to a text file in the NUANCE format\footnote{See \url{http://neutrino.phy.duke.edu/nuance-format/} for a description of this format.}, which can be used as an input file for a full detector simulation.
+
+
+\subsection{Installation Instructions}
+
+sntools requires
+\begin{itemize}
+\item Python (2.7 or 3.x)
+\item SciPy (0.13 or higher)
+\item NumPy (1.8 or higher)
+\end{itemize}
+
+If these are not yet available on your system, see \url{https://scipy.org/install.html} for installation instructions.
+
+
+\subsection{Quick Start Guide}
+
+An example usage of sntools may look as follows:
+
+\texttt{python genevts.py fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK}
+
+This generates events for a supernova in Hyper-Kamiokande, assuming normal mass ordering and the neutrino flux given in the input file \texttt{fluxes/intp2001.data}\footnote{This sample file, which is for a \SI{20}{M_\odot} progenitor from~\cite{Nakazato2013}, is included as part of sntools. See \url{http://asphwww.ph.noda.tus.ac.jp/snn/} for more information.}, which is in the \texttt{nakazato} format.
+
+The input file is a required argument. The following optional arguments are available:
+
+\begin{description}
+\item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
+\item[\texttt{--output <value>}] Name of the output file.
+\item[\texttt{--ordering <value>}] Neutrino mass ordering. See section~\ref{sec:mass-ordering}.
+\item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
+\item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
+\item[\texttt{--distance <value>}] Distance to supernova (in kpc).
+\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are specified in the input file.
+\item[\texttt{--verbose}] Print more detailed output.
+\end{description}
+
+The command \texttt{python genevts.py -h} displays a more detailed overview over all arguments, including their default values.
+
+
+
+\section{More Details}
+
+\subsection{Detector Materials}
+sntools currently supports three detector materials: water, liquid scintillator and water-based liquid scintillator.
+Water is assumed to consist of an oxygen-16 nucleus and two hydrogen nuclei (free protons).
+Liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons).
+Water-based liquid scintillator is assumed to be a mixture of $x\,\%$ liquid scintillator and $(100-x)\,\%$ water.
+%Each material supports the appropriate detection channels presented in section~\ref{sec:interaction-channels}.
+
+The detector material doesn’t need to be specified explicitly; it is determined by the detector configuration.
+
+
+\subsection{Detector Configurations}\label{sec:detector-configurations}
+Select a detector configuration by using the \texttt{--detector <value>} command line option. The following detector configurations are currently implemented:
+
+\begin{description}
+\item[\texttt{HyperK}] Inner detector of Hyper-Kamiokande~\cite{HKDR2018}. Cylinder with a height of \SI{65.8}{m} and a diameter of \SI{64.8}{m}, filled with water.\footnote{In September 2019, the dimensions were changed slightly compared to the 2018 Design Report.}
+\item[\texttt{SuperK}] Inner detector of Super-Kamiokande~\cite{Fukuda2003}. Cylinder with a height of \SI{36.2}{m} and a diameter of \SI{33.7}{m}, filled with water.
+\item[\texttt{WATCHMAN}] WATCHMAN detector~\cite{Askins2015}. Cylinder with a height and diameter of \SI{12.8}{m}, filled with water.
+\item[\texttt{WATCHMAN-LS}] Same as \texttt{WATCHMAN}, but filled with liquid scintillator.
+\item[\texttt{WATCHMAN-WbLS}] Same as \texttt{WATCHMAN}, but filled with water-based liquid scintillator (3\,\% LS, 97\,\% water).
+\end{description}
+
+
+\subsection{Interaction Channels} \label{sec:interaction-channels}
+sntools supports multiple different interaction channels described in this section.
+By default, it will generate events across all channels that are available in the selected detector, but it can be restricted to a single channel by using the \texttt{--channel <value>} command line argument, where \texttt{<value>} can be one of \texttt{ibd}, \texttt{es}, \texttt{o16e}, \texttt{o16eb}, \texttt{c12e}, \texttt{c12eb} and \texttt{c12nc}.
+
+In water Cherenkov detectors like Hyper-Kamiokande, the dominant interaction channel for supernova neutrinos is inverse beta decay, which makes up about 90\,\% of events.
+Another important interaction channel is elastic scattering on electrons, which makes up only a few per cent of events but provides precise information on the direction of the supernova.
+The cross sections for both interactions have been calculated to a high level of precision.
+
+Another important subdominant channel are charged-current interactions of \nue and \nuebar on $^{16}$O nuclei.
+While this channel suffers from large theoretical uncertainties, it is very sensitive to the high-energy tail of supernova neutrino fluxes, so that the number of events in this channel can vary greatly between models.
+
+
+\subsubsection{\texttt{ibd}: Inverse Beta Decay}
+In both water and liquid scintillator, inverse beta decay (IBD; $\nuebar + p \rightarrow n + e^+$) is the dominant interaction channel for supernova neutrinos due to its relatively high cross section and low energy threshold of $E_\nu^\text{thr} \approx \SI{1.8}{MeV}$, as well as the large number of free protons in the detector.
+The observed energy of IBD events is closely related to the neutrino energy, making this an excellent channel to reconstruct the \nuebar spectrum.
+
+In sntools, IBD is implemented using the full tree-level cross section calculated in reference~\cite{Strumia2003} and including radiative corrections based on the approximation from reference~\cite{Kurylov2003}.\footnote{That calculation uses the limit $m_e \rightarrow 0$. This approximation is accurate to better than 0.1\,\% above $E_e = \SI{1}{MeV}$.}
+
+
+\subsubsection{\texttt{es}: Neutrino-Electron Scattering}
+In both water and liquid scintillator, elastic neutrino-electron scattering  ($\nu + e^- \rightarrow \nu + e^-$) is a subdominant interaction channel due to its low cross section, which is only partially compensated by the large number of electrons in the detector.
+Elastic scattering events make up only a few per cent of all events but their angular distribution is strongly peaked into a forward direction, pointing away from the supernova.
+In detectors that can reconstruct the direction of scattered electrons, this channel can therefore be used to determine the direction of a supernova~\cite{Abe2016,HKDR2018}.
+
+Elastic scattering is sensitive to all neutrino flavours.
+However, the cross section of \nue and \nuebar, which can interact through both neutral and charged currents, is higher than that of \nux and \nuxbar, which can interact only through neutral currents.
+
+In sntools, elastic scattering is implemented using the tree-level cross sections from standard electroweak theory calculated by ’t~Hooft~\cite{t-Hooft1971} and including one-loop electroweak and QCD corrections as well as QED radiative corrections as calculated in reference~\cite{Bahcall1995}.
+
+
+\subsubsection{\texttt{o16e} and \texttt{o16eb}: Charged-Current Interactions on $^{16}$O}
+In water, charged-current interactions of \nue and \nuebar on $^{16}$O nuclei,
+\begin{align}
+\nue + ^{16}\text{O} &\rightarrow e^- + X \\
+\nuebar + ^{16}\text{O} &\rightarrow e^+ + X,
+\end{align}
+are a subdominant interaction channel.\footnote{\label{fn:cc-interactions}Charged-current interactions of other neutrino species do not occur, since the energy of supernova neutrinos is too small to produce muons or $\tau$ leptons.}
+Due to the high energy threshold of both interactions of approximately \SI{15}{MeV} and \SI{11}{MeV}, respectively, as well as the steep energy-dependence of the cross sections, the number of events in each channel is a very sensitive probe of the high-energy tail of the supernova neutrino flux.
+It may vary by more than two orders of magnitude depending on the supernova models and oscillation scenario.
+
+In sntools, the cross section for both interaction channels is based on a new shell model calculation~\cite{Suzuki2018} which selected 42 different nuclear states and calculated their respective partial cross sections.
+To simplify the evaluation of the cross section, the implementation in sntools uses the four-group fit presented in reference~\cite{Nakazato2018}.
+This fit matches the cross sections calculated from the full set of nuclear states to within a few per cent at neutrino energies of up to \SI{100}{MeV}.
+For a typical supernova neutrino flux, the difference in the resulting event spectra when using the four groups instead of all 42 nuclear states is very small.
+
+An older approximation of both cross sections, which was commonly used in the literature until recently, can still be found in \texttt{interaction\_channels/o16e\_old.py} and \texttt{interaction\_channels/o16eb\_old.py}.%
+\footnote{That approximation is based on a fit~\cite{Tomas2003} to an earlier calculation~\cite{Kolbe2002} which tabulated the resulting total cross sections, instead of partial cross sections for each excitation energy.
+Therefore, the fit assumed a simplified scenario where all final nuclear states shared the energy of the ground state.
+This significantly overestimated the energy spectrum of the emitted $e^\pm$.}
+
+
+\subsubsection{\texttt{c12e} and \texttt{c12eb}: Charged-Current Interactions on $^{12}$C}
+In liquid scintillator, charged-current interactions of \nue and \nuebar on $^{12}$C nuclei,
+\begin{align}
+\nue + ^{12}\text{C} &\rightarrow e^- + X \\
+\nuebar + ^{12}\text{C} &\rightarrow e^+ + X,
+\end{align}
+are a subdominant interaction channel.\footnote{Footnote \ref{fn:cc-interactions} applies here as well.}
+Due to the high energy threshold of both interactions of approximately \SI{17}{MeV} and \SI{14}{MeV}, respectively, as well as the steep energy-dependence of the cross sections, the number of events in each channel is a very sensitive probe of the high-energy tail of the supernova neutrino flux.
+
+In sntools, the cross section for both interaction channels is based on the calculation in reference~\cite{Kolbe1999}.
+To interpolate between the tabulated cross sections, sntools uses the fit
+\begin{equation}
+\sigma (E_\nu) = \sigma_0 \cdot \left[ a_1 (E_\nu - E_\text{thr}) + a_2 (E_\nu - E_\text{thr})^2 + a_3 (E_\nu - E_\text{thr})^3 \right],
+\end{equation}
+where $E_\nu$ is the neutrino energy, $E_\text{thr}$ is the energy threshold of the interaction and $\sigma_0$ and $a_i$ are fit parameters.
+The energy of the outgoing lepton is approximated as $E_e = E_\nu - E_\text{thr}$.
+
+
+\subsubsection{\texttt{c12nc}: Neutral-Current Interactions on $^{12}$C}
+In liquid scintillator, neutral-current interactions on $^{12}$C nuclei,
+\begin{align}
+\nu + ^{12}\text{C} \rightarrow \nu' + &^{12}\text{C}^*\\
+	&^{12}\text{C}^* \rightarrow ^{12}\text{C} + \gamma
+\end{align}
+are a subdominant interaction channel that neutrinos and antineutrinos of all flavours contribute to equally.
+In sntools, the cross section for this interaction channel is based on the theoretical calculation in~\cite{Donnelly1979}
+\begin{equation}
+\sigma (E_\nu) = \SI{1.08e-38}{cm^2} \left( \frac{E_\nu - E_\text{thr}}{m_N} \right)^2 \cdot \beta \kappa,
+\end{equation}
+where $E_\nu$ is the neutrino energy, $E_\text{thr} \approx \SI{15}{MeV}$ is the energy threshold of the interaction, $m_N \approx \SI{939}{MeV}$ is the nucleon mass and $\beta \kappa = 1.11$~\cite{Armbruster1998}.
+The energy of the outgoing $\gamma$ is $E_\gamma = E_\text{thr}$.
+
+
+\subsection{Treatment of Neutrino Flavour Conversion} \label{sec:mass-ordering}
+
+sntools implements three different mass ordering scenarios that can be selected by using the \texttt{--ordering <value>} command line argument.%
+\footnote{The alias \texttt{--hierarchy <value>} also exists.}
+
+The first scenario, \texttt{noosc}, assumes that neutrino oscillations do not take place such that the flux of a neutrino species $\nu_i$ observed by a detector on Earth, $\Phi_{\nu_i}$, is identical to the fluxes originating within the supernova, $\Phi_{\nu_i}^0$, which are given in the input files that sntools uses.\footnote{For simplicity, throughout this section I omit the geometrical factor $\frac{1}{4 \pi d^2}$ which depends on the distance $d$ of the supernova.}
+
+The other two scenarios, \texttt{normal} and \texttt{inverted}, assume that adiabatic flavour conversion happens via the MSW effect since neutrinos traverse a smoothly varying density profile while exiting the star.
+The resulting observed fluxes are linear combinations of the initial fluxes, which, for normal mass ordering, are given by~\cite{Dighe2000}
+\begin{align}
+\begin{split}
+\Phi_{\nue} &= \sin^2 \theta_{13} \cdot \Phi_{\nue}^0 + \cos^2 \theta_{13} \cdot \Phi_{\nux}^0\\
+\Phi_{\nuebar} &= \cos^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi^0_{\nuebar} + (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar} \\
+2 \Phi_{\nux} &= \cos^2 \theta_{13} \cdot \Phi^0_{\nue} + (1 + \sin^2 \theta_{13}) \cdot \Phi^0_{\nux} \\
+2 \Phi_{\nuxbar} &= (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuebar} + (1 + \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar},
+\end{split}
+\end{align}
+while for inverted ordering, they are
+\begin{align}
+\begin{split}
+\Phi_{\nue} &= \sin^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi_{\nue}^0 + (1 - \sin^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi_{\nux}^0\\
+\Phi_{\nuebar} &= \sin^2 \theta_{13} \cdot \Phi_{\nuebar}^0 + \cos^2 \theta_{13} \cdot \Phi_{\nuxbar}^0\\
+2 \Phi_{\nux} &= (1 - \sin^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi_{\nue}^0 + (1 + \sin^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi_{\nux}^0\\
+2 \Phi_{\nuxbar} &= \cos^2 \theta_{13} \cdot \Phi_{\nuebar}^0 + (1 + \sin^2 \theta_{13}) \cdot \Phi^0_{\nuxbar}.
+\end{split}
+\end{align}
+
+In both cases, the factor of 2 in the last two equations accounts for the fact that \nux (\nuxbar) includes the fluxes of \numu and \nutau (\numubar and \nutaubar).
+These equations assume purely adiabatic transition (corresponding to $P_H = 0$ in~\cite{Dighe2000,Fogli2005}) as explained below.
+Values for $\theta_{12}$ and $\theta_{13}$ are taken from the Particle Data Group~\cite{PDG2018}.
+
+In cases where the detected flux is a mixture of original fluxes of different species, sntools generates events for each original species separately with the appropriate weighting factor applied.
+For example, when generating inverse beta decay events in the normal ordering, sntools will generate events first using the input flux $\Phi_{\nuebar} = \cos^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi^0_{\nuebar}$ and then using the input flux $\Phi_{\nuebar} = (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar}$, before finally combining both sets of events into one output file.
+
+Several other effects that may induce additional time- and energy-dependent flavour conversion are not currently implemented in sntools.
+They are discussed in the following.
+
+After the accretion phase, the revived shock front travels outwards and passes through the layer within the star where the adiabatic flavour conversion described above takes place.
+This causes a sudden change in the matter and electron density and can severely impact the flavour conversion processes~\cite{Schirato2002}.
+Since this occurs after the shock wave is revived, it mainly affects the late-time part of the supernova neutrino signal.\footnote{For the Totani model, this effect is expected to become relevant more than \SI{1}{s} after core-bounce~\cite{Fogli2005}. Most other computer simulations don’t extend out to more than a few \SI{100}{ms} and would thus likely not exhibit this effect.}
+Furthermore, this effect is highly dependent on the the density structure of each individual progenitor and cannot be taken into account by sntools.
+Instead, where appropriate, groups performing supernova simulations will need to include this effect in their codes and publish neutrino flux data that takes it into account.
+
+Near the centre of the supernova, the high neutrino density could induce a matter effect that causes self-induced flavour conversion~\cite{Duan2006a,Duan2006}.
+These collective effects---and their observable consequences, which could include energy-dependent flavour conversion (so called “spectral splits”)---are the subject of intense theoretical study~\cite{Raffelt2007,Dasgupta2009,Friedland2010,Duan2011,Izaguirre2017}, though no clear picture has yet emerged of how these effects will manifest in a given supernova.
+See reference~\cite{Chakraborty2016} for a recent review.
+Flavour conversion may also be suppressed in dense matter~\cite{Esteban-Pretel2008,Zaizen2018}.
+As a result, the consequences in a realistic supernova are currently not well understood and may depend on the progenitor~\cite{Chakraborty2014}.
+They can therefore not be taken into account by sntools.
+Once theoretical understanding has improved, it may be more appropriate to include these effects in individual supernova simulations and publish neutrino flux data that takes this into account.
+
+Finally, depending on the location of the supernova relative to the detector, the neutrino detector may be “shadowed” by the Earth.
+As neutrinos traverse the Earth’s matter potential before detection, they can undergo energy-dependent flavour transitions which are, in principle, detectable in large liquid scintillator or water Cherenkov detectors~\cite{Dighe2003}.
+The presence and amplitude of this shadowing effect depends on a combination of the location of the progenitor within the Milky Way, the detector location on Earth~\cite{Mirizzi2006} and, due to the Earth’s rotation, the time of day that the neutrinos arrive on Earth.
+These are not currently included in sntools.%
+%\footnote{A possible workaround is to pre-process the neutrino fluxes to include Earth matter effects before using them as an input for sntools. However, note that the current input formats all assume a smooth spectrum, so the narrow, energy-dependent flavour transition may not be represented accurately. It may be necessary to define a more versatile input format.}
+
+
+\subsection{Input Formats} \label{sec:input-formats}
+sntools supports multiple different input formats for the neutrino fluxes from a simulation, which can be selected using the \texttt{--format <value>} command line argument, where \texttt{<value>} can be one of \texttt{gamma}, \texttt{nakazato}, \texttt{princeton} or \texttt{totani}.
+This section will briefly describe each format and the processing steps necessary to calculate the spectral number luminosity.
+
+All formats contain separate information on the three species \nue, \nuebar and \nux.
+The fluxes of \nux and \nuxbar are typically assumed to be equal and most simulations don’t provide separate fluxes for \nux and \nuxbar.
+For simplicity, references to each species are omitted in the following.
+
+\subsubsection{Gamma Format}\label{sec:format-gamma}
+Files in this format contain, for each time step $t_n$, the luminosity $L$, mean energy $\mean{E_\nu}$ and mean squared energy $\mean{E_\nu^2}$ of neutrinos.
+A sample file is provided under \texttt{fluxes/sample-gamma.txt}.
+%Each line is in the format:
+%
+%\texttt{$t$, $L_{\nue}$, $\mean{E_{\nue}}$, $\mean{E_{\nue}^2}$, $L_{\nuebar}$, $\mean{E_{\nuebar}}$, $\mean{E_{\nuebar}^2}$, $L_{\nux}$, $\mean{E_{\nux}}$, $\mean{E_{\nux}^2}$}
+
+To reconstruct the neutrino spectrum from this, we assume that it is described by a normalized Gamma distribution~\cite{Keil2003,Tamborra2012} given by
+\begin{equation}
+f (E_\nu) = \frac{E_\nu^\alpha}{\Gamma (\alpha + 1)} \left( \frac{\alpha + 1}{A} \right)^{\alpha + 1} \exp \left[ - \frac{(\alpha + 1) E_\nu}{A} \right].
+\end{equation}
+In this formula, $A$ is an energy scale, while $\alpha$ determines the shape of the distribution: $\alpha = 2$ corresponds to a Maxwell-Boltzmann distribution, while $\alpha > 2$ corresponds to a “pinched” spectrum, which is more typical for neutrino spectra from supernovae.
+
+The first two energy moments of the distribution are
+\begin{align}
+\mean{E_\nu}	&= \int_0^\infty \d E_\nu\, E_\nu f(E_\nu) = A\\
+\mean{E_\nu^2}&= \int_0^\infty \d E_\nu\, E_\nu^2 f(E_\nu) = \frac{\alpha + 2}{\alpha + 1} A^2,
+\end{align}
+and therefore,
+\begin{equation}
+\alpha = \frac{\mean{E_\nu^2} - 2 \mean{E_\nu}^2}{\mean{E_\nu}^2 - \mean{E_\nu^2}}.
+\end{equation}
+Thus, the shape of the spectral number luminosity is uniquely determined by the mean energy \mean{E_\nu} and the mean squared energy \mean{E_\nu^2}, while the normalization is provided by $L / \mean{E_\nu}$.
+To determine the spectral number luminosity at arbitrary times, each of the three parameters is interpolated separately before calculating the spectral number luminosity using the interpolated values.
+
+\subsubsection{Nakazato Format}
+Files in this format\footnote{See \url{http://asphwww.ph.noda.tus.ac.jp/snn/guide.pdf} for more details.} contain, for 20 energy bins $E_k$ during each time step $t_n$, the quantities $\Delta N_k (t_n) / \Delta E_k$ and $\Delta L_k (t_n) / \Delta E_k$, which reflect the number luminosity and luminosity at those energies, respectively.
+For each energy bin, sntools calculates the mean energy within that bin, which is given by
+\begin{equation}
+\mean{E_k} = \frac{\quad  \frac{\Delta L_k (t_n)}{\Delta E_k}  \quad}{  \frac{\Delta N_k (t_n)}{\Delta E_k}  },
+\end{equation}
+and set the differential neutrino number flux at that energy to $\Delta N_k (t_n) / \Delta E_k$.
+Finally, a linear interpolation in time and cubic spline interpolation in energy are used to determine the spectral number luminosity at an arbitrary time and energy. % as recommended by Nakazato\footnote{private communication, April 7, 2018}.
+
+\subsubsection{Princeton Format}
+Files in this format contain, for each time step $t_n$, the spectral luminosity $\tdiffx{L}{E}$ for 20 logarithmically spaced energy bins $E_k$.
+I divide this by the central energy $\sqrt{E_k E_{k+1}}$ of the respective bin to get the spectral number luminosity at that energy.
+Finally, a linear interpolation in time and cubic interpolation in energy are used to determine the spectral number luminosity at an arbitrary time and energy.
+
+This follows the procedure described in reference~\cite{Seadrow2018}.
+It is similar to that used for the Nakazato format described above, though with a different definition of the bin energy.
+
+\subsubsection{Totani Format}
+Files in this format contain, for each time step $t_n$, the total number of neutrinos emitted until that time, which makes it possible to calculate the number $N_n$ of neutrinos emitted since the previous time step.
+
+For 20 energy bins $E_k$ per time step, a quantity $X_k$ is provided, which is proportional to the number of neutrinos emitted during that time step and in that energy bin.
+I divide this by the width of each energy bin to get
+\begin{equation}
+X_k^\text{spec} = \frac{X_k}{E_{k+1} - E_k},
+\end{equation}
+which is proportional to the spectral number emission during that time step.
+
+Integrating $X_k^\text{spec}$ over all energy bins and dividing it by that integral gives the spectral number emission during that time step normalized to 1, $X_k^\text{norm}$.
+The spectral number luminosity at time $t_n$ and energy $E_k$ is given by
+\begin{equation}
+\tdiff{\text{NL} (t_n, E_k)}{E} = \frac{N_n}{t_n - t_{n-1}} \cdot X_k^\text{norm}.
+\end{equation}
+Finally, a linear interpolation in time and log cubic spline interpolation in energy are used to determine the spectral number luminosity at an arbitrary time and energy.%
+\footnote{This approach closely follows the one used in code provided by Totani. There is excellent agreement of the calculated fluxes between Totani’s code and sntools, with differences of at most a few per mille due to slight differences in the numerical interpolation algorithms used.}
+
+
+
+\section{Contributing to sntools}
+
+General comments:
+
+license
+
+Contributor Covenant % https://www.contributor-covenant.org
+
+how to make a PR on GitHub, adding unit tests, etc.
+
+
+\subsection{Add a New Detector Configuration}\label{sec:new-detector-config}
+
+If your new detector configuration uses a detector material that is not yet implemented, see section~\ref{sec:new-detector-material}.
+
+…
+
+\subsection{Add a New Detector Material}\label{sec:new-detector-material}
+
+…
+
+If necessary, add new interaction channels which may occur in this detector material (see section~\ref{sec:new-interaction-channel}).
+
+Finally, add a new detector configuration which uses this detector material (see section~\ref{sec:new-detector-config}).
+
+\subsection{Add a New Interaction Channel}\label{sec:new-interaction-channel}
+
+…
+
+\subsection{Add a New Input Format}\label{sec:new-input-format}
+Ask whoever provided you with that input file, whether they could make the fluxes available in the \texttt{gamma} format described in section~\ref{sec:format-gamma}.
+If that’s not possible …
+
+%\appendix
+%\include{Appendix} % add copy of license here?
+
+\footnotesize % use smaller font size so bibliography doesn’t span as many pages
+\bibliographystyle{unsrt}
+\bibliography{documentation}
+
+\end{document}  
