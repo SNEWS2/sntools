@@ -37,12 +37,12 @@ class Detector(object):
     """A neutrino detector."""
     def __init__(self, name):
         self.name = name
-        if name == "HyperK": # 2019 optimized design
+        if name == "HyperK": # inner detector only, 2019 optimized design
             self.height = 6580.
             self.radius = 6480./2
             # 2018 Design Report: radius = 7080./2; height = 5480.
             self.material = water
-        elif name == "SuperK":
+        elif name == "SuperK": # inner detector only
             self.height = 3620.
             self.radius = 3368.15/2
             self.material = water
@@ -62,7 +62,7 @@ class Detector(object):
             raise ValueError("Unknown detector name: %s" % name)
 
         # calculate number of target molecules in detector
-        volume = pi * self.radius**2 * self.height
+        volume = pi * self.radius**2 * self.height # assumes cylindrical detector
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
         self.n_molecules = volume * number_density
 

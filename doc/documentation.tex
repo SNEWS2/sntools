@@ -362,40 +362,61 @@ Finally, a linear interpolation in time and log cubic spline interpolation in en
 
 \section{Contributing to sntools}
 
-General comments:
+%license
+%Contributor Covenant % https://www.contributor-covenant.org
+%how to make a PR on GitHub, writing and running unit tests, etc.
 
-license
-
-Contributor Covenant % https://www.contributor-covenant.org
-
-how to make a PR on GitHub, adding unit tests, etc.
+The following sections contain brief instructions for the most common ways to extend sntools.
+If you do this, please submit a pull request at \url{https://github.com/JostMigenda/sntools/}.
 
 
 \subsection{Add a New Detector Configuration}\label{sec:new-detector-config}
 
-If your new detector configuration uses a detector material that is not yet implemented, see section~\ref{sec:new-detector-material}.
+In \texttt{detectors.py}:
+\begin{itemize}
+\item Add the name of your detector configuration to the list \texttt{supported\_detectors}.
+\item Add an \texttt{elif} clause for your detector in the \texttt{\_\_init\_\_} function of the \texttt{Detector} class and set the height, radius and detector material there.
+\end{itemize}
 
-…
+If your new detector configuration uses a detector material that is not yet implemented, see section~\ref{sec:new-detector-material}.
+At the moment, all detector configurations are cylindrical. If your new detector configuration has a different shape, further changes will be necessary.
 
 \subsection{Add a New Detector Material}\label{sec:new-detector-material}
 
-…
+In \texttt{detectors.py}, create a new dictionary for your detector material which contains three entries:
+\begin{itemize}
+\item \texttt{molecular\_weight}: Molecular weight of the material in \si{g/mol}.
+\item \texttt{density}: Density of the material in \si{g/cm^3}.
+\item \texttt{channel\_weight}: Dictionary with supported interaction channels as keys and their respective weighting factors as values. The weighting factors are the number of potential targets per molecule. For example, water has 2 protons and 10 electrons per molecule, so the weighting factor is 2 for \texttt{ibd} and 10 for \texttt{es}.
+\end{itemize}
+% In more advanced cases, you can also write a function, which generates and returns such a dictionary. -> See implementation of WbLS, which lets the user give the fraction of LS as an argument.
 
 If necessary, add new interaction channels which may occur in this detector material (see section~\ref{sec:new-interaction-channel}).
-
 Finally, add a new detector configuration which uses this detector material (see section~\ref{sec:new-detector-config}).
 
 \subsection{Add a New Interaction Channel}\label{sec:new-interaction-channel}
 
-…
+\begin{itemize}
+\item In the \texttt{fluxes/} folder, copy \texttt{\_example.py} to create a new module for your interaction channel and implement the relevant physics in there.
+(The source code contains extensive comments explaining all variables and functions.)
+\item In \texttt{genevts.py}, add the channel in the \texttt{parse\_command\_line\_options()} function.
+\item In \texttt{detectors.py}, add the channel to all relevant detector materials.
+\end{itemize}
+
 
 \subsection{Add a New Input Format}\label{sec:new-input-format}
 Ask whoever provided you with that input file, whether they could make the fluxes available in the \texttt{gamma} format described in section~\ref{sec:format-gamma}.
-If that’s not possible …
+If that’s not possible:
+\begin{itemize}
+\item In the \texttt{formats/} folder, copy \texttt{gamma.py} to create a new module for your interaction channel and implement the three functions in there.
+(See the doc strings in the source code for details.)
+\item In \texttt{genevts.py}, add the format in the \texttt{parse\_command\_line\_options()} function.
+\end{itemize}
 
 %\appendix
 %\include{Appendix} % add copy of license here?
 
+\clearpage
 \footnotesize % use smaller font size so bibliography doesn’t span as many pages
 \bibliographystyle{unsrt}
 \bibliography{documentation}
