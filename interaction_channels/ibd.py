@@ -6,7 +6,7 @@ def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
     eN, dirxN, diryN, dirzN = get_neutron_kinematics(eNu, eE, dirx, diry, dirz)
 
-    evt = Event('ibd')
+    evt = Event(-1001001)
     evt.incoming_particles.append((-12, eNu, 0, 0, 1)) # incoming neutrino
     evt.incoming_particles.append((2212, mP, 0, 0, 1)) # proton at rest
     evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing positron

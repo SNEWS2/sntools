@@ -9,7 +9,7 @@ def generate_event(eNu, dirx, diry, dirz):
     incoming_flv = {'e':12, 'eb':-12, 'x':14, 'xb':-14}[_flavor]
     eE = get_eE(eNu, dirz)
 
-    evt = Event('es-%s' % _flavor)
+    evt = Event(98 if incoming_flv > 0 else -98)
     evt.incoming_particles.append((incoming_flv, eNu, 0, 0, 1)) # incoming neutrino
     evt.incoming_particles.append((11, mE, 0, 0, 1)) # electron at rest
     evt.outgoing_particles.append((11, eE, dirx, diry, dirz)) # outgoing electron

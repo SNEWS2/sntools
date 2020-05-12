@@ -30,7 +30,7 @@ fit_parameters = {1: [11.23, -40.656, 4.528, 0.887],
 def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
 
-    evt = Event('o16eb')
+    evt = Event(-1008016)
     evt.incoming_particles.append((-12, eNu, 0, 0, 1)) # incoming neutrino
     evt.incoming_particles.append((8016, 14900, 0, 0, 1)) # oxygen nucleus at rest
     evt.outgoing_particles.append((-11, eE, dirx, diry, dirz)) # outgoing positron

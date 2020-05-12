@@ -27,7 +27,7 @@ Output:
 '''
 def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
-    evt = Event('c12eb')
+    evt = Event(-1006012)
     evt.incoming_particles.append([-12, eNu, 0, 0, 1]) # incoming neutrino
     evt.incoming_particles.append((6012, 11178, 0, 0, 1)) # carbon nucleus at rest
     evt.outgoing_particles.append([-11, eE, dirx, diry, dirz]) # outgoing positron

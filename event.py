@@ -1,15 +1,15 @@
 class Event(object):
     """A single neutrino interaction in the detector."""
-    def __init__(self, _info=None, time=None, vertex=None, incoming=None, outgoing=None):
-        self._info = _info # ibd, es, o16e, o16eb
+    def __init__(self, code, time=None, vertex=None, incoming=None, outgoing=None):
+        self.code = code # numeric code for interaction channel
         self.time = time # in ms
         self.vertex = vertex or (None, None, None) # x, y, z coordinates
         self.incoming_particles = incoming or [] # list of particles, each is a tuple containing PID, energy, direction (xyz)
         self.outgoing_particles = outgoing or []
 
     def __repr__(self):
-        return "Event(_info='%s', time=%s, vertex=%s, incoming=%s, outgoing=%s)" \
-                % (self._info, self.time, self.vertex, self.incoming_particles, self.outgoing_particles)
+        return "Event(code=%i, time=%s, vertex=%s, incoming=%s, outgoing=%s)" \
+                % (self.code, self.time, self.vertex, self.incoming_particles, self.outgoing_particles)
 
     def __setattr__(self, name, value):
         if name in ('incoming_particles', 'outgoing_particles') and hasattr(self, name):
@@ -24,7 +24,8 @@ class Event(object):
         Output:
             String describing event."""
 
-        s = "$ begin\n$ nuance 0\n"
+        s = "$ begin\n"
+        s += "$ nuance %i\n" % self.code
         s += "$ vertex %.5f %.5f %.5f %.5f\n" % (self.vertex[0], self.vertex[1], self.vertex[2], self.time)
         for (pid, e, dirx, diry, dirz) in self.incoming_particles:
             s += "$ track %i %.5f %.5f %.5f %.5f -1\n" % (pid, e, dirx, diry, dirz)

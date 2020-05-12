@@ -23,7 +23,11 @@ Output:
 def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)
 
-    evt = Event('')
+    # replace `0` with interaction channel code ±CZZZAAA, where
+    # + is for neutrinos, - for antineutrinos
+    # C is 1 for charged-current and 2 for neutral-current interaction
+    # AAAZZZ depends on the nucleus, e.g. 006012 for carbon-12 or 008016 for oxygen-16
+    evt = Event(0)
 #     evt.incoming_particles.append([12, eNu, 0, 0, 1]) # incoming neutrino
 #     evt.incoming_particles.append([11, mE, 0, 0, 1]) # electron at rest
 #     evt.outgoing_particles.append([11, eE, dirx, diry, dirz]) # outgoing electron

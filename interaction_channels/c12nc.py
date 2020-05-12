@@ -30,7 +30,7 @@ def generate_event(eNu, dirx, diry, dirz):
     # Note: `builtins._flavor` is set in `genevts.py`
     nu_flv = {'e':12, 'eb':-12, 'x':14, 'xb':-14}[_flavor]
 
-    evt = Event('c12nc')
+    evt = Event(2006012 if nu_flv > 0 else -2006012)
     evt.incoming_particles.append([nu_flv, eNu, 0, 0, 1]) # incoming nu
     evt.incoming_particles.append((6012, 11178, 0, 0, 1)) # carbon nucleus at rest
     evt.outgoing_particles.append([22, e_thr, dirx, diry, dirz]) # emitted gamma
