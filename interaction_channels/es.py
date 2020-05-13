@@ -38,6 +38,7 @@ rho_NC = 1.0126 # numerical factor from Bahcall et al.
 
 _cache = {} # save time by avoiding repeat calculations
 def spence(n):
+    n = round(n, 6) # negligible decrease in accuracy to save time & memory
     if n not in _cache:
         _cache[n] = integrate.quad(lambda t: log(abs(1-t))/t, 0, n) [0]
     return _cache[n]
