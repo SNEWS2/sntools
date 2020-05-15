@@ -142,6 +142,8 @@ Output:
 def dSigma_dCosT(eNu, cosT):
     # Plots in PRD 36,2283 show this behaves roughly similar to the analogous
     # nu_e reaction, so we use the same approximation. (hep-ph/0307050, eq. B7)
+    if abs(cosT) > 1:
+        return 0
     x = ((eNu-11.23) / 25)**4
     return 1 - cosT * (1+x)/(3+x)
 

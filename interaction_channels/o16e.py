@@ -13,6 +13,8 @@ Instead, below we implement an approximation to DiracDelta: a function that's
 2*epsilon wide and 1/(2*epsilon) high, so that the integral is 1.
 '''
 
+from __future__ import division
+
 from math import log10
 import random
 
@@ -140,6 +142,8 @@ Output:
     one floating point number
 '''
 def dSigma_dCosT(eNu, cosT): # eq. (B7) of arXiv:hep-ph/0307050
+    if abs(cosT) > 1:
+        return 0
     x = ((eNu-15) / 25)**4
     return 1 - cosT * (1+x)/(3+x)
 
