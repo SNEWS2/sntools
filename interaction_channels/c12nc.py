@@ -90,8 +90,8 @@ Output:
     one floating point number
 '''
 def dSigma_dE(eNu, eE):
-    if abs(get_eE(eNu) - eE) > epsilon:
-        # This should never happen, since we set bounds_eE() accordingly above
+    if eNu < e_thr or abs(get_eE(eNu) - eE) > epsilon:
+        # This should never happen, since we set bounds for eE and eNu accordingly above
         # ... but just in case:
         return 0
 
@@ -112,6 +112,8 @@ Output:
 '''
 def dSigma_dCosT(eNu, cosT):
     # Energy dependence is unclear, so we use a constant value for now.
+    if abs(cosT) > 1:
+        return 0
     return 0.5
 
 

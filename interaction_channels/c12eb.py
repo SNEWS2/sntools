@@ -108,6 +108,8 @@ Output:
 '''
 def dSigma_dCosT(eNu, cosT):
     # Energy dependence is unclear, so we use a constant value for now.
+    if abs(cosT) > 1:
+        return 0
     return 0.5
 
 

@@ -109,6 +109,8 @@ Output:
 def dSigma_dCosT(eNu, cosT):
     # Small values of cosT are preferred, see arXiv:hep-ex/0105068 (fig. 12,14).
     # However, energy dependence is unclear, so we use a constant value for now.
+    if abs(cosT) > 1:
+        return 0
     return 0.5
 
 
