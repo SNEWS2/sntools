@@ -65,7 +65,7 @@ More recently, sntools was adapted by the WATCHMAN [@Askins2015] experiment
 and for early studies for the THEIA detector concept [@Askins2020].
 
 A few other software packages related to supernova neutrinos already exist.
-The SNOwGLoBES software is widely used to compute event rates and energy
+SNOwGLoBES [@snowglobes] is widely used to compute event rates and energy
 distributions for supernova burst neutrinos in various different detectors.
 While it is an excellent tool for preliminary studies or quick comparisons of
 different detector configurations, it uses simplified approximations for
