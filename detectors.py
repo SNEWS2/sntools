@@ -17,7 +17,7 @@ ls = {"molecular_weight": 14.0266, # g/mol
 def wbls(x):
     """Generates dictionary characterizing Water-based Liquid Scintillator.
 
-    Input: Fraction of liquid scintillator.
+    Input: Fraction of liquid scintillator (0 <= x <= 1).
     Output: Dictionary, analogous to `water` and `ls` above.
     """
     mw = x * ls["molecular_weight"] + (1-x) * water["molecular_weight"]
@@ -31,38 +31,61 @@ def wbls(x):
 
 
 # List of supported detector configurations
-supported_detectors = ["HyperK", "SuperK", "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS"]
+supported_detectors = ["HyperK", "SuperK",
+                       "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
+                       "THEIA25", "THEIA100"]
 
 class Detector(object):
     """A neutrino detector."""
     def __init__(self, name):
         self.name = name
         if name == "HyperK": # inner detector only, 2019 optimized design
+            self.shape = 'cylinder'
             self.height = 6580.
             self.radius = 6480./2
             # 2018 Design Report: radius = 7080./2; height = 5480.
             self.material = water
         elif name == "SuperK": # inner detector only
+            self.shape = 'cylinder'
             self.height = 3620.
             self.radius = 3368.15/2
             self.material = water
         elif name == "WATCHMAN": # arXiv:1502.01132
+            self.shape = 'cylinder'
             self.height = 1280.
             self.radius = 1280./2
             self.material = water
         elif name == "WATCHMAN-LS":
+            self.shape = 'cylinder'
             self.height = 1280.
             self.radius = 1280./2
             self.material = ls
         elif name == "WATCHMAN-WbLS":
+            self.shape = 'cylinder'
             self.height = 1280.
             self.radius = 1280./2
             self.material = wbls(0.03) # 3% LS, 97% water
+        elif name == "THEIA25":  # DOI:10.1140/epjc/s10052-020-7977-8
+            self.shape = 'box'
+            self.x = 2000.
+            self.y = 1800.
+            self.z = 7000.
+            self.material = wbls(0.10)  # 10% LS, 90% water
+        elif name == "THEIA100":  # dummy values resulting in 98.2 kt volume
+            self.shape = 'cylinder'
+            self.height = 5000.
+            self.radius = 5000./2
+            self.material = wbls(0.10)  # 10% LS, 90% water
         else:
             raise ValueError("Unknown detector name: %s" % name)
 
         # calculate number of target molecules in detector
-        volume = pi * self.radius**2 * self.height # assumes cylindrical detector
+        if self.shape is 'box':
+            volume = self.x * self.y * self.z
+        elif self.shape is 'cylinder':
+            volume = pi * self.radius**2 * self.height
+        else:
+            raise ValueError("Unknown detector shape: %s" % self.shape)
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
         self.n_molecules = volume * number_density
 
@@ -76,10 +99,17 @@ class Detector(object):
         object.__setattr__(self, attr, value)
 
     def generate_random_vertex(self):
-        while True:
-            x = random.uniform(-self.radius, self.radius)
-            y = random.uniform(-self.radius, self.radius)
-            if x**2 + y**2 < self.radius**2:
-                break
-        z = random.uniform(-self.height/2, self.height/2)
+        if self.shape is 'box':
+            x = random.uniform(0, self.x)
+            y = random.uniform(0, self.y)
+            z = random.uniform(0, self.z)
+        elif self.shape is 'cylinder':
+            while True:
+                x = random.uniform(-self.radius, self.radius)
+                y = random.uniform(-self.radius, self.radius)
+                if x**2 + y**2 < self.radius**2:
+                    break
+            z = random.uniform(-self.height/2, self.height/2)
+        else:
+            raise ValueError("Unknown detector shape: %s" % self.shape)
         return x, y, z
