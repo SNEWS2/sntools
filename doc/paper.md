@@ -11,7 +11,8 @@ authors:
     affiliation: 1 # (Multiple affiliations must be quoted)
   - name: Susan Cartwright # TODO: ORCID identifier
     affiliation: 2
-  - name: Liz Kneale # TODO: ORCID identifier
+  - name: Liz Kneale
+    orcid: 0000-0002-4087-1244
     affiliation: 2
   - name: Matthew Malek # TODO: ORCID identifier
     affiliation: 2
@@ -22,7 +23,7 @@ affiliations:
    index: 1
  - name: University of Sheffield
    index: 2
-date: 22 May 2020 # TODO
+date: 26 May 2020 # TODO
 bibliography: documentation.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
