@@ -67,9 +67,11 @@ class Detector(object):
             self.material = wbls(0.03) # 3% LS, 97% water
         elif name == "THEIA25":  # DOI:10.1140/epjc/s10052-020-7977-8
             self.shape = 'box'
-            self.x = 2000.
-            self.y = 1800.
-            self.z = 7000.
+            # from dimensions in paper, substract 50cm detector wall on each side
+            # estimate based on discussion with M. Wurm, G. Orebi Gann
+            self.x = 2000. - 100
+            self.y = 1800. - 100
+            self.z = 7000. - 100
             self.material = wbls(0.10)  # 10% LS, 90% water
         elif name == "THEIA100":  # dummy values resulting in 98.2 kt volume
             self.shape = 'cylinder'
