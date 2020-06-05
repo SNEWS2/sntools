@@ -26,7 +26,7 @@ class Event(object):
 
         s = "$ begin\n"
         s += "$ nuance %i\n" % self.code
-        s += "$ vertex %.5f %.5f %.5f %.5f\n" % (self.vertex[0], self.vertex[1], self.vertex[2], self.time)
+        s += "$ vertex %.5f %.5f %.5f %.8f\n" % (self.vertex[0], self.vertex[1], self.vertex[2], self.time)
         for (pid, e, dirx, diry, dirz) in self.incoming_particles:
             s += "$ track %i %.5f %.5f %.5f %.5f -1\n" % (pid, e, dirx, diry, dirz)
         s += "$ info 0 0 %i\n" % i
