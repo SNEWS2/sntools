@@ -22,9 +22,11 @@ def parse_input(input, inflv, starttime, endtime):
     """
     # read data from input file, ignoring lines with comments and empty lines
     with open(input) as infile:
-        raw_indata = [list(map(float, line.split(","))) for line in infile if not (line.startswith("#") or line.isspace())]
+        raw_indata = [
+            list(map(float, line.split(","))) for line in infile if not (line.startswith("#") or line.isspace())
+        ]
     for entry in raw_indata:
-        entry[0] *= 1000 # convert time to ms
+        entry[0] *= 1000  # convert time to ms
 
     # Compare start/end time entered by user with first/last line of input file
     _starttime = raw_indata[0][0]
@@ -43,9 +45,10 @@ def parse_input(input, inflv, starttime, endtime):
     # Ignore data outside of the requested time span.
     indata = []
     for (i, entry) in enumerate(raw_indata):
-        if i == 0: continue
+        if i == 0:
+            continue
         if entry[0] > starttime:
-            indata.append(raw_indata[i-1])
+            indata.append(raw_indata[i - 1])
             if entry[0] > endtime:
                 indata.append(entry)
                 break
@@ -57,9 +60,9 @@ def parse_input(input, inflv, starttime, endtime):
         # input files contain information for nu_e in columns 1-3, for
         # anti-nu_e in cols 4-6 and for nu_x in columns 7-9
         offset = {"e": 1, "eb": 4, "x": 7, "xb": 7}[inflv]
-        (mean_e, mean_e_sq, lum) = timebin[offset:offset+3]
+        (mean_e, mean_e_sq, lum) = timebin[offset : offset + 3]
         t = timebin[0]
-        flux[t] = (mean_e, mean_e_sq, lum * 624.151) # convert lum from erg/s to MeV/ms
+        flux[t] = (mean_e, mean_e_sq, lum * 624.151)  # convert lum from erg/s to MeV/ms
 
     return (starttime, endtime, sorted(flux.keys()))
 
@@ -74,7 +77,7 @@ def prepare_evt_gen(binned_t):
     Argument:
     binned_t -- list of time bins for generating events
     """
-    _flux = sorted([(k,)+v for (k,v) in flux.items()]) # list of tuples: (t, e, e_sq, lum)
+    _flux = sorted([(k,) + v for (k, v) in flux.items()])  # list of tuples: (t, e, e_sq, lum)
     (raw_t, raw_e, raw_e_sq, raw_lum) = [[entry[i] for entry in _flux] for i in range(4)]
 
     # interpolate mean energy, mean squared energy and luminosity ...
@@ -101,9 +104,9 @@ def nu_emission(eNu, time):
     time -- time ;)
     """
     (e, e_sq, luminosity) = flux[time]
-    alpha = (2 * e**2 - e_sq) / (e_sq - e**2)
+    alpha = (2 * e ** 2 - e_sq) / (e_sq - e ** 2)
 
     # energy of neutrinos follows a gamma distribution
-    gamma_dist = eNu**alpha / gamma(alpha + 1) * ((alpha + 1)/e)**(alpha + 1) * exp(-(alpha + 1) * eNu/e)
+    gamma_dist = eNu ** alpha / gamma(alpha + 1) * ((alpha + 1) / e) ** (alpha + 1) * exp(-(alpha + 1) * eNu / e)
     # total number = luminosity / mean energy
     return luminosity / e * gamma_dist

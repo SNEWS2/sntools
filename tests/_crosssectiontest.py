@@ -10,6 +10,7 @@ import unittest
 
 # TODO: add test for `generate_event(eNu, direction)`
 
+
 class CrossSectionTest(unittest.TestCase):
     # In child class, define `c` as the imported module of that channel's
     # cross-section so we can use `self.c` here.
@@ -18,19 +19,19 @@ class CrossSectionTest(unittest.TestCase):
     # for some typical values of eNu, eE to run this test.
     def test_dSigma_dE(self):
         for (eNu, eE, result) in self.test_dSigma_dE_values:
-            self.assertAlmostEqual(self.c.dSigma_dE(eNu, eE), result, delta=1e-6*result)
+            self.assertAlmostEqual(self.c.dSigma_dE(eNu, eE), result, delta=1e-6 * result)
 
     # In child class, define `test_dSigma_dE_edgecases_values` with
     # cross-sections for some typical values of eNu, eE to run this test.
     def test_dSigma_dE_edgecases(self):
         for (eNu, eE, result) in self.test_dSigma_dE_edgecases_values:
             self.assertEqual(self.c.dSigma_dE(eNu, eE), result)  # eE too small
-        
+
     # In child class, define `test_dSigma_dCosT_values` with
     # cross-sections for some typical values of eNu, cosT to run this test.
     def test_dSigma_dCosT(self):
         for (eNu, cosT, result) in self.test_dSigma_dCosT_values:
-            self.assertAlmostEqual(self.c.dSigma_dCosT(eNu, cosT), result, delta=1e-6*result)
+            self.assertAlmostEqual(self.c.dSigma_dCosT(eNu, cosT), result, delta=1e-6 * result)
 
     # Untypical values for cosT are independent of interaction channel.
     # This test runs automatically without defining values in child class.

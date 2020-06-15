@@ -34,23 +34,24 @@ def parse_input(input, inflv, starttime, endtime):
 
     # luminosity is in 20 bins covering 1-300 MeV (for e), 1-100 MeV (for eb & x)
     emax = 300 if inflv == "e" else 100
-    ebins = [0] + [emax**((i+0.5) * 0.05) for i in range(22)] # add extra bins at start/end for interpolation
+    ebins = [0] + [emax ** ((i + 0.5) * 0.05) for i in range(22)]  # add extra bins at start/end for interpolation
 
     # for each time bin, save data to dictionaries to look up later
     for line in indata:
-        time = line[0] * 1000 # convert time to ms
-        time -= 31.7 # offset between time in file and core bounce (D. Vartanyan, private communications)
+        time = line[0] * 1000  # convert time to ms
+        time -= 31.7  # offset between time in file and core bounce (D. Vartanyan, private communications)
         times.append(time)
 
-        diff_number_flux = [0] # Set flux at 0 MeV to 0
-        for emean, diff_lum in zip(ebins[1:-1], line[offset:offset+20]):
-            diff_lum *= 1e50 # file gives spectral luminosity in 10^50 erg/s/MeV
-            diff_lum *= 624.151 # convert erg/s/MeV to MeV/ms/MeV
-            if offset == 41: diff_lum /= 4 # file contains sum of nu_mu, nu_tau and anti-particles
+        diff_number_flux = [0]  # Set flux at 0 MeV to 0
+        for emean, diff_lum in zip(ebins[1:-1], line[offset : offset + 20]):
+            diff_lum *= 1e50  # file gives spectral luminosity in 10^50 erg/s/MeV
+            diff_lum *= 624.151  # convert erg/s/MeV to MeV/ms/MeV
+            if offset == 41:
+                diff_lum /= 4  # file contains sum of nu_mu, nu_tau and anti-particles
             number_flux = diff_lum / emean
             diff_number_flux.append(number_flux)
         # Let flux at >100 MeV smoothly go to zero
-        diff_number_flux.append(diff_number_flux[-1]*0.001)
+        diff_number_flux.append(diff_number_flux[-1] * 0.001)
         diff_number_flux.append(0)
 
         dNLdE[time] = interpolate.pchip(ebins, diff_number_flux)
@@ -78,7 +79,7 @@ def parse_input(input, inflv, starttime, endtime):
             i_max = i
             break
 
-    return (starttime, endtime, times[i_min:i_max+1])
+    return (starttime, endtime, times[i_min : i_max + 1])
 
 
 def prepare_evt_gen(binned_t):
@@ -93,6 +94,7 @@ def prepare_evt_gen(binned_t):
     """
     # unnecessary here; linear interpolation is fast enough to do it on demand
     return None
+
 
 def nu_emission(eNu, time):
     """Number of neutrinos emitted, as a function of energy.

@@ -1,10 +1,11 @@
 class Event(object):
     """A single neutrino interaction in the detector."""
+
     def __init__(self, code, time=None, vertex=None, incoming=None, outgoing=None):
-        self.code = code # numeric code for interaction channel
-        self.time = time # in ms
-        self.vertex = vertex or (None, None, None) # x, y, z coordinates
-        self.incoming_particles = incoming or [] # list of particles, each is a tuple containing PID, energy, direction (xyz)
+        self.code = code  # numeric code for interaction channel
+        self.time = time  # in ms
+        self.vertex = vertex or (None, None, None)  # x, y, z coordinates
+        self.incoming_particles = incoming or []  # list of particles, each is a tuple containing PID, energy, direction (xyz)
         self.outgoing_particles = outgoing or []
 
     def __repr__(self):
@@ -12,8 +13,8 @@ class Event(object):
                 % (self.code, self.time, self.vertex, self.incoming_particles, self.outgoing_particles)
 
     def __setattr__(self, name, value):
-        if name in ('incoming_particles', 'outgoing_particles') and hasattr(self, name):
-            raise AttributeError('%s is a list. Append to it instead of overwriting it.' % name)
+        if name in ("incoming_particles", "outgoing_particles") and hasattr(self, name):
+            raise AttributeError("%s is a list. Append to it instead of overwriting it." % name)
         object.__setattr__(self, name, value)
 
     def nuance_string(self, i):

@@ -23,10 +23,10 @@ def parse_input(input, inflv, starttime, endtime):
     dNLdE = {}
 
     with open(input) as infile:
-        indata = [list(map(float, line.split())) for line in infile  if not (line.startswith("#") or line.isspace())]
+        indata = [list(map(float, line.split())) for line in infile if not (line.startswith("#") or line.isspace())]
 
     # 21 lines per time bin
-    chunks = [indata[21*i:21*(i+1)] for i in range(len(indata)//21)]
+    chunks = [indata[21 * i : 21 * (i + 1)] for i in range(len(indata) // 21)]
 
     # input files contain information for e, eb & x in neighbouring columns,
     # so depending on the flavor, we might need an offset
@@ -35,13 +35,13 @@ def parse_input(input, inflv, starttime, endtime):
     # for each time bin, save data to dictionaries to look up later
     for chunk in chunks:
         # first line contains time
-        time = chunk[0][0] * 1000 # convert to ms
+        time = chunk[0][0] * 1000  # convert to ms
         times.append(time)
 
-        diff_number_flux, energy_mesh = [0], [0] # flux = 0 at 0 MeV
-        for bin_data in chunk[1:-1]: # exclude first line (time) and last line (empty)
-            number_flux = bin_data[2+offset] / 1000. # convert 1/s to 1/ms
-            luminosity = bin_data[5+offset] * 624.151 # convert erg/s to MeV/ms
+        diff_number_flux, energy_mesh = [0], [0]  # flux = 0 at 0 MeV
+        for bin_data in chunk[1:-1]:  # exclude first line (time) and last line (empty)
+            number_flux = bin_data[2 + offset] / 1000.0  # convert 1/s to 1/ms
+            luminosity = bin_data[5 + offset] * 624.151  # convert erg/s to MeV/ms
             diff_number_flux.append(number_flux)
             energy_mesh.append(luminosity / number_flux)
 
@@ -70,7 +70,7 @@ def parse_input(input, inflv, starttime, endtime):
             i_max = i
             break
 
-    return (starttime, endtime, times[i_min:i_max+1])
+    return (starttime, endtime, times[i_min : i_max + 1])
 
 
 def prepare_evt_gen(binned_t):
@@ -85,6 +85,7 @@ def prepare_evt_gen(binned_t):
     """
     # unnecessary here; linear interpolation is fast enough to do it on demand
     return None
+
 
 def nu_emission(eNu, time):
     """Number of neutrinos emitted, as a function of energy.

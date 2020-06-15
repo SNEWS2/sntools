@@ -26,18 +26,18 @@ class C12EBTest(CrossSectionTest):
     # iterable with tuples (eNu, cosT, dSigma_dE(eNu, cosT))
     test_dSigma_dCosT_values = (
         (20, -0.99, 0.5),
-        (20,  0.00, 0.5),
-        (20,  0.99, 0.5),
+        (20, 0.00, 0.5),
+        (20, 0.99, 0.5),
         (50, -0.50, 0.5),
-        (50,  0.00, 0.5),
-        (50,  0.50, 0.5),
+        (50, 0.00, 0.5),
+        (50, 0.50, 0.5),
     )
 
     # iterable with tuples (eNu, cosT, get_eE(eNu, cosT))
     test_get_eE_values = (
         (20, -0.99, 5.61),
-        (20,  0.00, 5.61),
-        (20,  0.99, 5.61),
+        (20, 0.00, 5.61),
+        (20, 0.99, 5.61),
         # testing higher energies is more complicated, since there are multiple possible return values
     )
 
@@ -50,8 +50,9 @@ class C12EBTest(CrossSectionTest):
     # value of bounds_eNu[0]
     test_bounds_eNu_minvalue = 15.19
 
-# ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
-del(CrossSectionTest)
 
-if __name__ == '__main__':
+# ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
+del CrossSectionTest
+
+if __name__ == "__main__":
     unittest.main()
