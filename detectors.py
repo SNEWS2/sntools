@@ -20,7 +20,7 @@ ls = {
 def wbls(x):
     """Generates dictionary characterizing Water-based Liquid Scintillator.
 
-    Input: Fraction of liquid scintillator.
+    Input: Fraction of liquid scintillator (0 <= x <= 1).
     Output: Dictionary, analogous to `water` and `ls` above.
     """
     mw = x * ls["molecular_weight"] + (1 - x) * water["molecular_weight"]
@@ -33,7 +33,9 @@ def wbls(x):
 
 
 # List of supported detector configurations
-supported_detectors = ["HyperK", "SuperK", "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS"]
+supported_detectors = ["HyperK", "SuperK",
+                       "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
+                       "THEIA25", "THEIA100"]
 
 
 class Detector(object):
@@ -62,11 +64,29 @@ class Detector(object):
             self.height = 1280.0
             self.radius = 1280.0 / 2
             self.material = wbls(0.03)  # 3% LS, 97% water
+        elif name == "THEIA25":  # DOI:10.1140/epjc/s10052-020-7977-8
+            self.shape = "box"
+            # from dimensions in paper, substract 50cm detector wall on each side
+            # estimate based on discussion with M. Wurm, G. Orebi Gann
+            self.x = 2000.0 - 100
+            self.y = 1800.0 - 100
+            self.z = 7000.0 - 100
+            self.material = wbls(0.10)  # 10% LS, 90% water
+        elif name == "THEIA100":  # dummy values resulting in 98.2 kt volume
+            self.shape = "cylinder"
+            self.height = 5000.0
+            self.radius = 5000.0 / 2
+            self.material = wbls(0.10)  # 10% LS, 90% water
         else:
             raise ValueError("Unknown detector name: %s" % name)
 
         # calculate number of target molecules in detector
-        volume = pi * self.radius ** 2 * self.height  # assumes cylindrical detector
+        if self.shape == "box":
+            volume = self.x * self.y * self.z
+        elif self.shape == "cylinder":
+            volume = pi * self.radius ** 2 * self.height  # assumes cylindrical detector
+        else:
+            raise ValueError("Unknown detector shape: %s" % self.shape)
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
         self.n_molecules = volume * number_density
 
@@ -75,14 +95,21 @@ class Detector(object):
 
     def __setattr__(self, attr, value):
         if attr == "n_molecules" and hasattr(self, attr):
-            raise AttributeError("Number of molecules is determined by detector size and material. It cannot be changed.")
+            raise AttributeError("n_molecules is determined by detector size and material. It cannot be changed.")
         object.__setattr__(self, attr, value)
 
     def generate_random_vertex(self):
-        while True:
-            x = random.uniform(-self.radius, self.radius)
-            y = random.uniform(-self.radius, self.radius)
-            if x ** 2 + y ** 2 < self.radius ** 2:
-                break
-        z = random.uniform(-self.height / 2, self.height / 2)
+        if self.shape == "box":
+            x = random.uniform(0, self.x)
+            y = random.uniform(0, self.y)
+            z = random.uniform(0, self.z)
+        elif self.shape == "cylinder":
+            while True:
+                x = random.uniform(-self.radius, self.radius)
+                y = random.uniform(-self.radius, self.radius)
+                if x ** 2 + y ** 2 < self.radius ** 2:
+                    break
+            z = random.uniform(-self.height / 2, self.height / 2)
+        else:
+            raise ValueError("Unknown detector shape: %s" % self.shape)
         return x, y, z
