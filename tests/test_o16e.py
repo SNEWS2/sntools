@@ -1,6 +1,6 @@
 import unittest
 
-from . import o16e
+from interaction_channels import o16e
 from ._crosssectiontest import CrossSectionTest
 
 
@@ -31,18 +31,18 @@ class O16ETest(CrossSectionTest):
     # iterable with tuples (eNu, cosT, dSigma_dE(eNu, cosT))
     test_dSigma_dCosT_values = (
         (20, -0.99, 1.3303518123667377),
-        (20,  0.00, 1.0),
-        (20,  0.99, 0.6696481876332623),
+        (20, 0.00, 1.0),
+        (20, 0.99, 0.6696481876332623),
         (50, -0.50, 1.3538353601496727),
-        (50,  0.00, 1.0),
-        (50,  0.50, 0.6461646398503273),
+        (50, 0.00, 1.0),
+        (50, 0.50, 0.6461646398503273),
     )
 
     # iterable with tuples (eNu, cosT, get_eE(eNu, cosT))
     test_get_eE_values = (
         (20, -0.99, 4.79),
-        (20,  0.00, 4.79),
-        (20,  0.99, 4.79),
+        (20, 0.00, 4.79),
+        (20, 0.99, 4.79),
         # testing higher energies is more complicated, since there are multiple possible return values
     )
 
@@ -55,8 +55,9 @@ class O16ETest(CrossSectionTest):
     # value of bounds_eNu[0]
     test_bounds_eNu_minvalue = 16.01
 
-# ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
-del(CrossSectionTest)
 
-if __name__ == '__main__':
+# ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
+del CrossSectionTest
+
+if __name__ == "__main__":
     unittest.main()
