@@ -1,6 +1,9 @@
 from __future__ import print_function
-from interaction_channels import ibd
+import unittest
 from scipy import integrate
+
+from interaction_channels import ibd
+
 
 mev2cm = 1 / 5.067731E10
 
@@ -65,28 +68,19 @@ sigma_th = {2.01: [0.003439e-41, 0.7144, -0.0208],
             104: [47.68e-41, 94.84, 0.221],
             160: [81.30e-41, 143.7, 0.346]}
 
-good_agreement = True
-for eNu in sorted(sigma_th):
-    sigma_sv = sigma_th[eNu][0]
-    sigma_calc = sigma(eNu)
-    delta = 100 * (sigma_calc - sigma_sv) / sigma_sv
-    if abs(delta) > 0.05: # 0.05% = max. rounding error for 4 significant digits
-        print("eNu = %.2f: sigma is off by %.2f percent" % (eNu, delta))
-        good_agreement = False
+class ExtendedIBDTest(unittest.TestCase):
+    def test_sigma(self):
+        for eNu in sorted(sigma_th):
+            sigma_sv = sigma_th[eNu][0]
+            # 0.0005 = max. rounding error for 4 significant digits
+            self.assertAlmostEqual(sigma(eNu), sigma_sv, delta=0.0005 * sigma_sv)
 
-    eE_sv = sigma_th[eNu][1]
-    eE_calc = eE_avg(eNu)
-    delta = 100 * (eE_calc - eE_sv) / eE_sv
-    if abs(delta) > 0.05:
-        print("eNu = %.2f: eE is off by %.2f percent" % (eNu, delta))
-        good_agreement = False
+    def test_eE(self):
+        for eNu in sorted(sigma_th):
+            eE_sv = sigma_th[eNu][1]
+            self.assertAlmostEqual(eE_avg(eNu), eE_sv, delta=0.0005 * eE_sv)
 
-    cosT_sv = sigma_th[eNu][2]
-    cosT_calc = cosT_avg(eNu)
-    delta = 100 * (cosT_calc - cosT_sv) / cosT_sv
-    if abs(delta) > 0.5:
-        print("eNu = %.2f: cosT is off by %.2f percent" % (eNu, delta))
-        good_agreement = False
-
-if good_agreement:
-    print("Integrated cross-section, mean eE & mean cosT are in excellent agreement for eNu between 2 and 100 MeV.")
+    def test_cosT(self):
+        for eNu in sorted(sigma_th):
+            cosT_sv = sigma_th[eNu][2]
+            self.assertAlmostEqual(cosT_avg(eNu), cosT_sv, delta=abs(0.005 * cosT_sv))
