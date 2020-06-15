@@ -1,6 +1,6 @@
 import unittest
 
-from . import gamma as f
+from formats import gamma as f
 
 
 class ParseInputTest(unittest.TestCase):

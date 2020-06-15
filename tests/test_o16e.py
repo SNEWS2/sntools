@@ -1,6 +1,6 @@
 import unittest
 
-from . import o16e
+from interaction_channels import o16e
 from ._crosssectiontest import CrossSectionTest
 
 

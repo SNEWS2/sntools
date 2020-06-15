@@ -1,6 +1,6 @@
 import unittest
 
-from . import ibd
+from interaction_channels import ibd
 from ._crosssectiontest import CrossSectionTest
 
 
