@@ -12,25 +12,21 @@ https://stackoverflow.com/questions/36755487/diracdelta-not-giving-correct-resul
 Instead, below we implement an approximation to DiracDelta: a function that's
 2*epsilon wide and 1/(2*epsilon) high, so that the integral is 1.
 '''
-
-e_thr = 11.4 # energy threshold for this reaction
-epsilon = 0.001 # for approximating DiracDelta distribution below
+from event import Event
 
 
-'''
-targets_per_molecule:
-number of interaction targets per water molecule
-(i.e. 2 free protons, 1 oxygen nucleus or 10 electrons)
-'''
-targets_per_molecule = 1
+def generate_event(eNu, dirx, diry, dirz):
+    eE = get_eE(eNu, dirz)
+
+    evt = Event(-1008016)
+    evt.incoming_particles.append((-12, eNu, 0, 0, 1))  # incoming neutrino
+    evt.incoming_particles.append((8016, 14900, 0, 0, 1))  # oxygen nucleus at rest
+    evt.outgoing_particles.append((-11, eE, dirx, diry, dirz))  # outgoing positron
+    return evt
 
 
-'''
-pid:
-ID of the outgoing (detected) particle, using Particle Data Group conventions
-(e.g. electron = 11, positron = -11)
-'''
-pid = -11
+e_thr = 11.4  # energy threshold for this reaction
+epsilon = 0.001  # for approximating DiracDelta distribution below
 
 
 '''
