@@ -24,6 +24,9 @@ def wbls(x):
     Input: Fraction of liquid scintillator (0 <= x <= 1).
     Output: Dictionary, analogous to `water` and `ls` above.
     """
+    if not 0 <= x <= 1:
+        raise ValueError("Fraction of Liquid Scintillator must be between 0 and 1!")
+
     mw = x * ls["molecular_weight"] + (1 - x) * water["molecular_weight"]
     d = x * ls["density"] + (1 - x) * water["density"]
     cw = {}

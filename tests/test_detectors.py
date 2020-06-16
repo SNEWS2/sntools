@@ -27,5 +27,27 @@ class DetectorTest(unittest.TestCase):
         self.assertLessEqual(x ** 2 + y ** 2, hk.radius ** 2)
 
 
+class WbLSTest(unittest.TestCase):
+    def test_wbls0(self):
+        wbls = d.wbls(0)
+        water = d.water
+        self.assertEqual(wbls["molecular_weight"], water["molecular_weight"])
+        self.assertEqual(wbls["density"], water["density"])
+        for channel in wbls["channel_weights"]:
+            self.assertEqual(wbls["channel_weights"][channel], water["channel_weights"].get(channel, 0))
+
+    def test_wbls1(self):
+        wbls = d.wbls(1)
+        ls = d.ls
+        self.assertEqual(wbls["molecular_weight"], ls["molecular_weight"])
+        self.assertEqual(wbls["density"], ls["density"])
+        for channel in wbls["channel_weights"]:
+            self.assertEqual(wbls["channel_weights"][channel], ls["channel_weights"].get(channel, 0))
+
+    def test_invalid_wbls(self):
+        with self.assertRaises(ValueError):
+            d.wbls(1.01)
+
+
 if __name__ == "__main__":
     unittest.main()
