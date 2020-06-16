@@ -1,3 +1,4 @@
+from __future__ import division
 from math import pi
 import random
 
@@ -44,38 +45,43 @@ class Detector(object):
     def __init__(self, name):
         self.name = name
         if name == "HyperK":  # inner detector only, 2019 optimized design
-            self.height = 6580.0
-            self.radius = 6480.0 / 2
-            # 2018 Design Report: radius = 7080./2; height = 5480.
+            self.shape = "cylinder"
+            self.height = 6580
+            self.radius = 6480 / 2
+            # 2018 Design Report: radius = 7080 / 2; height = 5480
             self.material = water
         elif name == "SuperK":  # inner detector only
-            self.height = 3620.0
+            self.shape = "cylinder"
+            self.height = 3620
             self.radius = 3368.15 / 2
             self.material = water
         elif name == "WATCHMAN":  # arXiv:1502.01132
-            self.height = 1280.0
-            self.radius = 1280.0 / 2
+            self.shape = "cylinder"
+            self.height = 1280
+            self.radius = 1280 / 2
             self.material = water
         elif name == "WATCHMAN-LS":
-            self.height = 1280.0
-            self.radius = 1280.0 / 2
+            self.shape = "cylinder"
+            self.height = 1280
+            self.radius = 1280 / 2
             self.material = ls
         elif name == "WATCHMAN-WbLS":
-            self.height = 1280.0
-            self.radius = 1280.0 / 2
+            self.shape = "cylinder"
+            self.height = 1280
+            self.radius = 1280 / 2
             self.material = wbls(0.03)  # 3% LS, 97% water
         elif name == "THEIA25":  # DOI:10.1140/epjc/s10052-020-7977-8
             self.shape = "box"
             # from dimensions in paper, substract 50cm detector wall on each side
             # estimate based on discussion with M. Wurm, G. Orebi Gann
-            self.x = 2000.0 - 100
-            self.y = 1800.0 - 100
-            self.z = 7000.0 - 100
+            self.x = 2000 - 100
+            self.y = 1800 - 100
+            self.z = 7000 - 100
             self.material = wbls(0.10)  # 10% LS, 90% water
         elif name == "THEIA100":  # dummy values resulting in 98.2 kt volume
             self.shape = "cylinder"
-            self.height = 5000.0
-            self.radius = 5000.0 / 2
+            self.height = 5000
+            self.radius = 5000 / 2
             self.material = wbls(0.10)  # 10% LS, 90% water
         else:
             raise ValueError("Unknown detector name: %s" % name)
@@ -94,8 +100,8 @@ class Detector(object):
         return "Detector('%s')" % self.name
 
     def __setattr__(self, attr, value):
-        if attr == "n_molecules" and hasattr(self, attr):
-            raise AttributeError("n_molecules is determined by detector size and material. It cannot be changed.")
+        if hasattr(self, attr):
+            raise AttributeError("Detector properties cannot be changed.")
         object.__setattr__(self, attr, value)
 
     def generate_random_vertex(self):
