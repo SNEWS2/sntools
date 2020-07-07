@@ -5,7 +5,7 @@ except:
     import builtins  # Python 3
 import unittest
 
-from interaction_channels import es
+from sntools.interaction_channels import es
 from ._crosssectiontest import CrossSectionTest
 
 builtins._flavor = "e"

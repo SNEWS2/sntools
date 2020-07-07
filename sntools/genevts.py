@@ -167,4 +167,16 @@ def parse_command_line_options():
 
 
 if __name__ == "__main__":
+    try:
+        # TODO: this should work when installing via pip
+        import sntools.event
+    except ImportError:
+        # if running this directly from the repo, modify `sys.path` to ensure all imports work
+        import os
+        import sys
+        abs_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(abs_dir)  # Parent directory containing the `sntools` folder
+        sys.path.append(parent_dir)
+        print(abs_dir, parent_dir, sys.path)
+
     main()

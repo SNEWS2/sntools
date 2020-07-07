@@ -16,7 +16,7 @@ Instead, below we implement an approximation to DiracDelta: a function that's
 from math import log10
 import random
 
-from event import Event
+from sntools.event import Event
 
 epsilon = 0.001 # for approximating DiracDelta distribution below
 

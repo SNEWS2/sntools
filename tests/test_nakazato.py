@@ -1,6 +1,6 @@
 import unittest
 
-from formats import nakazato as f
+from sntools.formats import nakazato as f
 
 
 class ParseInputTest(unittest.TestCase):

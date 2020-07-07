@@ -1,6 +1,6 @@
 import unittest
 
-from interaction_channels import ibd
+from sntools.interaction_channels import ibd
 from ._crosssectiontest import CrossSectionTest
 
 

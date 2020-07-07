@@ -9,7 +9,7 @@ If you need to define helper functions or constants, you can do so at the bottom
 of this file, where some commonly used constants are already provided.
 '''
 
-from event import Event
+from sntools.event import Event
 
 '''
 generate_event(eNu, direction):

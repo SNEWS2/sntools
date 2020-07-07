@@ -1,6 +1,6 @@
 import unittest
 
-from interaction_channels import c12eb
+from sntools.interaction_channels import c12eb
 from ._crosssectiontest import CrossSectionTest
 
 
