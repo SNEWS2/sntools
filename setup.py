@@ -9,6 +9,8 @@ https://github.com/pypa/sampleproject
 from setuptools import setup, find_packages
 import pathlib
 
+import sntools
+
 here = pathlib.Path(__file__).parent.resolve()
 
 # Get the long description from the README file
@@ -37,7 +39,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.5.0.post1',  # Required
+    version=sntools.__version__,  # Required
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
@@ -138,7 +140,7 @@ setup(
     #   py_modules=["my_module"],
     #
     # packages=find_packages(where='src'),  # Required
-    packages=find_packages(),  # Required
+    packages=find_packages(include=('sntools','sntools.*')),
 
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
@@ -189,9 +191,14 @@ setup(
     # executes the function `main` from this package when invoked:
     # entry_points={  # Optional
     #     'console_scripts': [
-    #         'sample=sample:main',  # TODO: to use this, add a `main()` function to sntools/__init__.py
+    #         'sample=sample:main',
     #     ],
     # },
+    entry_points={  # Optional
+        'console_scripts': [
+            'sntools = sntools.genevts:main',
+        ],
+    },
 
     # List additional URLs that are relevant to your project as a dict.
     #
