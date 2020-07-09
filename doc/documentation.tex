@@ -88,24 +88,20 @@ Finally, \texttt{genevts.py} collects the events generated in all interaction ch
 
 
 \subsection{Installation Instructions}
+First, make sure you have Python\footnote{Either Python 2.7 or Python 3.x is fine.} installed on your computer.
+(If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
-sntools requires
-\begin{itemize}
-\item Python (2.7 or 3.x)
-\item SciPy (0.13 or higher)
-\item NumPy (1.8 or higher)
-\end{itemize}
-
-If these are not yet available on your system, see \url{https://scipy.org/install.html} for installation instructions.
+In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
 
 
 \subsection{Quick Start Guide}
 
 An example usage of sntools may look as follows:
 
-\texttt{python genevts.py fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK}
+\texttt{sntools fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK}
 
 This generates events for a supernova in Hyper-Kamiokande, assuming normal mass ordering and the neutrino flux given in the input file \texttt{fluxes/intp2001.data}\footnote{This sample file, which is for a \SI{20}{M_\odot} progenitor from~\cite{Nakazato2013}, is included as part of sntools. See \url{http://asphwww.ph.noda.tus.ac.jp/snn/} for more information.}, which is in the \texttt{nakazato} format.
+% TODO: This file is not currently included in the pip-based install.
 
 The input file is a required argument. The following optional arguments are available:
 
@@ -120,7 +116,7 @@ The input file is a required argument. The following optional arguments are avai
 \item[\texttt{--verbose}] Print more detailed output.
 \end{description}
 
-The command \texttt{python genevts.py -h} displays a more detailed overview over all arguments, including their default values.
+The command \texttt{sntools -h} displays a more detailed overview over all arguments, including their default values.
 
 
 
@@ -368,8 +364,15 @@ Finally, a linear interpolation in time and log cubic spline interpolation in en
 %Contributor Covenant % https://www.contributor-covenant.org
 %how to make a PR on GitHub, writing and running unit tests, etc.
 
+% sntools should support *at least* the python/scipy/numpy versions required by NEP 29:
+% https://numpy.org/neps/nep-0029-deprecation_policy.html
+
+Clone the GitHub repository and run \texttt{pip install -r requirements.txt} to install all dependencies.
+Then, edit the code---see below for help with that.
+To run the code you developed, use \texttt{python sntools/genevts.py [arguments]} instead of \texttt{sntools [arguments]}.
+
 The following sections contain brief instructions for the most common ways to extend sntools.
-If you do this, please submit a pull request at \url{https://github.com/JostMigenda/sntools/}.
+If you do this, please give your contributions back to the community by \href{https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests}{submitting a pull request}.
 
 sntools uses the \texttt{unittest} module in the Python standard library.
 Simply run \texttt{python -m unittest discover} from its top-level directory to check whether all tests are passing.
