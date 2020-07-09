@@ -2,10 +2,13 @@
 fluxes/in_*
 outfile*
 
-# compiled code
+# compiled code and build products
 __pycache__/
 *.pyc
 *.so
+build/
+dist/
+*.egg-info/
 
 # LaTeX documentation
 *.aux

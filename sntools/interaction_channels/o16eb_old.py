@@ -12,7 +12,7 @@ https://stackoverflow.com/questions/36755487/diracdelta-not-giving-correct-resul
 Instead, below we implement an approximation to DiracDelta: a function that's
 2*epsilon wide and 1/(2*epsilon) high, so that the integral is 1.
 '''
-from event import Event
+from sntools.event import Event
 
 
 def generate_event(eNu, dirx, diry, dirz):

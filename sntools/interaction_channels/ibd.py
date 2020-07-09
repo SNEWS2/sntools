@@ -1,6 +1,6 @@
 from math import pi, sqrt, log
 
-from event import Event
+from sntools.event import Event
 
 def generate_event(eNu, dirx, diry, dirz):
     eE = get_eE(eNu, dirz)

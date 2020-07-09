@@ -2,7 +2,7 @@ from __future__ import print_function
 import unittest
 from scipy import integrate
 
-from interaction_channels import ibd
+from sntools.interaction_channels import ibd
 
 
 mev2cm = 1 / 5.067731e10

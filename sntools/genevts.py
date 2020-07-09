@@ -10,8 +10,18 @@ import argparse
 from datetime import datetime
 from importlib import import_module
 
-from channel import gen_evts
-from detectors import Detector, supported_detectors
+try:
+    import sntools  # when installing via pip, this should work
+except ImportError:
+    # if running this directly from the repo, modify `sys.path` to ensure all imports work
+    import os
+    import sys
+    abs_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(abs_dir)
+    sys.path.append(parent_dir)
+
+from sntools.channel import gen_evts
+from sntools.detectors import Detector, supported_detectors
 
 
 # mixing parameters from M. Tanabashi et al. (Particle Data Group), PRD 98 (2018), 030001
@@ -86,7 +96,7 @@ def main():
     # generate the actual events for each channel.
     events_by_channel = {}
     for channel in channels:
-        mod_channel = import_module("interaction_channels." + channel)
+        mod_channel = import_module("sntools.interaction_channels." + channel)
         for (original_flv, scale, detected_flv) in mixings[hierarchy]:
             if detected_flv in mod_channel.possible_flavors:
 

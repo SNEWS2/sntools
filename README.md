@@ -1,8 +1,33 @@
 # sntools
-Event generator for simulating supernova neutrino bursts in water Cherenkov or liquid scintillator detectors.
+sntools is a Monte Carlo event generator for supernova neutrino interactions.
+
+Based on detailed time- and energy-dependent neutrino fluxes provided by various supernova models, it generates interactions within the detector volume and writes them to event files that can be used as an input for a full detector simulation.
+sntools was originally developed for Hyper-Kamiokande and later extended to support different detectors and detector materials.
+
+## Getting Started
+First, make sure you have Python installed on your computer. (Either Python 2.7 or Python 3.x is fine.)
+
+Then, in a terminal, run
+```
+pip install sntools
+```
+to install the latest version of sntools and all dependencies.
+(sntools currently requires numpy 1.8 (or higher) and scipy 0.17 (or higher).)
+
+You can then run
+```
+sntools -h
+```
+for a brief summary of all of sntools’ options.
+A typical usage will look something like this:
+```
+sntools fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK
+```
+This generates events for a supernova in Hyper-Kamiokande, assuming normal mass ordering and the neutrino flux given in the input file `fluxes/intp2001.data`, which is in the `nakazato` format.
+(That sample file is included in the sntools repository. See [this web page](http://asphwww.ph.noda.tus.ac.jp/snn/index.html) for more information.)
 
 
-### Input
+## Input
 Text file(s) containing information about neutrino fluxes produced by the supernova.
 sntools distinguishes between three flavours: nu_e, anti-nu_e and nu_x (where nu_x stands for nu_mu or nu_tau or their respective antineutrinos).
 The following input formats are supported; see the source files in the `formats/` directory for details.
@@ -21,27 +46,17 @@ Used in [recent simulations](https://arxiv.org/abs/1804.00689) by the Princeton 
 Used in [historical simulation by Totani et al.](https://arxiv.org/abs/astro-ph/9710203), which is the baseline model in the [Hyper-Kamiokande Design Report](https://arxiv.org/abs/1805.04163).
 
 
-### Interaction Channels
+## Interaction Channels
 sntools supports the main interaction channels in water and liquid scintillator.
 
 For water Cherenkov detectors, like Hyper-Kamiokande, these are inverse beta decay, elastic scattering on electrons and charged-current interactions of nu_e and anti-nu_e on oxygen-16 nuclei.
+
 For liquid scintillator detectors, these are inverse beta decay, elastic scattering on electrons, charged-current interactions of nu_e and anti-nu_e on carbon-12 nuclei and neutral-current interactions on carbon-12 nuclei.
+
+Water-based liquid scintillator, a mixture of the two materials, is also supported.
+
 For details, see the files in `interaction_channels/`.
 
 
-### Output
+## Output
 A .kin file in the NUANCE format used by the /mygen/vecfile options in WCSim. See [the format documentation](http://neutrino.phy.duke.edu/nuance-format/) for details.
-
-
-### Typical Usage
-```
-python genevts.py fluxes/intp2001.data --format=nakazato -o outfile.kin --hierarchy=normal --detector=HyperK
-```
-
-See
-```
-python genevts.py -h
-```
-for a full description of these and other options.
-
-sntools requires Python 2.7 or 3.x, numpy 1.8 (or higher) and scipy 0.13 (or higher).

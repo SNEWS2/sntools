@@ -18,7 +18,7 @@ from __future__ import division
 from math import log10
 import random
 
-from event import Event
+from sntools.event import Event
 
 epsilon = 0.001 # for approximating DiracDelta distribution below
 

@@ -1,7 +1,7 @@
 from __future__ import division
 import unittest
 
-import detectors as d
+import sntools.detectors as d
 
 
 class DetectorTest(unittest.TestCase):

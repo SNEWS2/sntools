@@ -1,7 +1,7 @@
 from math import pi, sqrt, log
 from scipy import integrate
 
-from event import Event
+from sntools.event import Event
 
 # Note: `es.py` uses `builtins._flavor` (which is set in `genevts.py`)
 
