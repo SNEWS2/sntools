@@ -2,7 +2,7 @@
 sntools is a Monte Carlo event generator for supernova neutrino interactions.
 
 Based on detailed time- and energy-dependent neutrino fluxes provided by various supernova models, it generates interactions within the detector volume and writes them to event files that can be used as an input for a full detector simulation.
-sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and later extended to support different detectors and detector materials.
+sntools was originally developed for Hyper-Kamiokande and later extended to support different detectors and detector materials.
 
 ## Getting Started
 First, make sure you have Python installed on your computer. (Either Python 2.7 or Python 3.x is fine.)

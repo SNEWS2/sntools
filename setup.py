@@ -6,13 +6,8 @@ https://github.com/pypa/sampleproject
 """
 
 from setuptools import setup, find_packages
-import pathlib
 
 import sntools
-
-# Get the long description from the README file
-here = pathlib.Path(__file__).parent.resolve()
-long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     # The name determines how to install the project (`pip install sntools`)
@@ -36,7 +31,7 @@ setup(
     # An optional longer description of the project that represents
     # the body of text which users will see when they visit PyPI.
     # https://packaging.python.org/specifications/core-metadata/#description-optional
-    long_description=long_description,  # Optional
+    long_description=open('README.md', 'rb').read().decode('utf-8'),  # Optional
 
     # long_description format: text/x-rst (default), text/plain, text/markdown
     # https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
