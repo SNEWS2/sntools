@@ -25,10 +25,10 @@ from sntools.channel import gen_evts
 from sntools.detectors import Detector, supported_detectors
 
 
-# mixing parameters from M. Tanabashi et al. (Particle Data Group), PRD 98 (2018), 030001
+# mixing parameters from P.A. Zyla et al. (Particle Data Group), Prog. Theor. Exp. Phys. 2020, 083C01 (2020)
 s12 = 0.307  # sin^2 theta_12
 c12 = 1 - s12
-s13 = 0.0212  # sin^2 theta_13
+s13 = 0.0218  # sin^2 theta_13
 c13 = 1 - s13
 
 # While exiting the supernova, neutrinos experience mass hierarchy-dependent
