@@ -59,6 +59,7 @@ First, make sure you have Python\footnote{Either Python 2.7 or Python 3.x is fin
 (If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
 In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
+Then, run \texttt{sntools --version} to check whether it’s working.
 
 
 \subsection{Quick Start Guide}
@@ -81,6 +82,7 @@ The input file is a required argument. The following optional arguments are avai
 \item[\texttt{--distance <value>}] Distance to supernova (in kpc).
 \item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
 \item[\texttt{--verbose}] Print more detailed output.
+\item[\texttt{--version}] Print the current version number and exit.
 \end{description}
 
 The command \texttt{sntools -h} displays a more detailed overview over all arguments, including their default values.

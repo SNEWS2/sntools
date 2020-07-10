@@ -19,6 +19,7 @@ except ImportError:
     abs_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(abs_dir)
     sys.path.append(parent_dir)
+    import sntools
 
 from sntools.channel import gen_evts
 from sntools.detectors import Detector, supported_detectors
@@ -163,15 +164,17 @@ def parse_command_line_options():
 
     default = 10.0
     parser.add_argument("--distance", type=float, default=default,
-                      help="Distance to supernova in kpc. Default: '%s'." % default)
+                        help="Distance to supernova in kpc. Default: '%s'." % default)
 
     parser.add_argument("--starttime", metavar="T", type=float,
-                      help="Start generating events at T milliseconds. Default: First time bin in input file.")
+                        help="Start generating events at T milliseconds. Default: First time bin in input file.")
 
     parser.add_argument("--endtime", metavar="T", type=float,
-                      help="Stop generating events at T milliseconds. Default: Last time bin in input file.")
+                        help="Stop generating events at T milliseconds. Default: Last time bin in input file.")
 
     parser.add_argument("-v", "--verbose", action="count", help="Verbose output, e.g. for debugging. Off by default.")
+
+    parser.add_argument('--version', action='version', version='%(prog)s ' + sntools.__version__)
 
     return parser.parse_args()
 
