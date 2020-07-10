@@ -35,7 +35,7 @@
 \newcommand{\nuxbar}{\ensuremath{\bar{\nu}_x}\xspace}
 
 
-\title{sntools Documentation}
+\title{Documentation for sntools 0.5\footnote{See \url{https://github.com/JostMigenda/sntools} for the most recent version.}}
 \author{Jost Migenda\footnote{King’s College London, \url{jost.migenda@kcl.ac.uk}}}
 \date{\today}
 
@@ -52,39 +52,6 @@ sntools is a Monte Carlo event generator for supernova neutrino interactions.
 
 Based on detailed time- and energy-dependent neutrino fluxes provided by various supernova models, it generates interactions within the detector volume and writes them to event files that can be used as an input for a full detector simulation.
 sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and later extended to support different detectors and detector materials.
-
-
-\subsection{Design}
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=0.52]{sntools-overview.pdf}
-	\caption[Overview over the structure of sntools]{Overview over the structure of sntools. See text for a detailed description.}
-	\label{fig-sim-sntools-overview}
-\end{figure}
-
-An overview over the structure of sntools is given in figure~\ref{fig-sim-sntools-overview}.
-sntools is written in Python and uses the scipy and numpy libraries~\cite{Virtanen2020,Walt2011}, which implement many numerical calculations in Fortran for performance reasons.
-Additionally, critical parts of sntools were tuned for increased performance.
-%On a current desktop computer, sntools needs \SI[parse-numbers=false]{\mathcal{O}(10)}{min} to generate events for a supernova at the fiducial distance of \SI{10}{kpc} in Hyper-Kamiokande.
-
-The main user interface is provided by the file \texttt{genevts.py}.
-It requires an input file containing neutrino fluxes from the supernova, while other, optional arguments include the format of the input file, the neutrino mass ordering, the distance to the supernova and many others.
-
-After parsing the arguments, events are generated separately for each combination of interaction channel and input species\footnote{sntools uses the species \nue, \nuebar, \nux and \nuxbar, with \nux (\nuxbar) representing any one of \numu and \nutau (\numubar and \nutaubar). Since the energy of supernova neutrinos is too low to produce $\mu^\pm$ or $\tau^\pm$ in a detector, neutrinos with those two flavours interact in the same ways.} by calling code in the file \texttt{channel.py}.
-The code first calculates the total number of events expected in each \SI{1}{ms} bin, which is given by
-\begin{equation}
-N(t) = \mathop{\mathlarger{\mathlarger{\iint}}} \tdiff{\Phi (t, E_\nu)}{E_\nu} \tdiff{\sigma (E_\nu, E_e)}{E_e}\, \d E_e\,\d E_\nu,
-\end{equation}
-where $\Phi (t, E_\nu)$ is the neutrino flux and $\sigma (E_\nu, E_e)$ is the cross section of the current interaction channel.
-It then picks the actual number of events to generate within that time bin from a Poisson distribution with expectation value $N(t)$.
-Finally, it generates events by rejection sampling from the energy spectrum of neutrino interactions at that time and the distribution of outgoing particle directions.
-
-The event generation code relies on a plug-in architecture to support various different input formats and interaction channels.
-Input format plug-ins provide functions that read in the data from an input file and return the number luminosity as a function of time and energy.
-Interaction channel plug-ins specify properties of the interaction channel, like the neutrino species that undergo this interaction, and provide functions to calculate quantities like the differential cross section $\tdiffx{\sigma (E_\nu, E_e)}{E_e}$ or the kinematically allowed energy range.
-This modular design makes sntools easily extensible, with roughly 100 lines of code required to add a new input format or interaction channel.
-
-Finally, \texttt{genevts.py} collects the events generated in all interaction channels and writes them to a text file in the NUANCE format\footnote{See \url{http://neutrino.phy.duke.edu/nuance-format/} for a description of this format.}, which can be used as an input file for a full detector simulation.
 
 
 \subsection{Installation Instructions}
@@ -112,7 +79,7 @@ The input file is a required argument. The following optional arguments are avai
 \item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
 \item[\texttt{--distance <value>}] Distance to supernova (in kpc).
-\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are specified in the input file.
+\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
 \item[\texttt{--verbose}] Print more detailed output.
 \end{description}
 
@@ -121,6 +88,38 @@ The command \texttt{sntools -h} displays a more detailed overview over all argum
 
 
 \section{More Details}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.52]{sntools-overview.pdf}
+	\caption[Overview over the structure of sntools]{Overview over the structure of sntools. See text for a detailed description.}
+	\label{fig-sim-sntools-overview}
+\end{figure}
+
+An overview over the structure of sntools is given in figure~\ref{fig-sim-sntools-overview}.
+% sntools is written in Python and uses the scipy and numpy libraries~\cite{Virtanen2020,Walt2011}, which implement many numerical calculations in Fortran for performance reasons.
+% Additionally, critical parts of sntools were tuned for increased performance.
+%On a current desktop computer, sntools needs \SI[parse-numbers=false]{\mathcal{O}(10)}{min} to generate events for a supernova at the fiducial distance of \SI{10}{kpc} in Hyper-Kamiokande.
+
+The main user interface is provided by the file \texttt{genevts.py}, which parses command line arguments and then calls code in \texttt{channel.py} to generate events.
+Events are generated separately for each combination of interaction channel and input species.\footnote{sntools uses the species \nue, \nuebar, \nux and \nuxbar, with \nux (\nuxbar) representing any one of \numu and \nutau (\numubar and \nutaubar). Since the energy of supernova neutrinos is too low to produce $\mu^\pm$ or $\tau^\pm$ in a detector, neutrinos with those two flavours interact in the same ways.}
+The code first calculates the total number of events expected in each \SI{1}{ms} bin, which is given by
+\begin{equation}
+N(t) = \mathop{\mathlarger{\mathlarger{\iint}}} \tdiff{\Phi (t, E_\nu)}{E_\nu} \tdiff{\sigma (E_\nu, E_e)}{E_e}\, \d E_e\,\d E_\nu,
+\end{equation}
+where $\Phi (t, E_\nu)$ is the neutrino flux and $\sigma (E_\nu, E_e)$ is the cross section of the current interaction channel.
+It then picks the actual number of events to generate within that time bin from a Poisson distribution with expectation value $N(t)$.
+Finally, it generates events by rejection sampling from the energy spectrum of neutrino interactions at that time and the distribution of outgoing particle directions.
+
+The event generation code relies on a plug-in architecture to support various different input formats and interaction channels.
+Input format plug-ins provide functions that read in the data from an input file and return the number luminosity as a function of time and energy.
+Interaction channel plug-ins specify properties of the interaction channel, like the neutrino species that undergo this interaction, and provide functions to calculate quantities like the differential cross section $\tdiffx{\sigma (E_\nu, E_e)}{E_e}$ or the kinematically allowed energy range.
+This modular design makes sntools easily extensible, with roughly 100 lines of code required to add a new input format or interaction channel.
+
+Finally, \texttt{genevts.py} collects the events generated in all interaction channels and writes them to a text file in the NUANCE format\footnote{See \url{http://neutrino.phy.duke.edu/nuance-format/} for a description of this format.}, which can be used as an input file for a full detector simulation.
+
+The rest of this chapter describes the various components of the code and the physics behind them in more detail.
+
 
 \subsection{Detector Materials}
 sntools currently supports three detector materials: water, liquid scintillator and water-based liquid scintillator.
