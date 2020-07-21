@@ -55,7 +55,7 @@ sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and lat
 
 
 \subsection{Installation Instructions}
-First, make sure you have Python\footnote{Either Python 2.7 or Python 3.x is fine.} installed on your computer.
+First, make sure you have Python\footnote{Python 3.5 or higher is strongly recommended, though Python 2.7 is still supported.} installed on your computer.
 (If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
 In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
@@ -81,6 +81,7 @@ The input file is a required argument. The following optional arguments are avai
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
 \item[\texttt{--distance <value>}] Distance to supernova (in kpc).
 \item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
+\item[\texttt{--randomseed <value>}] Set an integer as a seed for the random number generator, to generate events reproducibly.\footnote{Note: Python 2.7 will not give identical results to Python 3.x for the oxygen-16 CC channels.}
 \item[\texttt{--verbose}] Print more detailed output.
 \item[\texttt{--version}] Print the current version number and exit.
 \end{description}
