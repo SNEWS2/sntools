@@ -104,7 +104,7 @@ def main():
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
     events_by_channel = {}
-    for channel in channels:
+    for channel in sorted(channels):
         mod_channel = import_module("sntools.interaction_channels." + channel)
         for (original_flv, scale, detected_flv) in mixings[hierarchy]:
             if detected_flv in mod_channel.possible_flavors:
