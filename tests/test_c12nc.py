@@ -1,3 +1,9 @@
+try:
+    import __builtin__ as builtins  # Python 2.7
+except ImportError:
+    import builtins  # Python 3
+finally:
+    builtins._flavor = "e"
 import unittest
 
 from sntools.interaction_channels import c12nc

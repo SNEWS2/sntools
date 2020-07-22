@@ -4,7 +4,7 @@ from __future__ import print_function
 
 try:
     import __builtin__ as builtins  # Python 2.7
-except:
+except ImportError:
     import builtins  # Python 3
 import argparse
 from datetime import datetime
