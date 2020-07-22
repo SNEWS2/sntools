@@ -13,7 +13,7 @@ water = {
 # liquid scintillator: approximated here as CH_2
 ls = {
     "molecular_weight": 14.0266,  # g/mol
-    "density": 1.0,  # g/cm^3
+    "density": 0.86,  # g/cm^3
     "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1},
 }
 

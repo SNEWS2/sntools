@@ -1,14 +1,14 @@
 # coding=utf-8
 try:
     import __builtin__ as builtins  # Python 2.7
-except:
+except ImportError:
     import builtins  # Python 3
+finally:
+    builtins._flavor = "e"
 import unittest
 
 from sntools.interaction_channels import es
 from ._crosssectiontest import CrossSectionTest
-
-builtins._flavor = "e"
 
 
 class ESTest(CrossSectionTest):

@@ -4,7 +4,7 @@ from __future__ import print_function
 
 try:
     import __builtin__ as builtins  # Python 2.7
-except:
+except ImportError:
     import builtins  # Python 3
 import argparse
 from datetime import datetime
@@ -14,7 +14,7 @@ import random
 import numpy as np
 
 try:
-    import sntools  # when installing via pip, this should work
+    import sntools  # if sntools was installed via pip
 except ImportError:
     # if running this directly from the repo, modify `sys.path` to ensure all imports work
     import os
@@ -39,8 +39,7 @@ c13 = 1 - s13
 #   * original flavor at production (i.e. in input files from computer simulations),
 #   * mixing probability,
 #   * resulting flavor in detector.
-# See p. 266 of the 2018 Hyper-K Design Report (arXiv:1805.04163v1), but note
-# that this code includes theta_13 and assumes adiabatic transition (P_H = 0).
+# See the section "Treatment of Neutrino Flavour Conversion" in the documentation.
 mixings = {
     "noosc": (
         ("e", 1, "e"),
@@ -103,7 +102,7 @@ def main():
 
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
-    events_by_channel = {}
+    events = []
     for channel in sorted(channels):
         mod_channel = import_module("sntools.interaction_channels." + channel)
         for (original_flv, scale, detected_flv) in mixings[hierarchy]:
@@ -120,13 +119,10 @@ def main():
                     % (channel, input, format, original_flv, scale, starttime, endtime, verbose)
                 if verbose:
                     print("Now executing:", cmd)
-                events_by_channel[(channel, original_flv, detected_flv)] = eval(cmd)
+                events.extend(eval(cmd))
 
-    # Collect events generated in all interaction channels.
-    events = [evt for evtlist in events_by_channel.values() for evt in evtlist]
-    events.sort(key=lambda evt: evt.time)  # sort events by time
-
-    # Write events to a nuance-formatted output file
+    # Sort events by time and write them to a nuance-formatted output file
+    events.sort(key=lambda evt: evt.time)
     with open(output, "w") as outfile:
         if verbose:  # write parameters to file as a comment
             outfile.write("# Generated on %s with the options:\n" % datetime.now())
