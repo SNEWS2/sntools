@@ -2,10 +2,7 @@
 
 Most of the actual work is done in `channel.py`. Here, you need to provide
 constants and functions that characterize this interaction channel.
-See the docstrings below for detailed descriptions.
-
-If you need to define helper functions or constants, you can do so at the bottom
-of this file, where some commonly used constants are already provided.
+See the comments below for detailed descriptions.
 """
 
 from sntools.event import Event
