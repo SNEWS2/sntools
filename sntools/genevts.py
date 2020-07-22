@@ -9,6 +9,9 @@ except ImportError:
 import argparse
 from datetime import datetime
 from importlib import import_module
+import random
+
+import numpy as np
 
 try:
     import sntools  # if sntools was installed via pip
@@ -79,6 +82,7 @@ def main():
     distance = args.distance
     starttime = args.starttime if args.starttime else None
     endtime = args.endtime if args.endtime else None
+    seed = args.randomseed
     verbose = args.verbose
 
     if verbose:
@@ -90,12 +94,16 @@ def main():
         print("distance   =", distance)
         print("starttime  =", starttime)
         print("endtime    =", endtime)
+        print("randomseed =", seed)
         print("**************************************")
+
+    random.seed(seed)
+    np.random.seed(seed)
 
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
     events = []
-    for channel in channels:
+    for channel in sorted(channels):
         mod_channel = import_module("sntools.interaction_channels." + channel)
         for (original_flv, scale, detected_flv) in mixings[hierarchy]:
             if detected_flv in mod_channel.possible_flavors:
@@ -167,6 +175,9 @@ def parse_command_line_options():
 
     parser.add_argument("--endtime", metavar="T", type=float,
                         help="Stop generating events at T milliseconds. Default: Last time bin in input file.")
+
+    parser.add_argument("--randomseed", metavar="SEED", type=int,  # non-ints may not give reproducible results
+                        help="Integer used as a random number seed to reproducibly generate events. Default: None.")
 
     parser.add_argument("-v", "--verbose", action="count", help="Verbose output, e.g. for debugging. Off by default.")
 
