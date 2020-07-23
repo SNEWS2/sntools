@@ -10,11 +10,12 @@ Note that it uses different conventions (e.g. minus signs) from Bahcall et al.!
 
 from __future__ import division
 
-# `builtins._flavor` is set in `genevts.py`
+# Use `builtins._flavor` (see `genevts.py`) explicitly (instead of `_flavor`)
+# to make the code easier to understand--both for humans and for linters.
 try:
-    from __builtin__ import _flavor  # Python 2.7
+    import __builtin__ as builtins  # Python 2.7
 except ImportError:
-    from builtins import _flavor  # Python 3
+    import builtins  # Python 3
 from math import pi, sqrt, log
 from scipy import integrate
 
@@ -28,7 +29,7 @@ def generate_event(eNu, dirx, diry, dirz):
         eNu: neutrino energy
         dirx, diry, dirz: direction of outgoing particle (normalized to 1)
     """
-    incoming_flv = {'e': 12, 'eb': -12, 'x': 14, 'xb': -14}[_flavor]
+    incoming_flv = {'e': 12, 'eb': -12, 'x': 14, 'xb': -14}[builtins._flavor]
     eE = get_eE(eNu, dirz)
 
     evt = Event(98 if incoming_flv > 0 else -98)
@@ -73,24 +74,24 @@ def dSigma_dE(eNu, eE):
     x = sqrt(1 + 2 * mE / T)
     i = 1 / 6 * (1 / 3 + (3 - x**2) * (x / 2 * log((x + 1) / (x - 1)) - 1))
 
-    if _flavor in ("e", "eb"):
+    if builtins._flavor in ("e", "eb"):
         k = 0.9791 + 0.0097 * i
-    elif _flavor in ("x", "xb"):
+    elif builtins._flavor in ("x", "xb"):
         k = 0.9970 - 0.00037 * i
 
     g1 = rho_NC * (0.5 - k * sin2theta_w)
     g2 = -rho_NC * k * sin2theta_w
 
-    if _flavor == "e":
+    if builtins._flavor == "e":
         gL = g1 - 1
         gR = g2
-    elif _flavor == "eb":
+    elif builtins._flavor == "eb":
         gL = g2
         gR = g1 - 1
-    elif _flavor == "x":
+    elif builtins._flavor == "x":
         gL = g1
         gR = g2
-    elif _flavor == "xb":
+    elif builtins._flavor == "xb":
         gL = g2
         gR = g1
 
