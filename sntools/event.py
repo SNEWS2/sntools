@@ -5,7 +5,7 @@ class Event(object):
         self.code = code  # numeric code for interaction channel
         self.time = time  # in ms
         self.vertex = vertex or (None, None, None)  # x, y, z coordinates
-        self.incoming_particles = incoming or []  # list of particles, each is a tuple containing PID, energy, direction (xyz)
+        self.incoming_particles = incoming or []  # list of tuples containing PID, energy, direction (x, y, z)
         self.outgoing_particles = outgoing or []
 
     def __repr__(self):
