@@ -1,0 +1,38 @@
+# This workflow will install Python dependencies and run tests with a variety of Python versions.
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run unit tests
+      run: |
+        python -m unittest discover
+    - name: Run integration test
+      run: |
+        # Generate output file
+        python sntools/genevts.py fluxes/intp2001.data -f nakazato --detector WATCHMAN-LS --distance 2 --ordering normal --starttime 100 --endtime 300 --randomseed 314 -o outfile.kin
+        # Compare with sample output
+        diff outfile.kin tests/sample_outfile.kin

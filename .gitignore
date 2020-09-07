@@ -1,20 +1,30 @@
 # input and output files
-infile*
+fluxes/in_*
 outfile*
 
-# compiled code
+# compiled code and build products
+__pycache__/
 *.pyc
 *.so
+build/
+dist/
+*.egg-info/
 
 # LaTeX documentation
 *.aux
 *.bbl
 *.blg
+*.fdb_latexmk
+*.fls
 *.log
 *.out
 *.synctex.gz
 *.toc
 
+# editor-specific
+.vscode/
+
 # temporary files and analysis scripts
 tmp*
 ana*
+scripts/*

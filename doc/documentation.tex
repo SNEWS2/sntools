@@ -35,7 +35,7 @@
 \newcommand{\nuxbar}{\ensuremath{\bar{\nu}_x}\xspace}
 
 
-\title{sntools Documentation}
+\title{Documentation for sntools 0.6\footnote{See \url{https://github.com/JostMigenda/sntools} for the most recent version.}}
 \author{Jost Migenda\footnote{King’s College London, \url{jost.migenda@kcl.ac.uk}}}
 \date{\today}
 
@@ -54,7 +54,44 @@ Based on detailed time- and energy-dependent neutrino fluxes provided by various
 sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and later extended to support different detectors and detector materials.
 
 
-\subsection{Design}
+\subsection{Installation Instructions}
+First, make sure you have Python\footnote{Python 3.5 or higher is strongly recommended, though Python 2.7 is still supported.} installed on your computer.
+(If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
+
+In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
+Then, run \texttt{sntools --version} to check whether it’s working.
+
+
+\subsection{Quick Start Guide}
+
+An example usage of sntools may look as follows:
+
+\texttt{sntools fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK}
+
+This generates events for a supernova in Hyper-Kamiokande, assuming normal mass ordering and the neutrino flux given in the input file \texttt{fluxes/intp2001.data}\footnote{This sample file, which is for a \SI{20}{M_\odot} progenitor from~\cite{Nakazato2013}, is included as part of sntools. See \url{http://asphwww.ph.noda.tus.ac.jp/snn/} for more information.}, which is in the \texttt{nakazato} format.
+% TODO: This file is not currently included in the pip-based install.
+
+The input file is a required argument. The following optional arguments are available:
+
+\begin{description}
+\item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
+\item[\texttt{--output <value>}] Name of the output file.
+\item[\texttt{--ordering <value>}] Neutrino mass ordering. See section~\ref{sec:mass-ordering}.
+\item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
+\item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
+\item[\texttt{--distance <value>}] Distance to supernova (in kpc).
+\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
+\item[\texttt{--randomseed <value>}] Set an integer as a seed for the random number generator, to generate events reproducibly.\footnote{Note: Python 2.7 will not give identical results to Python 3.x for the oxygen-16 CC channels.}
+\item[\texttt{--verbose}] Print more detailed output.
+\item[\texttt{--version}] Print the current version number and exit.
+\end{description}
+
+The command \texttt{sntools -h} displays a more detailed overview over all arguments, including their default values.
+
+
+
+\section{More Details}
+
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[scale=0.52]{sntools-overview.pdf}
@@ -63,14 +100,12 @@ sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and lat
 \end{figure}
 
 An overview over the structure of sntools is given in figure~\ref{fig-sim-sntools-overview}.
-sntools is written in Python and uses the scipy and numpy libraries~\cite{Virtanen2020,Walt2011}, which implement many numerical calculations in Fortran for performance reasons.
-Additionally, critical parts of sntools were tuned for increased performance.
+% sntools is written in Python and uses the scipy and numpy libraries~\cite{Virtanen2020,Walt2011}, which implement many numerical calculations in Fortran for performance reasons.
+% Additionally, critical parts of sntools were tuned for increased performance.
 %On a current desktop computer, sntools needs \SI[parse-numbers=false]{\mathcal{O}(10)}{min} to generate events for a supernova at the fiducial distance of \SI{10}{kpc} in Hyper-Kamiokande.
 
-The main user interface is provided by the file \texttt{genevts.py}.
-It requires an input file containing neutrino fluxes from the supernova, while other, optional arguments include the format of the input file, the neutrino mass ordering, the distance to the supernova and many others.
-
-After parsing the arguments, events are generated separately for each combination of interaction channel and input species\footnote{sntools uses the species \nue, \nuebar, \nux and \nuxbar, with \nux (\nuxbar) representing any one of \numu and \nutau (\numubar and \nutaubar). Since the energy of supernova neutrinos is too low to produce $\mu^\pm$ or $\tau^\pm$ in a detector, neutrinos with those two flavours interact in the same ways.} by calling code in the file \texttt{channel.py}.
+The main user interface is provided by the file \texttt{genevts.py}, which parses command line arguments and then calls code in \texttt{channel.py} to generate events.
+Events are generated separately for each combination of interaction channel and input species.\footnote{sntools uses the species \nue, \nuebar, \nux and \nuxbar, with \nux (\nuxbar) representing any one of \numu and \nutau (\numubar and \nutaubar). Since the energy of supernova neutrinos is too low to produce $\mu^\pm$ or $\tau^\pm$ in a detector, neutrinos with those two flavours interact in the same ways.}
 The code first calculates the total number of events expected in each \SI{1}{ms} bin, which is given by
 \begin{equation}
 N(t) = \mathop{\mathlarger{\mathlarger{\iint}}} \tdiff{\Phi (t, E_\nu)}{E_\nu} \tdiff{\sigma (E_\nu, E_e)}{E_e}\, \d E_e\,\d E_\nu,
@@ -86,45 +121,8 @@ This modular design makes sntools easily extensible, with roughly 100 lines of c
 
 Finally, \texttt{genevts.py} collects the events generated in all interaction channels and writes them to a text file in the NUANCE format\footnote{See \url{http://neutrino.phy.duke.edu/nuance-format/} for a description of this format.}, which can be used as an input file for a full detector simulation.
 
+The rest of this chapter describes the various components of the code and the physics behind them in more detail.
 
-\subsection{Installation Instructions}
-
-sntools requires
-\begin{itemize}
-\item Python (2.7 or 3.x)
-\item SciPy (0.13 or higher)
-\item NumPy (1.8 or higher)
-\end{itemize}
-
-If these are not yet available on your system, see \url{https://scipy.org/install.html} for installation instructions.
-
-
-\subsection{Quick Start Guide}
-
-An example usage of sntools may look as follows:
-
-\texttt{python genevts.py fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK}
-
-This generates events for a supernova in Hyper-Kamiokande, assuming normal mass ordering and the neutrino flux given in the input file \texttt{fluxes/intp2001.data}\footnote{This sample file, which is for a \SI{20}{M_\odot} progenitor from~\cite{Nakazato2013}, is included as part of sntools. See \url{http://asphwww.ph.noda.tus.ac.jp/snn/} for more information.}, which is in the \texttt{nakazato} format.
-
-The input file is a required argument. The following optional arguments are available:
-
-\begin{description}
-\item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
-\item[\texttt{--output <value>}] Name of the output file.
-\item[\texttt{--ordering <value>}] Neutrino mass ordering. See section~\ref{sec:mass-ordering}.
-\item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
-\item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
-\item[\texttt{--distance <value>}] Distance to supernova (in kpc).
-\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are specified in the input file.
-\item[\texttt{--verbose}] Print more detailed output.
-\end{description}
-
-The command \texttt{python genevts.py -h} displays a more detailed overview over all arguments, including their default values.
-
-
-
-\section{More Details}
 
 \subsection{Detector Materials}
 sntools currently supports three detector materials: water, liquid scintillator and water-based liquid scintillator.
@@ -145,6 +143,8 @@ Select a detector configuration by using the \texttt{--detector <value>} command
 \item[\texttt{WATCHMAN}] WATCHMAN detector~\cite{Askins2015}. Cylinder with a height and diameter of \SI{12.8}{m}, filled with water.
 \item[\texttt{WATCHMAN-LS}] Same as \texttt{WATCHMAN}, but filled with liquid scintillator.
 \item[\texttt{WATCHMAN-WbLS}] Same as \texttt{WATCHMAN}, but filled with water-based liquid scintillator (3\,\% LS, 97\,\% water).
+\item[\texttt{THEIA25}] THEIA-25 geometry~\cite{Askins2020}. Box with dimensions $\SI{20}{m}\times\SI{18}{m}\times\SI{70}{m}$, filled with \SI{25}{kt} of water-based liquid scintillator (10\,\% LS, 90\,\% water).
+\item[\texttt{THEIA100}] THEIA-100 geometry~\cite{Askins2020}. Cylindrical detector filled with \SI{100}{kt} of water-based liquid scintillator (10\,\% LS, 90\,\% water).
 \end{description}
 
 
@@ -261,7 +261,7 @@ while for inverted ordering, they are
 
 In both cases, the factor of 2 in the last two equations accounts for the fact that \nux (\nuxbar) includes the fluxes of \numu and \nutau (\numubar and \nutaubar).
 These equations assume purely adiabatic transition (corresponding to $P_H = 0$ in~\cite{Dighe2000,Fogli2005}) as explained below.
-Values for $\theta_{12}$ and $\theta_{13}$ are taken from the Particle Data Group~\cite{PDG2018}.
+Values for $\theta_{12}$ and $\theta_{13}$ are taken from the Particle Data Group~\cite{PDG2020}.
 
 In cases where the detected flux is a mixture of original fluxes of different species, sntools generates events for each original species separately with the appropriate weighting factor applied.
 For example, when generating inverse beta decay events in the normal ordering, sntools will generate events first using the input flux $\Phi_{\nuebar} = \cos^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi^0_{\nuebar}$ and then using the input flux $\Phi_{\nuebar} = (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar}$, before finally combining both sets of events into one output file.
@@ -366,8 +366,19 @@ Finally, a linear interpolation in time and log cubic spline interpolation in en
 %Contributor Covenant % https://www.contributor-covenant.org
 %how to make a PR on GitHub, writing and running unit tests, etc.
 
+% sntools should support *at least* the python/scipy/numpy versions required by NEP 29:
+% https://numpy.org/neps/nep-0029-deprecation_policy.html
+
+Clone the GitHub repository and run \texttt{pip install -r requirements.txt} to install all dependencies.
+Then, edit the code---see below for help with that.
+To run the code you developed, use \texttt{python sntools/genevts.py [arguments]} instead of \texttt{sntools [arguments]}.
+
 The following sections contain brief instructions for the most common ways to extend sntools.
-If you do this, please submit a pull request at \url{https://github.com/JostMigenda/sntools/}.
+If you do this, please give your contributions back to the community by \href{https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests}{submitting a pull request}.
+
+sntools uses the \texttt{unittest} module in the Python standard library.
+Simply run \texttt{python -m unittest discover} from its top-level directory to check whether all tests are passing.
+Tests will also run automatically whenever you submit a pull request on GitHub.
 
 
 \subsection{Add a New Detector Configuration}\label{sec:new-detector-config}
@@ -375,11 +386,10 @@ If you do this, please submit a pull request at \url{https://github.com/JostMige
 In \texttt{detectors.py}:
 \begin{itemize}
 \item Add the name of your detector configuration to the list \texttt{supported\_detectors}.
-\item Add an \texttt{elif} clause for your detector in the \texttt{\_\_init\_\_} function of the \texttt{Detector} class and set the height, radius and detector material there.
+\item Add an \texttt{elif} clause for your detector in the \texttt{\_\_init\_\_} function of the \texttt{Detector} class and set the detector dimensions and material there.
 \end{itemize}
 
 If your new detector configuration uses a detector material that is not yet implemented, see section~\ref{sec:new-detector-material}.
-At the moment, all detector configurations are cylindrical. If your new detector configuration has a different shape, further changes will be necessary.
 
 \subsection{Add a New Detector Material}\label{sec:new-detector-material}
 
