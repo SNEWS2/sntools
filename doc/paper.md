@@ -23,7 +23,7 @@ affiliations:
    index: 1
  - name: University of Sheffield
    index: 2
-date: 26 May 2020 # TODO
+date: 7 September 2020 # TODO
 bibliography: documentation.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -33,7 +33,6 @@ aas-journal: Astrophysical Journal # The name of the AAS journal.
 ---
 
 # Summary
-sntools is an event generator for supernova burst neutrinos.
 Supernovae are stellar explosions that produce many of the chemical elements
 necessary for life to exist and form neutron stars and black holes.
 However, despite millennia of observations and almost a century of in-depth
@@ -51,8 +50,9 @@ energy-dependent cross-sections for all relevant interaction channels.
 These data sets can then be used as input for a full detector simulation and
 event reconstruction toolchain.
 
-sntools is written in Python and makes extensive use of the numpy [@Walt2011]
-and scipy [@Virtanen2020] frameworks.
+# Statement of Need
+sntools is an event generator for supernova burst neutrinos which is written in
+Python and makes extensive use of numpy [@Walt2011] and scipy [@Virtanen2020].
 It currently supports multiple detector configurations using either water,
 liquid scintillator or water-based liquid scintillator as a detection material.
 It also supports several different input formats for neutrino fluxes from
