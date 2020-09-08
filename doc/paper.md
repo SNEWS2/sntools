@@ -8,7 +8,7 @@ tags:
 authors:
   - name: Jost Migenda
     orcid: 0000-0002-5350-8049
-    affiliation: 1 # (Multiple affiliations must be quoted)
+    affiliation: "1,2" # (Multiple affiliations must be quoted)
   - name: Susan Cartwright # TODO: ORCID identifier
     affiliation: 2
   - name: Liz Kneale
@@ -23,7 +23,7 @@ affiliations:
    index: 1
  - name: University of Sheffield
    index: 2
-date: 7 September 2020 # TODO
+date: 8 September 2020 # TODO
 bibliography: documentation.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
