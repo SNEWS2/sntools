@@ -79,6 +79,7 @@ def main():
     input = args.input_file
     format = args.format
     output = args.output
+    mcformat = args.mcformat
     distance = args.distance
     starttime = args.starttime
     endtime = args.endtime
@@ -90,6 +91,7 @@ def main():
         print("hierarchy  =", hierarchy)
         print("input file =", input, "--- format =", format)
         print("output     =", output)
+        print("mcformat   =", mcformat)
         print("detector   =", detector)
         print("distance   =", distance)
         print("starttime  =", starttime)
@@ -127,10 +129,15 @@ def main():
         if verbose:  # write parameters to file as a comment
             outfile.write("# Generated on %s with the options:\n" % datetime.now())
             outfile.write("# " + str(args) + "\n")
-        for (i, evt) in enumerate(events):
-            evt.vertex = detector.generate_random_vertex()
-            outfile.write(evt.nuance_string(i))
-        outfile.write("$ stop\n")
+        if mcformat == 'NUANCE':
+            for (i, evt) in enumerate(events):
+                evt.vertex = detector.generate_random_vertex()
+                outfile.write(evt.nuance_string(i))
+            outfile.write("$ stop\n")
+        if mcformat == 'RATPAC':
+            for (i, evt) in enumerate(events):
+                evt.vertex = detector.generate_random_vertex()
+                outfile.write(evt.ratpac_string(i))
 
 
 def parse_command_line_options():
@@ -148,6 +155,11 @@ def parse_command_line_options():
     default = "outfile.kin"
     parser.add_argument("-o", "--output", metavar="FILE", default=default,
                         help="Name of the output file. Default: '%s'." % default)
+
+    choices = ["NUANCE", "RATPAC"]
+    default = "NUANCE"
+    parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=default,
+                        help="MC output format for simulations. Choices: %s. Default: %s." % (choices, default))
 
     choices = ["noosc", "normal", "inverted"]
     default = choices[0]
