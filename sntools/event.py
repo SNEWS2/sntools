@@ -35,3 +35,33 @@ class Event(object):
             s += "$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, e, dirx, diry, dirz)
         s += "$ end\n"
         return s
+
+    def ratpac_string(self, i):
+        """Return RAT-PAC readable HEPEVT-style representation of event for writing to output file.
+
+        Input:
+            i: number of event
+        Output:
+            String describing event."""
+
+        GeV = 0.001   # convert from MeV
+        mm = 10       # convert from cm
+        ns = 1000000  # convert from ms
+        
+        s = "%i\n"  % len(self.outgoing_particles)
+        for (pid, e, dirx, diry, dirz) in self.outgoing_particles:
+            mass = 0.0
+            dt = self.time
+            if pid == 11 or pid == -11:
+                mass = 0.5109907
+            if pid == 22:
+                mass = 0.0
+            if pid == 2112:
+                mass = 939.56563
+            p2 = (e**2) - (mass**2)
+            p = p2**0.5
+            px = dirx*p
+            py = diry*p
+            pz = dirz*p
+            s += "1 %i 0 0 %.8e %.8e %.8e %.8e %.5e %.5e %.5e %.5e\n" % (pid, px*GeV, py*GeV, pz*GeV, mass*GeV, dt*ns, self.vertex[0]*mm, self.vertex[1]*mm, self.vertex[2]*mm)
+        return s
