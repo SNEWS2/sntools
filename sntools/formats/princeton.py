@@ -8,8 +8,8 @@ where the spectral luminosity is split in 20 energy bins per flavor.
 See parsing code below for details.
 """
 
-from math import ceil, floor
 from scipy import interpolate
+from sntools.formats import get_endtime, get_starttime
 
 
 def parse_input(input, inflv, starttime, endtime):
@@ -56,19 +56,8 @@ def parse_input(input, inflv, starttime, endtime):
 
         dNLdE[time] = interpolate.pchip(ebins, diff_number_flux)
 
-    # Compare start/end time entered by user with first/last line of input file
-    _starttime = times[0]
-    _endtime = times[-1]
-
-    if not starttime:
-        starttime = ceil(_starttime)
-    elif starttime < _starttime:
-        raise ValueError("Start time must be at least %f (first line of input file)." % _starttime)
-
-    if not endtime:
-        endtime = floor(_endtime)
-    elif endtime > _endtime:
-        raise ValueError("End time must be at least %f (last line of input file)." % _endtime)
+    starttime = get_starttime(starttime, times[0])
+    endtime = get_endtime(endtime, times[-1])
 
     # if user entered a custom start/end time, find indices of relevant time bins
     i_min, i_max = 0, len(times) - 1
