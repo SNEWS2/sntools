@@ -323,6 +323,10 @@ and therefore,
 Thus, the shape of the spectral number luminosity is uniquely determined by the mean energy \mean{E_\nu} and the mean squared energy \mean{E_\nu^2}, while the normalization is provided by $L / \mean{E_\nu}$.
 To determine the spectral number luminosity at arbitrary times, each of the three parameters is interpolated separately before calculating the spectral number luminosity using the interpolated values.
 
+\subsubsection{Warren2020 Format}
+Files in this format contain, for each time step $t_n$, the luminosity $L$, mean energy $\mean{E_\nu}$ and RMS energy $\sqrt{\mean{E_\nu^2}}$ of neutrinos in the HDF5 format.
+After reading data from the input file, it is processed as described in section~\ref{sec:format-gamma}.
+
 \subsubsection{Nakazato Format}
 Files in this format\footnote{See \url{http://asphwww.ph.noda.tus.ac.jp/snn/guide.pdf} for more details.} contain, for 20 energy bins $E_k$ during each time step $t_n$, the quantities $\Delta N_k (t_n) / \Delta E_k$ and $\Delta L_k (t_n) / \Delta E_k$, which reflect the number luminosity and luminosity at those energies, respectively.
 For each energy bin, sntools calculates the mean energy within that bin, which is given by
