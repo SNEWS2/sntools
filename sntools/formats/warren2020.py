@@ -6,9 +6,8 @@ for description of the models.
 """
 
 import h5py
-from math import ceil, floor
 
-from sntools.formats import gamma
+from sntools.formats import gamma, get_starttime, get_endtime
 
 flux = {}
 
@@ -29,19 +28,8 @@ def parse_input(input, inflv, starttime, endtime):
             tbounce = t * 1000  # convert to ms
             break
 
-    # Compare start/end time entered by user with first/last line of input file
-    _starttime = 1000 * f['sim_data']['shock_radius'][0][0] - tbounce
-    _endtime = 1000 * f['sim_data']['shock_radius'][-1][0] - tbounce
-
-    if starttime is None:
-        starttime = ceil(_starttime)
-    elif starttime < _starttime:
-        raise ValueError("Start time must be at least %f (first line of input file)." % _starttime)
-
-    if endtime is None:
-        endtime = floor(_endtime)
-    elif endtime > _endtime:
-        raise ValueError("End time must be at least %f (last line of input file)." % _endtime)
+    starttime = get_starttime(starttime, 1000 * f['sim_data']['shock_radius'][0][0] - tbounce)
+    endtime = get_endtime(endtime, 1000 * f['sim_data']['shock_radius'][-1][0] - tbounce)
 
     # Save flux data to dictionary to look up in nu_emission() below
     global flux
