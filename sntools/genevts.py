@@ -137,7 +137,7 @@ def main():
         if mcformat == 'RATPAC':
             for (i, evt) in enumerate(events):
                 evt.vertex = detector.generate_random_vertex()
-                outfile.write(evt.ratpac_string(i))
+                outfile.write(evt.ratpac_string(i, events))
 
 
 def parse_command_line_options():
