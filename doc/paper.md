@@ -87,7 +87,9 @@ the sntools GitHub repository.
 
 # Acknowledgements
 We want to thank members of the Hyper-Kamiokande software, astrophysics and
-DAQ working groups as well as Yan-Jie Schnellbach for valuable discussions.
+DAQ working groups for valuable discussions. We also want to thank Yan-Jie
+Schnellbach for advice on implementing the WATCHMAN detector and Gabriel
+Orebi Gann and Michael Wurm for advice on implementing the THEIA detector.
 
 
 # References
