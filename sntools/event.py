@@ -36,11 +36,12 @@ class Event(object):
         s += "$ end\n"
         return s
 
-    def ratpac_string(self, i):
+    def ratpac_string(self, i, events):
         """Return RAT-PAC readable HEPEVT-style representation of event for writing to output file.
 
         Input:
             i: number of event
+            events: list of all events
         Output:
             String describing event."""
 
@@ -48,10 +49,13 @@ class Event(object):
         mm = 10       # convert from cm
         ns = 1000000  # convert from ms
         
+        dt = self.time
+        if i > 0:
+            dt -= events[i-1].time
+        
         s = "%i\n"  % len(self.outgoing_particles)
         for (pid, e, dirx, diry, dirz) in self.outgoing_particles:
             mass = 0.0
-            dt = self.time
             if pid == 11 or pid == -11:
                 mass = 0.5109907
             if pid == 22:
