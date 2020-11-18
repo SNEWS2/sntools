@@ -54,7 +54,7 @@ class Event(object):
             dt -= events[i-1].time
         
         s = "%i\n"  % len(self.outgoing_particles)
-        for (pid, e, dirx, diry, dirz) in self.outgoing_particles:
+        for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
             mass = 0.0
             if pid == 11 or pid == -11:
                 mass = 0.5109907
@@ -67,5 +67,7 @@ class Event(object):
             px = dirx*p
             py = diry*p
             pz = dirz*p
+            if idx > 0:
+                dt = 0.0
             s += "1 %i 0 0 %.8e %.8e %.8e %.8e %.5e %.5e %.5e %.5e\n" % (pid, px*GeV, py*GeV, pz*GeV, mass*GeV, dt*ns, self.vertex[0]*mm, self.vertex[1]*mm, self.vertex[2]*mm)
         return s
