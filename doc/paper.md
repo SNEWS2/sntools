@@ -16,6 +16,9 @@ authors:
     affiliation: 2
   - name: Matthew Malek # TODO: ORCID identifier
     affiliation: 2
+  - name: Yan-Jie Schnellbach
+    orcid: 0000-0002-6007-105X
+    affiliation: 3
   - name: Owen Stone # TODO: ORCID identifier
     affiliation: 2
 affiliations:
@@ -23,7 +26,9 @@ affiliations:
    index: 1
  - name: University of Sheffield
    index: 2
-date: 8 September 2020 # TODO
+ - name: University of Liverpool
+   index: 3
+date: 18 November 2020 # TODO
 bibliography: documentation.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -87,8 +92,7 @@ the sntools GitHub repository.
 
 # Acknowledgements
 We want to thank members of the Hyper-Kamiokande software, astrophysics and
-DAQ working groups for valuable discussions. We also want to thank Yan-Jie
-Schnellbach for advice on implementing the WATCHMAN detector and Gabriel
+DAQ working groups for valuable discussions. We also want to thank Gabriel
 Orebi Gann and Michael Wurm for advice on implementing the THEIA detector.
 
 
