@@ -12,7 +12,7 @@ Then, in a terminal, run
 pip install sntools
 ```
 to install the latest version of sntools and all dependencies.
-(sntools currently requires numpy 1.8 (or higher) and scipy 0.17 (or higher).)
+(sntools currently requires at least numpy 1.8, scipy 0.17 and h5py 2.10, but newer versions are recommended.)
 
 You can then run
 ```
@@ -38,6 +38,9 @@ If you use these included models in your work, please cite [Nakazato et al., ApJ
 
 #### Gamma format
 Text file containing time, mean energy, mean squared energy and luminosity. These parameters describe a Gamma distribution, [which is a good fit to the true spectrum](https://arxiv.org/abs/1211.3920). See `fluxes/sample-gamma.txt` for an unphysical sample file.
+
+#### Warren2020 format
+Similar to the Gamma format, but in an HDF5 file instead of plain text. Data [available online](https://zenodo.org/record/3952926).
 
 #### Princeton format
 Used in [recent simulations](https://arxiv.org/abs/1804.00689) by the Princeton group.

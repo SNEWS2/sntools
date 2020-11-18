@@ -6,8 +6,9 @@ All times are post-bounce, which differs slightly from the simulation time given
 in the raw input files. We fix this when reading from the files in _parse().
 """
 
-from math import ceil, floor, gamma, exp, log10
+from math import log10
 from scipy.interpolate import InterpolatedUnivariateSpline
+from sntools.formats import get_endtime, get_starttime
 
 zero = 1e-99  # not exactly zero to ensure log interpolation is still possible
 
@@ -33,19 +34,8 @@ def parse_input(input, inflv, starttime, endtime):
     _calculate_dNLde()  # calculate number luminosity for early and late files
     times = times_el
 
-    # Compare start/end time entered by user with first/last line of input file
-    _starttime = times[0]
-    _endtime = times[-1]
-
-    if not starttime:
-        starttime = ceil(_starttime)
-    elif starttime < _starttime:
-        raise ValueError("Start time must be at least %f (first line of input file)." % _starttime)
-
-    if not endtime:
-        endtime = floor(_endtime)
-    elif endtime > _endtime:
-        raise ValueError("End time must be at least %f (last line of input file)." % _endtime)
+    starttime = get_starttime(starttime, times[0])
+    endtime = get_endtime(endtime, times[-1])
 
     # If user entered a custom start/end time, select only relevant time bins
     i_min, i_max = 0, len(times) - 1

@@ -7,8 +7,9 @@ with one entry per line. We assume that the data follows a gamma distribution
 See the file 'fluxes/sample-gamma.txt' for details.
 """
 
-from math import ceil, floor, gamma, exp
+from math import gamma, exp
 from scipy import interpolate
+from sntools.formats import get_endtime, get_starttime
 
 
 def parse_input(input, inflv, starttime, endtime):
@@ -28,19 +29,8 @@ def parse_input(input, inflv, starttime, endtime):
     for entry in raw_indata:
         entry[0] *= 1000  # convert time to ms
 
-    # Compare start/end time entered by user with first/last line of input file
-    _starttime = raw_indata[0][0]
-    _endtime = raw_indata[-1][0]
-
-    if not starttime:
-        starttime = ceil(_starttime)
-    elif starttime < _starttime:
-        raise ValueError("Start time must be at least %f (first line of input file)." % _starttime)
-
-    if not endtime:
-        endtime = floor(_endtime)
-    elif endtime > _endtime:
-        raise ValueError("End time must be at least %f (last line of input file)." % _endtime)
+    starttime = get_starttime(starttime, raw_indata[0][0])
+    endtime = get_endtime(endtime, raw_indata[-1][0])
 
     # Ignore data outside of the requested time span.
     indata = []
