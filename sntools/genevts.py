@@ -81,8 +81,8 @@ def main():
     output = args.output
     mcformat = args.mcformat
     distance = args.distance
-    starttime = args.starttime if args.starttime else None
-    endtime = args.endtime if args.endtime else None
+    starttime = args.starttime
+    endtime = args.endtime
     seed = args.randomseed
     verbose = args.verbose
 
@@ -146,11 +146,11 @@ def parse_command_line_options():
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-    choices = ["gamma", "nakazato", "princeton", "totani"]
+    choices = ["gamma", "nakazato", "princeton", "totani", "warren2020"]
     default = "totani"
     parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=default,
                         help="Format of input files. See parsers in folder 'formats/' \
-                              for details. Choices: %s. Default: %s" % (choices, default))
+                              for details. Choices: %s. Default: '%s'." % (choices, default))
 
     default = "outfile.kin"
     parser.add_argument("-o", "--output", metavar="FILE", default=default,
@@ -164,7 +164,7 @@ def parse_command_line_options():
     choices = ["noosc", "normal", "inverted"]
     default = choices[0]
     parser.add_argument("-H", "--hierarchy", "--ordering", metavar="HIERARCHY", choices=choices, default=default,
-                        help="Oscillation scenario. Choices: %s. Default: %s" % (choices, default))
+                        help="Oscillation scenario. Choices: %s. Default: '%s'." % (choices, default))
 
     choices = ["ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc"]
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
@@ -172,11 +172,11 @@ def parse_command_line_options():
                               electron scattering (es), nu_e + oxygen CC (o16e), nu_e-bar + oxygen CC \
                               (o16eb), nu_e + carbon CC (c12e), nu_e-bar + carbon CC (c12eb) \
                               and nu + carbon NC (c12nc) are supported. \
-                              Choices: %s. Default: all supported channels" % choices)
+                              Choices: %s. Default: All supported channels." % choices)
 
     default = "HyperK"
     parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default=default,
-                        help="Detector configuration. Choices: %s. Default: %s" % (supported_detectors, default))
+                        help="Detector configuration. Choices: %s. Default: '%s'." % (supported_detectors, default))
 
     default = 10.0
     parser.add_argument("--distance", type=float, default=default,
