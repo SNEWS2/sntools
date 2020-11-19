@@ -62,4 +62,4 @@ For details, see the files in `interaction_channels/`.
 
 
 ## Output
-A .kin file in the NUANCE format used by the /mygen/vecfile options in WCSim. See [the format documentation](http://neutrino.phy.duke.edu/nuance-format/) for details.
+A text file in the NUANCE format (used by the `/mygen/vecfile` options in WCSim) or the RATPAC format. See the documentation for details.

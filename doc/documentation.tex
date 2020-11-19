@@ -76,9 +76,11 @@ The input file is a required argument. The following optional arguments are avai
 \begin{description}
 \item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
 \item[\texttt{--output <value>}] Name of the output file.
-\item[\texttt{--ordering <value>}] Neutrino mass ordering. See section~\ref{sec:mass-ordering}.
-\item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
+\item[\texttt{--mcformat <value>}] Format of output file. Can be \texttt{NUANCE} or \texttt{RATPAC}.\footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external}.}
+
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
+\item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
+\item[\texttt{--ordering <value>}] Neutrino mass ordering. See section~\ref{sec:mass-ordering}.
 \item[\texttt{--distance <value>}] Distance to supernova (in kpc).
 \item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
 \item[\texttt{--randomseed <value>}] Set an integer as a seed for the random number generator, to generate events reproducibly.\footnote{Note: Python 2.7 will not give identical results to Python 3.x for the oxygen-16 CC channels.}
@@ -119,7 +121,7 @@ Input format plug-ins provide functions that read in the data from an input file
 Interaction channel plug-ins specify properties of the interaction channel, like the neutrino species that undergo this interaction, and provide functions to calculate quantities like the differential cross section $\tdiffx{\sigma (E_\nu, E_e)}{E_e}$ or the kinematically allowed energy range.
 This modular design makes sntools easily extensible, with roughly 100 lines of code required to add a new input format or interaction channel.
 
-Finally, \texttt{genevts.py} collects the events generated in all interaction channels and writes them to a text file in the NUANCE format\footnote{See \url{http://neutrino.phy.duke.edu/nuance-format/} for a description of this format.}, which can be used as an input file for a full detector simulation.
+Finally, \texttt{genevts.py} collects the events generated in all interaction channels and writes them to an output file, which can be used as input for a full detector simulation.
 
 The rest of this chapter describes the various components of the code and the physics behind them in more detail.
 
