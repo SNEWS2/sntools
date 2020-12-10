@@ -4,6 +4,8 @@ sntools is a Monte Carlo event generator for supernova neutrino interactions.
 Based on detailed time- and energy-dependent neutrino fluxes provided by various supernova models, it generates interactions within the detector volume and writes them to event files that can be used as an input for a full detector simulation.
 sntools was originally developed for Hyper-Kamiokande and later extended to support different detectors and detector materials.
 
+This README file should give a brief overview over sntools and help you get started. For more information, see the [full documentation for each release on GitHub](https://github.com/JostMigenda/sntools/releases).
+
 ## Getting Started
 First, make sure you have Python installed on your computer. (Either Python 2.7 or Python 3.x is fine.)
 
@@ -30,7 +32,7 @@ This generates events for a supernova in Hyper-Kamiokande, assuming normal mass 
 ## Input
 Text file(s) containing information about neutrino fluxes produced by the supernova.
 sntools distinguishes between three flavours: nu_e, anti-nu_e and nu_x (where nu_x stands for nu_mu or nu_tau or their respective antineutrinos).
-The following input formats are supported; see the source files in the `formats/` directory for details.
+The following input formats are supported.
 
 #### Nakazato format
 Used by recent simulations by the Nakazato group. Fluxes for 13 and 20 solar mass progenitors are included as `fluxes/intp1301.data` and `fluxes/intp2001.data`. [A description of the format and fluxes for more progenitors are available online.](http://asphwww.ph.noda.tus.ac.jp/snn/index.html)
@@ -58,8 +60,6 @@ For liquid scintillator detectors, these are inverse beta decay, elastic scatter
 
 Water-based liquid scintillator, a mixture of the two materials, is also supported.
 
-For details, see the files in `interaction_channels/`.
-
 
 ## Output
-A text file in the NUANCE format (used by the `/mygen/vecfile` options in WCSim) or the RATPAC format. See the documentation for details.
+A text file in the NUANCE format (used by the `/mygen/vecfile` options in WCSim) or the RATPAC format.
