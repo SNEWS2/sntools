@@ -7,6 +7,7 @@ sntools was originally developed for Hyper-Kamiokande and later extended to supp
 This README file should give a brief overview over sntools and help you get started. For more information, see the [full documentation for each release on GitHub](https://github.com/JostMigenda/sntools/releases).
 
 ## Getting Started
+### Installation Instructions
 First, make sure you have Python installed on your computer. (Either Python 2.7 or Python 3.x is fine.)
 
 Then, in a terminal, run
@@ -21,12 +22,21 @@ You can then run
 sntools -h
 ```
 for a brief summary of all of sntools’ options.
-A typical usage will look something like this:
+
+### Example Usage
+
+To generate your first supernova neutrino events with sntools, open a terminal window and type in the following command:
 ```
-sntools fluxes/intp2001.data --format nakazato --ordering normal --detector HyperK
+sntools fluxes/intp2001.data --format nakazato --endtime 50
 ```
-This generates events for a supernova in Hyper-Kamiokande, assuming normal mass ordering and the neutrino flux given in the input file `fluxes/intp2001.data`, which is in the `nakazato` format.
-(That sample file is included in the sntools repository. See [this web page](http://asphwww.ph.noda.tus.ac.jp/snn/index.html) for more information.)
+This generates events for the first 50 ms of a supernova based on the neutrino flux given in the input file `fluxes/intp2001.data` (which is in the `nakazato` format) and writes them to a file named `outfile.kin` in the current directory.
+(This sample input file is included in the sntools repository. See [this web page](http://asphwww.ph.noda.tus.ac.jp/snn/index.html) for more information.)
+
+A more realistic usage that demonstrates more of sntools’ capabilities looks like this:
+```
+sntools fluxes/intp2001.data --format nakazato --channel es --detector SuperK --distance 20 --verbose --output intp2001es.kin
+```
+This uses the neutrino flux given in the same input file to generate neutrino-electron elastic scattering events in Super-Kamiokande for a supernova at 20 kpc distance. It also produces more verbose output, which lets you see that sntools generates events separately for different neutrino flavours (which have different fluxes and cross sections), before merging them into an output file named `intp2001es.kin`.
 
 
 ## Input
