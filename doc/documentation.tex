@@ -83,7 +83,7 @@ The input file is a required argument. The following optional arguments are avai
 \begin{description}
 \item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
 \item[\texttt{--output <value>}] Name of the output file.
-\item[\texttt{--mcformat <value>}] Format of output file. Can be \texttt{NUANCE} or \texttt{RATPAC}.\footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external}.}
+\item[\texttt{--mcformat <value>}] Format of output file. Can be \texttt{NUANCE} (used e.\,g. by Hyper-Kamiokande) or \texttt{RATPAC} (used e.\,g. by WATCHMAN).\footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external}.}
 
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
 \item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
@@ -300,7 +300,8 @@ These are not currently included in sntools.%
 
 
 \subsection{Input Formats} \label{sec:input-formats}
-sntools supports multiple different input formats for the neutrino fluxes from a simulation, which can be selected using the \texttt{--format <value>} command line argument, where \texttt{<value>} can be one of \texttt{gamma}, \texttt{nakazato}, \texttt{princeton} or \texttt{totani}.
+sntools supports multiple different input formats for the neutrino fluxes from a simulation.
+To select one, use the \texttt{--format <value>} command line argument, where \texttt{<value>} can be one of \texttt{gamma}, \texttt{warren2020}, \texttt{nakazato}, \texttt{princeton} or \texttt{totani}.
 This section will briefly describe each format and the processing steps necessary to calculate the spectral number luminosity.
 
 All formats contain separate information on the three species \nue, \nuebar and \nux.
