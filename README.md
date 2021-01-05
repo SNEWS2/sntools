@@ -17,11 +17,11 @@ pip install sntools
 to install the latest version of sntools and all dependencies.
 (sntools currently requires at least numpy 1.8, scipy 0.17 and h5py 2.10, but newer versions are recommended.)
 
-You can then run
+Finally, run
 ```
-sntools -h
+python -c 'import sntools; sntools.setup()'
 ```
-for a brief summary of all of sntools’ options.
+to check whether sntools is working and to download the sample input file used below.
 
 ### Example Usage
 
@@ -37,6 +37,12 @@ A more realistic usage that demonstrates more of sntools’ capabilities looks l
 sntools fluxes/intp2001.data --format nakazato --channel es --detector SuperK --distance 20 --verbose --output intp2001es.kin
 ```
 This uses the neutrino flux given in the same input file to generate neutrino-electron elastic scattering events in Super-Kamiokande for a supernova at 20 kpc distance. It also produces more verbose output, which lets you see that sntools generates events separately for different neutrino flavours (which have different fluxes and cross sections), before merging them into an output file named `intp2001es.kin`.
+
+You can also run
+```
+sntools -h
+```
+to get an overview over all of sntools’ options.
 
 
 ## Input

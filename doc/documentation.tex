@@ -59,7 +59,7 @@ First, make sure you have Python\footnote{Python 3.5 or higher is strongly recom
 (If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
 In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
-Then, run \texttt{sntools --version} to check whether it’s working.
+Then, run \texttt{python -c 'import sntools; sntools.setup()'} to check whether sntools is working and to download the sample input file used below.
 
 
 \subsection{Quick Start Guide}
@@ -69,7 +69,6 @@ To generate your first supernova neutrino events with sntools, open a terminal w
 \texttt{sntools fluxes/intp2001.data --format nakazato --endtime 50}
 
 This generates events for the first \SI{50}{ms} of a supernova based on the neutrino flux given in the input file \texttt{fluxes/intp2001.data}\footnote{This sample file, which is for a \SI{20}{M_\odot} progenitor from~\cite{Nakazato2013}, is included as part of sntools. See \url{http://asphwww.ph.noda.tus.ac.jp/snn/} for more information.} (which is in the \texttt{nakazato} format) and writes them to a file named \texttt{outfile.kin} in the current directory.
-% TODO: This file is not currently included in the pip-based install.
 
 A more realistic usage that demonstrates more of sntools’ capabilities looks like this:
 
