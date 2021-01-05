@@ -73,3 +73,10 @@ Water-based liquid scintillator, a mixture of the two materials, is also support
 
 ## Output
 A text file in the NUANCE format (used by the `/mygen/vecfile` options in WCSim) or the RATPAC format.
+
+## Support and Contributing
+To report problems or ask for help, [open an issue on GitHub](https://github.com/JostMigenda/sntools/issues) or email the [lead developer](https://github.com/JostMigenda/).
+
+Contributions to sntools are welcome! See instructions in the [full documentation](https://github.com/JostMigenda/sntools/releases) for help on common ways to extend sntools (e. g. by adding a new detector, input format or interaction channel) and please submit a pull request with your contributions!
+
+Please note that this project is released with a Contributor Code of Conduct (see `CODE_OF_CONDUCT.md`). By participating in this project you agree to abide by its terms.
