@@ -55,6 +55,9 @@ sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and lat
 
 
 \subsection{Installation Instructions}
+% sntools should support *at least* the python/scipy/numpy versions required by NEP 29:
+% https://numpy.org/neps/nep-0029-deprecation_policy.html
+
 First, make sure you have Python\footnote{Python 3.5 or higher is strongly recommended, though Python 2.7 is still supported.} installed on your computer.
 (If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
@@ -374,25 +377,24 @@ Finally, a linear interpolation in time and log cubic spline interpolation in en
 
 
 
-\section{Contributing to sntools}
+\section{Getting Help and Contributing}
 
-%license
-%Contributor Covenant % https://www.contributor-covenant.org
-%how to make a PR on GitHub, writing and running unit tests, etc.
+To report problems or ask for help, \href{https://github.com/JostMigenda/sntools/issues}{open an issue on GitHub} or email the lead developer (see title page of this document).
 
-% sntools should support *at least* the python/scipy/numpy versions required by NEP 29:
-% https://numpy.org/neps/nep-0029-deprecation_policy.html
+sntools is designed to be versatile and support many different detectors and input formats.
+\textbf{Your contributions are welcome!}
+To help extend sntools, follow these steps:
 
-Clone the GitHub repository and run \texttt{pip install -r requirements.txt} to install all dependencies.
-Then, edit the code---see below for help with that.
-To run the code you developed, use \texttt{python sntools/genevts.py [arguments]} instead of \texttt{sntools [arguments]}.
+\begin{itemize}
+	\item Clone the GitHub repository and run \texttt{pip install -r requirements.txt} to install all dependencies.
+	\item Then, edit the code---see the subsections below for help with the most common ways to extend sntools.
+	\item To run the code you developed, use \texttt{python sntools/genevts.py [arguments]} instead of \texttt{sntools [arguments]}.
+	\item To ensure that your changes have not introduced any bugs, run \texttt{python -m unittest discover} from the top-level directory of the repository. (Tests will also run automatically whenever you submit a pull request on GitHub.)
+	\item Finally, please \href{https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests}{submit a pull request} with your contributions!
+\end{itemize}
 
-The following sections contain brief instructions for the most common ways to extend sntools.
-If you do this, please give your contributions back to the community by \href{https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests}{submitting a pull request}.
-
-sntools uses the \texttt{unittest} module in the Python standard library.
-Simply run \texttt{python -m unittest discover} from its top-level directory to check whether all tests are passing.
-Tests will also run automatically whenever you submit a pull request on GitHub.
+sntools is released under a BSD license (see \texttt{LICENSE.md}) and with a Contributor Code of Conduct (see \texttt{CODE\_OF\_CONDUCT.md}).
+By participating in this project you agree to abide by its terms.
 
 
 \subsection{Add a New Detector Configuration}\label{sec:new-detector-config}
