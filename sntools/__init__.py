@@ -56,7 +56,7 @@ def setup():
     
     test_sha = "6173ea086aab0590212d0207612d57a46184f7569d0205d322fe3b5689f5f700"
     if output_sha == test_sha:
-        print("\u2705 Everything seems to work fine. Enjoy using sntools!")
+        print(u"\u2705 Everything seems to work fine. Enjoy using sntools!")
     else:
         print(u"\u274c Error: Test did not generate the expected events.\n"
               u"\u274c Please ensure you have installed the most recent version of sntools and all dependencies.\n"
