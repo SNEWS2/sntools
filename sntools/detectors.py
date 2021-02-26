@@ -37,7 +37,7 @@ def wbls(x):
 
 
 # List of supported detector configurations
-supported_detectors = ["HyperK", "SuperK",
+supported_detectors = ["HyperK", "HyperKDR", "SuperK",
                        "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
                        "THEIA25", "THEIA100"]
 
@@ -51,7 +51,11 @@ class Detector(object):
             self.shape = "cylinder"
             self.height = 6580
             self.radius = 6480 / 2
-            # 2018 Design Report: radius = 7080 / 2; height = 5480
+            self.material = water
+        elif name == "HyperKDR":  # 2018 Design Report (outdated, only for backwards compatibility)
+            self.shape = "cylinder"
+            self.height = 5480
+            self.radius = 7080 / 2
             self.material = water
         elif name == "SuperK":  # inner detector only
             self.shape = "cylinder"
