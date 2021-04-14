@@ -28,13 +28,16 @@ affiliations:
    index: 2
  - name: University of Liverpool
    index: 3
-date: 18 November 2020 # TODO
+date: 14 April 2021
 bibliography: documentation.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
 # https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
 aas-doi: 10.3847/1538-4357/abf7c4 # Update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal # The name of the AAS journal.
+aas-journal: The Astrophysical Journal # The name of the AAS journal.
+
+# This paper will be published in JOSS as DOI:10.21105/joss.2877
+# See full review: https://github.com/openjournals/joss-reviews/issues/2877
 ---
 
 # Summary
