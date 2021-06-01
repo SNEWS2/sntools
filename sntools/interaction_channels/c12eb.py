@@ -10,6 +10,7 @@ total cross section, we approximate a DiracDelta function with one that is
 """
 
 from sntools.event import Event
+from sntools.interaction_channels import cherenkov_threshold
 
 e_thr = 14.39  # energy threshold of this reaction (arXiv:1507.05613, p. 74)
 epsilon = 0.001  # for approximating DiracDelta distribution below
@@ -34,7 +35,7 @@ def generate_event(eNu, dirx, diry, dirz):
 possible_flavors = ["eb"]
 
 # List with minimum & maximum energy of incoming neutrino.
-bounds_eNu = [e_thr + 0.8, 100]  # 0.8 MeV = Cherenkov threshold of positron
+bounds_eNu = [e_thr + cherenkov_threshold, 100]
 
 
 def bounds_eE(eNu, *args):

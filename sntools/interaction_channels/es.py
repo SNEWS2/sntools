@@ -20,6 +20,7 @@ from math import pi, sqrt, log
 from scipy import integrate
 
 from sntools.event import Event
+from sntools.interaction_channels import cherenkov_threshold
 
 
 def generate_event(eNu, dirx, diry, dirz):
@@ -122,7 +123,7 @@ def dSigma_dE(eNu, eE):
                                     + gR**2 * ((1 - z)**2 + alpha / pi * f2)
                                     - gR * gL * mE / eNu * z * (1 + alpha / pi * f3))
     if result < 0:
-        if eNu < 0.8:
+        if eNu < cherenkov_threshold:
             # Approximations in f_* may be imprecise at very low energies.
             # This is below threshold in HK anyway, so we suppress it.
             result = 0
