@@ -158,7 +158,7 @@ def dSigma_dCosT(eNu, cosT):
     return dE_dCosT * dSigma_dE(eNu, eE)
 
 
-eE_min = 0.77  # Cherenkov threshold in water (refraction index n=1.34)
+eE_min = cherenkov_threshold
 
 
 def bounds_eE(eNu, *args):  # ignore additional arguments handed over by integrate.nquad()

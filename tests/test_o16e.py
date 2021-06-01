@@ -53,7 +53,7 @@ class O16ETest(CrossSectionTest):
     )
 
     # value of bounds_eNu[0]
-    test_bounds_eNu_minvalue = 16.01
+    test_bounds_eNu_minvalue = 15.98
 
 
 # ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
