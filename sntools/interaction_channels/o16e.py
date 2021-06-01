@@ -18,6 +18,7 @@ from math import log10
 import random
 
 from sntools.event import Event
+from sntools.interaction_channels import cherenkov_threshold
 
 epsilon = 0.001  # for approximating DiracDelta distribution below
 
@@ -48,7 +49,7 @@ def generate_event(eNu, dirx, diry, dirz):
 possible_flavors = ["e"]
 
 # List with minimum & maximum energy of incoming neutrino.
-bounds_eNu = [fit_parameters[1][0] + 0.8, 100]  # 0.8 MeV = Cherenkov threshold of electron
+bounds_eNu = [fit_parameters[1][0] + cherenkov_threshold, 100]
 
 
 def bounds_eE(eNu, *args):
@@ -62,7 +63,7 @@ def bounds_eE(eNu, *args):
     """
     # smallest eE is at largest (allowed) excitation energy
     for g in range(1, 5):
-        if eNu > fit_parameters[g][0] + epsilon:
+        if eNu >= fit_parameters[g][0] + cherenkov_threshold:
             eMin = eNu - fit_parameters[g][0] - epsilon
 
     # largest eE is at smallest excitation energy
@@ -81,7 +82,7 @@ def get_eE(eNu, cosT=0):
     # find allowed excitation energies
     allowed = []
     for g in range(1, 5):
-        if eNu > fit_parameters[g][0] + epsilon:
+        if eNu >= fit_parameters[g][0] + cherenkov_threshold:
             eE = eNu - fit_parameters[g][0]
             sigma = partial_dSigma_dE(eNu, eE, g)
             allowed.append([eE, sigma])
