@@ -48,7 +48,7 @@ class C12ETest(CrossSectionTest):
     )
 
     # value of bounds_eNu[0]
-    test_bounds_eNu_minvalue = 18.138
+    test_bounds_eNu_minvalue = 18.108
 
 
 # ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
