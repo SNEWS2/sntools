@@ -49,7 +49,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
 
     # integrate over eE and then eNu to obtain the event rate at time t
-    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
+    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
                  for t in raw_times]
     event_rate = interpolate.pchip(raw_times, raw_nevts)
 
@@ -71,7 +71,7 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
 
     if verbose:  # compute events above threshold energy `thr_e`
         thr_bounds_eE = lambda _eNu, *args: [max(thr_e, channel.bounds_eE(_eNu)[0]), max(thr_e, channel.bounds_eE(_eNu)[1])]
-        thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts,{}])[0]
+        thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
                          for t in raw_times]
         thr_event_rate = interpolate.pchip(raw_times, thr_raw_nevts)
         thr_binned_nevt_th = thr_event_rate(binned_t)
@@ -103,9 +103,9 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
     return events
 
 
-"""Helper functions."""
-# double differential event rate
+# Helper functions
 def ddEventRate(eE, eNu, time):
+    """Double differential event rate."""
     return channel.dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
 
 
@@ -117,8 +117,8 @@ def dFlux_dE(eNu, time):
     return cached_flux[(eNu, time)]
 
 
-# get a value from an arbitrary distribution dist
 def rejection_sample(dist, min_val, max_val, n_bins=100):
+    """Sample value from an arbitrary distribution."""
     p_max = 0
     j_max = 0
     bin_width = float(max_val - min_val) / n_bins
@@ -147,8 +147,8 @@ def rejection_sample(dist, min_val, max_val, n_bins=100):
     return val
 
 
-# use rejection sampling to get the energy of an interacting neutrino
 def get_eNu(time):
+    """Get energy of interacting neutrino using rejection sampling."""
     dist = lambda _eNu: integrate.quad(
         ddEventRate, *channel.bounds_eE(_eNu), args=(_eNu, time), points=channel._opts(_eNu)["points"]
     )[0]
@@ -156,8 +156,10 @@ def get_eNu(time):
     return eNu
 
 
-# get direction of outgoing particle (incoming neutrino moves in z direction)
 def get_direction(eNu):
+    """Get direction of outgoing particle using rejection sampling.
+    (Assumes that incoming neutrino with energy eNu moves in z direction.)
+    """
     dist = lambda _cosT: channel.dSigma_dCosT(eNu, _cosT)
     cosT = rejection_sample(dist, -1, 1, 200)
     sinT = sin(acos(cosT))
