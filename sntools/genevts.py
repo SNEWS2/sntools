@@ -29,7 +29,7 @@ from sntools.detectors import Detector, supported_detectors
 
 import sys
 if sys.version_info < (3, 6):
-    print(u"\u274c WARNING: You are using Python %s.%s.%s, which is not supported any more." %
+    print(u"\u274c WARNING:".encode('utf-8'), "You are using Python %s.%s.%s, which is not supported any more." %
           (sys.version_info[0], sys.version_info[1], sys.version_info[2]))
     print(u"\u274c Future versions of sntools will require Python 3.6 or higher and it is recommended that you transition as soon as possible.")
     print(u"\u274c See https://github.com/JostMigenda/sntools/issues/29 for more information.\n")
