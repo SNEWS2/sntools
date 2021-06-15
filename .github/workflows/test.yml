@@ -30,6 +30,11 @@ jobs:
     - name: Run unit tests
       run: |
         python -m unittest discover
+    - name: Prepare integration test
+      run: |
+        # Setting environment variable: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+        # Eliminate UnicodeEncodeError under Python 2.7
+        echo "PYTHONIOENCODING=utf8:ignore" >> $GITHUB_ENV
     - name: Run integration test
       run: |
         # Generate output file
