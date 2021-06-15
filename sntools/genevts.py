@@ -29,10 +29,14 @@ from sntools.detectors import Detector, supported_detectors
 
 import sys
 if sys.version_info < (3, 6):
-    print(u"\u274c WARNING:".encode('utf-8'), "You are using Python %s.%s.%s, which is not supported any more." %
+    from sntools import tryprint
+    tryprint(u"\u274c", "[WARNING]")
+    print("You are using Python %s.%s.%s, which is not supported any more." %
           (sys.version_info[0], sys.version_info[1], sys.version_info[2]))
-    print(u"\u274c Future versions of sntools will require Python 3.6 or higher and it is recommended that you transition as soon as possible.")
-    print(u"\u274c See https://github.com/JostMigenda/sntools/issues/29 for more information.\n")
+    tryprint(u"\u274c", "[WARNING]")
+    print("Future versions of sntools will require Python 3.6 or higher and it is recommended that you transition as soon as possible.")
+    tryprint(u"\u274c", "[WARNING]")
+    print("See https://github.com/JostMigenda/sntools/issues/29 for more information.\n")
 
 # mixing parameters from P.A. Zyla et al. (Particle Data Group), Prog. Theor. Exp. Phys. 2020, 083C01 (2020)
 s12 = 0.307  # sin^2 theta_12
