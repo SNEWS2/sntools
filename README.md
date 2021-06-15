@@ -8,7 +8,7 @@ This README file should give a brief overview over sntools and help you get star
 
 ## Getting Started
 ### Installation Instructions
-First, make sure you have Python installed on your computer. (Either Python 2.7 or Python 3.x is fine.)
+First, make sure you have Python installed on your computer. (Python 3.6 or higher is recommended; support for earlier versions, including Python 2.7, will be removed in a future version of sntools.)
 
 Then, in a terminal, run
 ```
