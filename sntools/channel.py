@@ -12,7 +12,8 @@ from scipy import integrate, interpolate
 def setup(_channel, _format):
     global channel, format, cached_flux
     channel = import_module("sntools.interaction_channels." + _channel)
-    format = import_module("sntools.formats." + _format)
+    format_module = import_module("sntools.formats." + _format)
+    format = format_module.Flux()
 
     # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
     # often with repetitive arguments (when integrating ddEventRate over eE).

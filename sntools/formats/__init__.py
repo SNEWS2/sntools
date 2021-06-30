@@ -1,4 +1,20 @@
+from abc import ABC, abstractmethod
 from math import ceil, floor
+
+
+class BaseFlux(ABC):
+    """Abstract base class that defines the interface for all submodules in `sntools.formats`."""
+    @abstractmethod
+    def parse_input():
+        pass
+
+    @abstractmethod
+    def prepare_evt_gen():
+        pass
+
+    @abstractmethod
+    def nu_emission():
+        pass
 
 
 def get_starttime(starttime, minimum):
