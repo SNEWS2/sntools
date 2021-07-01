@@ -56,19 +56,19 @@ class Flux(BaseFlux):
 
             self.dNLdE[time] = interpolate.pchip(ebins, diff_number_flux)
 
-        starttime = get_starttime(starttime, self.times[0])
-        endtime = get_endtime(endtime, self.times[-1])
+        self.starttime = get_starttime(starttime, self.times[0])
+        self.endtime = get_endtime(endtime, self.times[-1])
 
         # if user entered a custom start/end time, find indices of relevant time bins
         i_min, i_max = 0, len(self.times) - 1
         for (i, time) in enumerate(self.times):
-            if time < starttime:
+            if time < self.starttime:
                 i_min = i
-            elif time > endtime:
+            elif time > self.endtime:
                 i_max = i
                 break
 
-        return (starttime, endtime, self.times[i_min : i_max + 1])
+        self.raw_times = self.times[i_min : i_max + 1]
 
     def prepare_evt_gen(self, binned_t):
         """Pre-compute values necessary for event generation.

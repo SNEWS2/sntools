@@ -35,22 +35,22 @@ class Flux(BaseFlux):
         self._calculate_dNLde()  # calculate number luminosity for early and late files
         self.times = self.times_el
 
-        starttime = get_starttime(starttime, self.times[0])
-        endtime = get_endtime(endtime, self.times[-1])
+        self.starttime = get_starttime(starttime, self.times[0])
+        self.endtime = get_endtime(endtime, self.times[-1])
 
         # If user entered a custom start/end time, select only relevant time bins
         i_min, i_max = 0, len(self.times) - 1
         for (i, time) in enumerate(self.times):
-            if time < starttime:
+            if time < self.starttime:
                 i_min = i
-            elif time > endtime:
+            elif time > self.endtime:
                 i_max = i
                 break
         self.times = self.times[i_min: i_max + 1]
 
         # nu_e fluxes during the neutronization burst (40-50 ms) are in a separate
         # file, with more precise time bins and a different format.
-        if inflv == "e" and starttime < 50:
+        if inflv == "e" and self.starttime < 50:
             self._parse_nb(input + "-nb.txt")
             self.times = sorted(self.times + self.times_nb)
 
@@ -60,7 +60,7 @@ class Flux(BaseFlux):
             log_dNLde = [log10(d) for d in self.dNLde_dict[time]]
             self.log_spectrum[time] = InterpolatedUnivariateSpline(log_group_e, log_dNLde)
 
-        return (starttime, endtime, self.times)
+        self.raw_times = self.times
 
     def prepare_evt_gen(self, binned_t):
         """Pre-compute values necessary for event generation.

@@ -29,15 +29,15 @@ class Flux(gamma.Flux):
                 tbounce = t * 1000  # convert to ms
                 break
 
-        starttime = get_starttime(starttime, 1000 * f['sim_data']['shock_radius'][0][0] - tbounce)
-        endtime = get_endtime(endtime, 1000 * f['sim_data']['shock_radius'][-1][0] - tbounce)
+        self.starttime = get_starttime(starttime, 1000 * f['sim_data']['shock_radius'][0][0] - tbounce)
+        self.endtime = get_endtime(endtime, 1000 * f['sim_data']['shock_radius'][-1][0] - tbounce)
 
         # Save flux data to dictionary to look up in nu_emission() below
         self.flux = {}
         path = {'e': 'nue_data', 'eb': 'nuae_data', 'x': 'nux_data', 'xb': 'nux_data'}[inflv]
         for i, (t, lum) in enumerate(f[path]['lum']):
             t = 1000 * t - tbounce  # convert to time post-bounce in ms
-            if (t < starttime - 30) or (t > endtime + 30):
+            if (t < self.starttime - 30) or (t > self.endtime + 30):
                 # Ignore data outside of the requested time span.
                 continue
 
@@ -48,4 +48,4 @@ class Flux(gamma.Flux):
             self.flux[t] = (mean_e, mean_e_sq, lum)
 
         f.close()
-        return (starttime, endtime, sorted(self.flux.keys()))
+        self.raw_times = sorted(self.flux.keys())

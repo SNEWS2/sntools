@@ -9,16 +9,16 @@ class ParseInputTest(unittest.TestCase):
 
     def test_default_startendtime(self):
         # test extracting default start- and endtime from sample input file
-        starttime, endtime, _ = self.f.parse_input("fluxes/sample-gamma.txt", "e", None, None)
-        self.assertEqual(starttime, 101)
-        self.assertEqual(endtime, 125)
+        self.f.parse_input("fluxes/sample-gamma.txt", "e", None, None)
+        self.assertEqual(self.f.starttime, 101)
+        self.assertEqual(self.f.endtime, 125)
 
     def test_valid_startendtime(self):
         # test extracting default start- and endtime from sample input file
-        starttime, endtime, times = self.f.parse_input("fluxes/sample-gamma.txt", "e", 108, 115)
-        self.assertEqual(starttime, 108.0)
-        self.assertEqual(endtime, 115.0)
-        self.assertEqual([round(t, 3) for t in times],  # avoid floating point inaccuracies
+        self.f.parse_input("fluxes/sample-gamma.txt", "e", 108, 115)
+        self.assertEqual(self.f.starttime, 108.0)
+        self.assertEqual(self.f.endtime, 115.0)
+        self.assertEqual([round(t, 3) for t in self.f.raw_times],  # avoid floating point inaccuracies
                          [107.505, 108.001, 108.505, 109.002, 109.495, 110.005,
                           110.504, 111.003, 111.500, 112.395, 112.499, 113.004,
                           113.503, 114.002, 114.501, 114.999, 115.499])

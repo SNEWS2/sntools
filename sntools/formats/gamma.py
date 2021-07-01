@@ -30,17 +30,17 @@ class Flux(BaseFlux):
         for entry in raw_indata:
             entry[0] *= 1000  # convert time to ms
 
-        starttime = get_starttime(starttime, raw_indata[0][0])
-        endtime = get_endtime(endtime, raw_indata[-1][0])
+        self.starttime = get_starttime(starttime, raw_indata[0][0])
+        self.endtime = get_endtime(endtime, raw_indata[-1][0])
 
         # Ignore data outside of the requested time span.
         indata = []
         for (i, entry) in enumerate(raw_indata):
             if i == 0:
                 continue
-            if entry[0] > starttime:
+            if entry[0] > self.starttime:
                 indata.append(raw_indata[i - 1])
-                if entry[0] > endtime:
+                if entry[0] > self.endtime:
                     indata.append(entry)
                     break
 
@@ -54,7 +54,7 @@ class Flux(BaseFlux):
             t = timebin[0]
             self.flux[t] = (mean_e, mean_e_sq, lum * 624.151)  # convert lum from erg/s to MeV/ms
 
-        return (starttime, endtime, sorted(self.flux.keys()))
+        self.raw_times = sorted(self.flux.keys())
 
     def prepare_evt_gen(self, binned_t):
         """Pre-compute values necessary for event generation.
