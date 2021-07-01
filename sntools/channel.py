@@ -1,29 +1,9 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
-from importlib import import_module
 from math import pi, sin, cos, acos
 import numpy as np
 import random
 from scipy import integrate, interpolate
-
-
-def setup(_channel):
-    global channel, cached_flux
-    channel = import_module("sntools.interaction_channels." + _channel)
-
-    # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
-    # often with repetitive arguments (when integrating ddEventRate over eE).
-    # To save time, we cache results in a dictionary.
-    cached_flux = {}
-
-    # Set options for numerical integration. Not needed for all channels, so
-    # default to returning an empty dictionary.
-    if not hasattr(channel, "_opts"):
-        channel._opts = lambda *args: {"points": []}
-
-    return channel
 
 
 def gen_evts(_channel, _flux, scale, verbose):
@@ -34,13 +14,23 @@ def gen_evts(_channel, _flux, scale, verbose):
     * Generate these events from time-dependent energy & direction distribution.
 
     Arguments:
-    _channel -- abbreviation of interaction channel, e.g. 'ibd', 'es', ...
+    _channel -- module for the current interaction channel (e.g. sntools.interaction_channels.ibd)
     _flux -- BaseFlux instance with appropriate flavor and time range
     scale -- constant factor, accounts for oscillation probability, distance of SN, size of detector
     """
-    setup(_channel)  # import appropriate modules
-    global flux
+    global channel, cached_flux, flux
     flux = _flux
+    channel = _channel
+
+    # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
+    # often with repetitive arguments (when integrating ddEventRate over eE).
+    # To save time, we cache results in a dictionary.
+    cached_flux = {}
+
+    # Set options for numerical integration. Not needed for all channels, so
+    # default to returning an empty dictionary.
+    if not hasattr(channel, "_opts"):
+        channel._opts = lambda *args: {"points": []}
 
     thr_e = 3.511  # detection threshold in HK: 3 MeV kinetic energy + rest mass
 
