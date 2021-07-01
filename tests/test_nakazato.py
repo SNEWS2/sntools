@@ -9,16 +9,16 @@ class ParseInputTest(unittest.TestCase):
 
     def test_default_startendtime(self):
         # test extracting default start- and endtime from sample input file
-        starttime, endtime, _ = self.f.parse_input("fluxes/intp2001.data", "e", None, None)
-        self.assertEqual(starttime, -50.0)
-        self.assertEqual(endtime, 20000.0)
+        self.f.parse_input("fluxes/intp2001.data", "e", None, None)
+        self.assertEqual(self.f.starttime, -50.0)
+        self.assertEqual(self.f.endtime, 20000.0)
 
     def test_valid_startendtime(self):
         # test extracting default start- and endtime from sample input file
-        starttime, endtime, times = self.f.parse_input("fluxes/intp2001.data", "e", 100, 119)
-        self.assertEqual(starttime, 100.0)
-        self.assertEqual(endtime, 119.0)
-        self.assertEqual(times, [99.0, 100.0, 105.0, 110.0, 115.0, 120.0])
+        self.f.parse_input("fluxes/intp2001.data", "e", 100, 119)
+        self.assertEqual(self.f.starttime, 100.0)
+        self.assertEqual(self.f.endtime, 119.0)
+        self.assertEqual(self.f.raw_times, [99.0, 100.0, 105.0, 110.0, 115.0, 120.0])
 
     def test_invalid_startendtime(self):
         # should raise ValueError if specified start-/endtime is invalid

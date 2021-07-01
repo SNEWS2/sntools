@@ -9,11 +9,9 @@ import random
 from scipy import integrate, interpolate
 
 
-def setup(_channel, _format):
-    global channel, format, cached_flux
+def setup(_channel):
+    global channel, cached_flux
     channel = import_module("sntools.interaction_channels." + _channel)
-    format_module = import_module("sntools.formats." + _format)
-    format = format_module.Flux()
 
     # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
     # often with repetitive arguments (when integrating ddEventRate over eE).
@@ -25,10 +23,10 @@ def setup(_channel, _format):
     if not hasattr(channel, "_opts"):
         channel._opts = lambda *args: {"points": []}
 
-    return channel, format
+    return channel
 
 
-def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose):
+def gen_evts(_channel, _flux, scale, verbose):
     """Generate events.
 
     * Get event rate by interpolating from time steps in the input data.
@@ -37,50 +35,47 @@ def gen_evts(_channel, input, _format, inflv, scale, starttime, endtime, verbose
 
     Arguments:
     _channel -- abbreviation of interaction channel, e.g. 'ibd', 'es', ...
-    input -- name (or common prefix) of file(s) containing neutrino fluxes
-    _format -- which parser (in folder `formats/`) to use for input file(s)
-    inflv -- original neutrino flavor (at time of production in the SN)
+    _flux -- BaseFlux instance with appropriate flavor and time range
     scale -- constant factor, accounts for oscillation probability, distance of SN, size of detector
-    starttime -- start time set by user via command line option (or None)
-    endtime -- end time set by user via command line option (or None)
     """
-    setup(_channel, _format)  # import appropriate modules
-    thr_e = 3.511  # detection threshold in HK: 3 MeV kinetic energy + rest mass
+    setup(_channel)  # import appropriate modules
+    global flux
+    flux = _flux
 
-    (starttime, endtime, raw_times) = format.parse_input(input, inflv, starttime, endtime)
+    thr_e = 3.511  # detection threshold in HK: 3 MeV kinetic energy + rest mass
 
     # integrate over eE and then eNu to obtain the event rate at time t
     raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
-                 for t in raw_times]
-    event_rate = interpolate.pchip(raw_times, raw_nevts)
+                 for t in flux.raw_times]
+    event_rate = interpolate.pchip(flux.raw_times, raw_nevts)
 
     bin_width = 1  # in ms
-    n_bins = int((endtime - starttime) / bin_width)  # number of full-width bins; int() implies floor()
+    n_bins = int((flux.endtime - flux.starttime) / bin_width)  # number of full-width bins; int() implies floor()
     if verbose:
-        print("Now generating events in", bin_width, "ms bins from", starttime, "to", endtime, "ms")
+        print("Now generating events in", bin_width, "ms bins from", flux.starttime, "to", flux.endtime, "ms")
 
     # scipy is optimized for operating on large arrays, making it orders of
     # magnitude faster to pre-compute all values of the interpolated functions.
-    binned_t = [starttime + (i + 0.5) * bin_width for i in range(n_bins)]
+    binned_t = [flux.starttime + (i + 0.5) * bin_width for i in range(n_bins)]
     binned_nevt_th = event_rate(binned_t)
     # check for unphysical values of interpolated function event_rate(t)
     for _i, _n in enumerate(binned_nevt_th):
         if _n < 0:
             binned_nevt_th[_i] = 0
     binned_nevt = np.random.poisson(binned_nevt_th)  # Get random number of events in each bin from Poisson distribution
-    format.prepare_evt_gen(binned_t)  # give flux script a chance to pre-compute values
+    flux.prepare_evt_gen(binned_t)  # give flux script a chance to pre-compute values
 
     if verbose:  # compute events above threshold energy `thr_e`
         thr_bounds_eE = lambda _eNu, *args: [max(thr_e, channel.bounds_eE(_eNu)[0]), max(thr_e, channel.bounds_eE(_eNu)[1])]
         thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
-                         for t in raw_times]
-        thr_event_rate = interpolate.pchip(raw_times, thr_raw_nevts)
+                         for t in flux.raw_times]
+        thr_event_rate = interpolate.pchip(flux.raw_times, thr_raw_nevts)
         thr_binned_nevt_th = thr_event_rate(binned_t)
         thr_nevt = sum(binned_nevt)
 
     events = []
     for i in range(n_bins):
-        t0 = starttime + i * bin_width
+        t0 = flux.starttime + i * bin_width
 
         if verbose and i % (10 ** (4 - verbose)) == 0:
             print("%s-%s ms: %d events (%.5f expected)" % (t0, t0 + bin_width, binned_nevt[i], binned_nevt_th[i]))
@@ -113,7 +108,7 @@ def ddEventRate(eE, eNu, time):
 def dFlux_dE(eNu, time):
     if (eNu, time) not in cached_flux:
         fiducial_distance = 1.563738e33  # 10 kpc/(hbar * c) in MeV**(-1)
-        emission = format.nu_emission(eNu, time)
+        emission = flux.nu_emission(eNu, time)
         cached_flux[(eNu, time)] = emission / (4 * pi * fiducial_distance ** 2)
     return cached_flux[(eNu, time)]
 

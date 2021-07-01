@@ -127,11 +127,14 @@ def main():
                 scale *= detector.n_molecules
                 scale *= detector.material["channel_weights"][channel]
 
-                cmd = "gen_evts(_channel='%s', input='%s', _format='%s', inflv='%s', scale=%s, starttime=%s, endtime=%s, verbose=%s)" \
-                    % (channel, input, format, original_flv, scale, starttime, endtime, verbose)
+                # Create flux from input file
+                mod_format = import_module("sntools.formats." + format)
+                flux = mod_format.Flux()
+                flux.parse_input(input, original_flv, starttime, endtime)
+
                 if verbose:
-                    print("Now executing:", cmd)
-                events.extend(eval(cmd))
+                    print(f"Now generating events for channel = {channel}, original_flv = {original_flv}, scale = {scale}")
+                events.extend(gen_evts(_channel=channel, _flux=flux, scale=scale, verbose=verbose))
 
     # Sort events by time and write them to a nuance-formatted output file
     events.sort(key=lambda evt: evt.time)
