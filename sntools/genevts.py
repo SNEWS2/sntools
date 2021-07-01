@@ -134,7 +134,7 @@ def main():
 
                 if verbose:
                     print(f"Now generating events for channel = {channel}, original_flv = {original_flv}, scale = {scale}")
-                events.extend(gen_evts(_channel=channel, _flux=flux, scale=scale, verbose=verbose))
+                events.extend(gen_evts(_channel=mod_channel, _flux=flux, scale=scale, verbose=verbose))
 
     # Sort events by time and write them to a nuance-formatted output file
     events.sort(key=lambda evt: evt.time)
