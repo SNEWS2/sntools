@@ -14,7 +14,7 @@ def gen_evts(_channel, _flux, scale, verbose):
     * Generate these events from time-dependent energy & direction distribution.
 
     Arguments:
-    _channel -- module for the current interaction channel (e.g. sntools.interaction_channels.ibd)
+    _channel -- BaseChannel instance for the current interaction channel
     _flux -- BaseFlux instance with appropriate flavor and time range
     scale -- constant factor, accounts for oscillation probability, distance of SN, size of detector
     """
