@@ -2,10 +2,6 @@
 
 from __future__ import print_function
 
-try:
-    import __builtin__ as builtins  # Python 2.7
-except ImportError:
-    import builtins  # Python 3
 import argparse
 from datetime import datetime
 from importlib import import_module
@@ -119,10 +115,6 @@ def main():
         mod_channel = import_module("sntools.interaction_channels." + channel)
         for (original_flv, scale, detected_flv) in mixings[hierarchy]:
             if detected_flv in mod_channel.possible_flavors:
-
-                # TODO: Replace this with a more sensible design, e.g. see https://stackoverflow.com/a/15959638
-                builtins._flavor = detected_flv
-
                 scale *= (10.0 / distance) ** 2  # flux is proportional to 1/distance**2
                 scale *= detector.n_molecules
                 scale *= detector.material["channel_weights"][channel]
@@ -132,9 +124,12 @@ def main():
                 flux = mod_format.Flux()
                 flux.parse_input(input, original_flv, starttime, endtime)
 
+                # Setup channel
+                channel_instance = mod_channel.Channel(detected_flv)
+
                 if verbose:
                     print(f"Now generating events for channel = {channel}, original_flv = {original_flv}, scale = {scale}")
-                events.extend(gen_evts(_channel=mod_channel, _flux=flux, scale=scale, verbose=verbose))
+                events.extend(gen_evts(_channel=channel_instance, _flux=flux, scale=scale, verbose=verbose))
 
     # Sort events by time and write them to a nuance-formatted output file
     events.sort(key=lambda evt: evt.time)
