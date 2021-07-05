@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from importlib import import_module
 import random
@@ -110,7 +111,8 @@ def main():
 
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
-    events = []
+    pool = ProcessPoolExecutor(max_workers=args.maxworkers)
+    results = []
     for channel in sorted(channels):
         mod_channel = import_module("sntools.interaction_channels." + channel)
         for (original_flv, scale, detected_flv) in mixings[hierarchy]:
@@ -129,7 +131,12 @@ def main():
 
                 if verbose:
                     print(f"Now generating events for channel = {channel}, original_flv = {original_flv}, scale = {scale}")
-                events.extend(gen_evts(_channel=channel_instance, _flux=flux, scale=scale, verbose=verbose))
+                results.append(pool.submit(gen_evts, channel_instance, flux, scale, verbose))
+
+    # Combine events from all subchannels
+    events = []
+    for result in as_completed(results):
+        events.extend(result.result())
 
     # Sort events by time and write them to a nuance-formatted output file
     events.sort(key=lambda evt: evt.time)
@@ -198,6 +205,9 @@ def parse_command_line_options():
 
     parser.add_argument("--randomseed", metavar="SEED", type=int,  # non-ints may not give reproducible results
                         help="Integer used as a random number seed to reproducibly generate events. Default: None.")
+
+    parser.add_argument("--maxworkers", metavar="N", type=int,
+                        help="Maximum number of parallel processes. Default: [number of CPU cores].")
 
     parser.add_argument("-v", "--verbose", action="count", help="Verbose output, e.g. for debugging. Off by default.")
 
