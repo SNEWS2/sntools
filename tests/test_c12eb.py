@@ -5,7 +5,7 @@ from ._crosssectiontest import CrossSectionTest
 
 
 class C12EBTest(CrossSectionTest):
-    c = c12eb  # ensure we can access interaction channel module as self.c
+    c = c12eb.Channel('eb')  # ensure we can access interaction channel module as self.c
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
     test_dSigma_dE_values = (

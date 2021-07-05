@@ -5,7 +5,7 @@ from ._crosssectiontest import CrossSectionTest
 
 
 class IBDTest(CrossSectionTest):
-    c = ibd  # ensure we can access interaction channel module as self.c
+    c = ibd.Channel('eb')  # ensure we can access interaction channel module as self.c
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
     test_dSigma_dE_values = (
@@ -18,7 +18,7 @@ class IBDTest(CrossSectionTest):
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
     test_dSigma_dE_edgecases_values = (
-        (c.eThr - 1e-6, c.mE, 0),  # eNu too small
+        (ibd.eThr - 1e-6, ibd.mE, 0),  # eNu too small
         (20, 17.841, 0),  # eE too small
         (20, 18.706, 0),  # eE too large
     )
