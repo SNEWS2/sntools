@@ -25,6 +25,7 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     global channel, cached_flux, flux
     flux = _flux
     channel = _channel
+    tag = str(channel.__class__).split('.')[-2]
 
     # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
     # often with repetitive arguments (when integrating ddEventRate over eE).
@@ -46,7 +47,7 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     bin_width = 1  # in ms
     n_bins = int((flux.endtime - flux.starttime) / bin_width)  # number of full-width bins; int() implies floor()
     if verbose:
-        print("Now generating events in", bin_width, "ms bins from", flux.starttime, "to", flux.endtime, "ms")
+        print(f"[{tag}] Now generating events in {bin_width} ms bins from {flux.starttime} to {flux.endtime} ms")
 
     # scipy is optimized for operating on large arrays, making it orders of
     # magnitude faster to pre-compute all values of the interpolated functions.
@@ -72,7 +73,7 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
         t0 = flux.starttime + i * bin_width
 
         if verbose and i % (10 ** (4 - verbose)) == 0:
-            print("%s-%s ms: %d events (%.5f expected)" % (t0, t0 + bin_width, binned_nevt[i], binned_nevt_th[i]))
+            print(f"[{tag}] {t0}-{t0 + bin_width} ms: {binned_nevt[i]} events ({binned_nevt_th[i]:.5f} expected)")
 
         # generate events in this time bin
         for _ in range(binned_nevt[i]):
@@ -85,9 +86,9 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
             if verbose and evt.outgoing_particles[0][1] < thr_e:
                 thr_nevt -= 1
 
-    print("Generated %s particles (expected: %.2f particles)" % (sum(binned_nevt), sum(binned_nevt_th)))
+    print(f"[{tag}] Generated {sum(binned_nevt)} particles (expected: {sum(binned_nevt_th):.2f} particles)")
     if verbose:
-        print("-> above threshold of %s MeV: %s particles (expected: %.2f)" % (thr_e, thr_nevt, sum(thr_binned_nevt_th)))
+        print(f"[{tag}] -> above threshold of {thr_e} MeV: {thr_nevt} particles (expected: {sum(thr_binned_nevt_th):.2f})")
         print("**************************************")
 
     return events
