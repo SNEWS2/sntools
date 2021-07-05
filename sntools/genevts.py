@@ -107,7 +107,6 @@ def main():
         print("**************************************")
 
     random.seed(seed)
-    np.random.seed(seed)
 
     # Take into account hierarchy-dependent flavor mixing and let channel.py
     # generate the actual events for each channel.
@@ -131,7 +130,7 @@ def main():
 
                 if verbose:
                     print(f"Now generating events for channel = {channel}, original_flv = {original_flv}, scale = {scale}")
-                results.append(pool.submit(gen_evts, channel_instance, flux, scale, verbose))
+                results.append(pool.submit(gen_evts, channel_instance, flux, scale, seed + random.random(), verbose))
 
     # Combine events from all subchannels
     events = []

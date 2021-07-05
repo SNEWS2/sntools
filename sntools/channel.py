@@ -6,7 +6,7 @@ import random
 from scipy import integrate, interpolate
 
 
-def gen_evts(_channel, _flux, scale, verbose):
+def gen_evts(_channel, _flux, scale, seed, verbose):
     """Generate events.
 
     * Get event rate by interpolating from time steps in the input data.
@@ -17,7 +17,11 @@ def gen_evts(_channel, _flux, scale, verbose):
     _channel -- BaseChannel instance for the current interaction channel
     _flux -- BaseFlux instance with appropriate flavor and time range
     scale -- constant factor, accounts for oscillation probability, distance of SN, size of detector
+    seed -- random number seed to reproducibly generate events
     """
+    random.seed(seed)
+    np.random.seed(int(seed))
+
     global channel, cached_flux, flux
     flux = _flux
     channel = _channel
