@@ -1,10 +1,4 @@
 # coding=utf-8
-try:
-    import __builtin__ as builtins  # Python 2.7
-except ImportError:
-    import builtins  # Python 3
-finally:
-    builtins._flavor = "e"
 import unittest
 
 from sntools.interaction_channels import es
@@ -12,7 +6,7 @@ from ._crosssectiontest import CrossSectionTest
 
 
 class ESTest(CrossSectionTest):
-    c = es  # ensure we can access interaction channel module as self.c
+    c = es.Channel('e')  # ensure we can access interaction channel module as self.c
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
     test_dSigma_dE_values = (

@@ -7,20 +7,22 @@ from sntools.interaction_channels import ibd
 
 mev2cm = 1 / 5.067731e10
 
+c = ibd.Channel('eb')
+
 
 def sigma(eNu):
-    func = lambda _eE: ibd.dSigma_dE(eNu, _eE) * mev2cm ** 2
-    return integrate.quad(func, *ibd.bounds_eE(eNu))[0]
+    func = lambda _eE: c.dSigma_dE(eNu, _eE) * mev2cm ** 2
+    return integrate.quad(func, *c.bounds_eE(eNu))[0]
 
 
 def eE_avg(eNu):
-    func = lambda _eE: _eE * ibd.dSigma_dE(eNu, _eE) * mev2cm ** 2
-    numerator = integrate.quad(func, *ibd.bounds_eE(eNu))[0]
+    func = lambda _eE: _eE * c.dSigma_dE(eNu, _eE) * mev2cm ** 2
+    numerator = integrate.quad(func, *c.bounds_eE(eNu))[0]
     return numerator / sigma(eNu)
 
 
 def cosT_avg(eNu):
-    func = lambda _cosT: _cosT * ibd.dSigma_dCosT(eNu, _cosT) * mev2cm ** 2
+    func = lambda _cosT: _cosT * c.dSigma_dCosT(eNu, _cosT) * mev2cm ** 2
     numerator = integrate.quad(func, -1, 1)[0]
     return numerator / sigma(eNu)
 
