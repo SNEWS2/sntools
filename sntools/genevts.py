@@ -129,7 +129,7 @@ def main():
                 channel_instance = mod_channel.Channel(detected_flv)
 
                 if verbose:
-                    print(f"Now generating events for channel = {channel}, original_flv = {original_flv}, scale = {scale}")
+                    print(f"[{channel}] Now generating events for original_flv = {original_flv}, scale = {scale}")
                 results.append(pool.submit(gen_evts, channel_instance, flux, scale, seed + random.random(), verbose))
 
     # Combine events from all subchannels
