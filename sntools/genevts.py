@@ -1,14 +1,10 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
 import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from importlib import import_module
 import random
-
-import numpy as np
 
 try:
     import sntools  # if sntools was installed via pip
@@ -26,82 +22,44 @@ from sntools.detectors import Detector, supported_detectors
 from sntools.formats import CompositeFlux
 from sntools.transformation import Transformation
 
-import sys
-if sys.version_info < (3, 6):
-    from sntools import tryprint
-    tryprint(u"\u274c", "[WARNING]")
-    print("You are using Python %s.%s.%s, which is not supported any more." %
-          (sys.version_info[0], sys.version_info[1], sys.version_info[2]))
-    tryprint(u"\u274c", "[WARNING]")
-    print("Future versions of sntools will require Python 3.6 or higher and it is recommended that you transition as soon as possible.")
-    tryprint(u"\u274c", "[WARNING]")
-    print("See https://github.com/JostMigenda/sntools/issues/29 for more information.\n")
-
 
 def main():
     args = parse_command_line_options()
-
-    detector = Detector(args.detector)
-    channels = detector.material["channel_weights"] if args.channel == "all" else [args.channel]
-    transformation = Transformation(args.hierarchy)
-    input = args.input_file
-    format = args.format
-    output = args.output
-    mcformat = args.mcformat
-    distance = args.distance
-    starttime = args.starttime
-    endtime = args.endtime
-    seed = args.randomseed
-    verbose = args.verbose
-
-    if verbose:
-        print("channel(s) =", channels)
-        print("transform. =", transformation)
-        print("input file =", input, "--- format =", format)
-        print("output     =", output)
-        print("mcformat   =", mcformat)
-        print("detector   =", detector)
-        print("distance   =", distance)
-        print("starttime  =", starttime)
-        print("endtime    =", endtime)
-        print("randomseed =", seed)
-        print("**************************************")
-
-    random.seed(seed)
+    random.seed(args.randomseed)
 
     # Calculate fluxes at detector
     raw_flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
-    flux_at_detector = raw_flux.transformed_by(transformation, args.distance)
+    flux_at_detector = raw_flux.transformed_by(args.transformation, args.distance)
 
     # Generate events for each (sub-)channel and combine them
     pool = ProcessPoolExecutor(max_workers=args.maxworkers)
     results = []
-    for channel in sorted(channels):
+    for channel in sorted(args.channels):
         mod_channel = import_module("sntools.interaction_channels." + channel)
-        n_targets = detector.n_molecules * detector.material["channel_weights"][channel]
+        n_targets = args.detector.n_molecules * args.detector.material["channel_weights"][channel]
         for flv in mod_channel.possible_flavors:
             channel_instance = mod_channel.Channel(flv)
             for flux in flux_at_detector.components[flv]:
-                results.append(pool.submit(gen_evts, channel_instance, flux, n_targets, seed + random.random(), args.verbose))
+                results.append(pool.submit(gen_evts, channel_instance, flux, n_targets, args.randomseed + random.random(), args.verbose))
 
     events = []
     for result in as_completed(results):
         events.extend(result.result())
 
-    # Sort events by time and write them to a nuance-formatted output file
+    # Sort events by time and write them to an output file
     events.sort(key=lambda evt: evt.time)
-    with open(output, "w") as outfile:
-        if verbose:  # write parameters to file as a comment
+    with open(args.output, "w") as outfile:
+        if args.verbose:  # write parameters to file as a comment
             outfile.write("# Generated on %s with the options:\n" % datetime.now())
             outfile.write("# " + str(args) + "\n")
-        if mcformat == 'NUANCE':
+        if args.mcformat == 'NUANCE':
             for (i, evt) in enumerate(events):
-                evt.vertex = detector.generate_random_vertex()
+                evt.vertex = args.detector.generate_random_vertex()
                 outfile.write(evt.nuance_string(i))
             outfile.write("$ stop\n")
-        if mcformat == 'RATPAC':
+        if args.mcformat == 'RATPAC':
             for (i, evt) in enumerate(events):
-                evt.vertex = detector.generate_random_vertex()
+                evt.vertex = args.detector.generate_random_vertex()
                 outfile.write(evt.ratpac_string(i, events))
 
 
@@ -161,7 +119,20 @@ def parse_command_line_options():
 
     parser.add_argument('--version', action='version', version='%(prog)s ' + sntools.__version__)
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    args.transformation = Transformation(args.hierarchy)
+    args.detector = Detector(args.detector)
+    args.channels = args.detector.material["channel_weights"] if args.channel == "all" else [args.channel]
+    del args.hierarchy  # see args.transformation
+    del args.channel  # see args.channels
+
+    if args.verbose:
+        print("Arguments:")
+        for (k, v) in vars(args).items():
+            print(f"  {k}: {v}")
+
+    return args
 
 
 if __name__ == "__main__":
