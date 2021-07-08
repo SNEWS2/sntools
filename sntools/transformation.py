@@ -1,3 +1,6 @@
+from importlib import import_module
+
+
 # mixing parameters from P.A. Zyla et al. (Particle Data Group), Prog. Theor. Exp. Phys. 2020, 083C01 (2020)
 s12 = 0.307  # sin^2 theta_12
 c12 = 1 - s12
@@ -10,13 +13,14 @@ c13 = 1 - s13
 #   * mixing probability,
 #   * resulting flavor in detector.
 # See the section "Treatment of Neutrino Flavour Conversion" in the documentation.
+# Naming of transformations follows SNEWPy conventions.
 transformations = {
-    "noosc": (
+    "NoTransformation": (
         ("e", 1, "e"),
         ("eb", 1, "eb"),
         ("x", 2, "x"),  # scale = 2 to include both nu_mu and nu_tau
         ("xb", 2, "xb")),
-    "normal": (
+    "AdiabaticMSW_NMO": (
         ("e", s13, "e"),  # nu_e that originated as nu_e
         ("x", c13, "e"),  # nu_e that originated as nu_x
         ("eb", c12 * c13, "eb"),  # anti-nu_e that originated as anti-nu_e
@@ -26,7 +30,7 @@ transformations = {
         ("eb", 1 - c12 * c13, "xb"),  # anti-nu_x that originated as anti-nu_e
         ("xb", 1 + c12 * c13, "xb"),  # anti-nu_x that originated as anti-nu_x
     ),
-    "inverted": (
+    "AdiabaticMSW_IMO": (
         ("e", s12 * c13, "e"),  # nu_e that originated as nu_e
         ("x", 1 - s12 * c13, "e"),  # nu_e that originated as nu_x
         ("eb", s13, "eb"),  # anti-nu_e that originated as anti-nu_e
@@ -56,3 +60,47 @@ class Transformation:
         for (original_flv, scale, detected_flv) in self.transformation:
             if detected_flv == flavor:
                 yield (original_flv, scale)
+
+
+class SNEWPYTransformationAdapter(Transformation):
+    """Adapter to turn a SNEWPy FlavorTransformation into an sntools Transformation.
+
+    Some limitations currently apply:
+        * the FlavorTransformation must not depend on time or energy
+        * it’s not possible to set additional init parameters (e.g. non-default mixing angles)
+    """
+
+    def __init__(self, name):
+        from snewpy.neutrino import MassHierarchy
+
+        self.name = name
+        kwargs = {}
+
+        if name[-4:] == "_NMO":
+            self.name = name[:-4]
+            kwargs['mh'] = MassHierarchy.NORMAL
+        elif name[-4:] == "_IMO":
+            self.name = name[:-4]
+            kwargs['mh'] = MassHierarchy.INVERTED
+
+        xf = getattr(import_module('snewpy.flavor_transformation'), self.name)(**kwargs)
+
+        if xf.prob_ee(0, 10) != xf.prob_ee(0, 20) or xf.prob_ee(0, 10) != xf.prob_ee(0.2, 10):
+            # Probability appears to depend on time and/or energy
+            raise ValueError(f"The transformation '{name}' from SNEWPy appears to be time- or energy-dependent. This is not currently supported.")
+
+        transformation = (
+            ("e", float(xf.prob_ee(0, 0)), "e"),  # nu_e that originated as nu_e
+            ("x", float(xf.prob_ex(0, 0)), "e"),  # nu_e that originated as nu_x
+            ("eb", float(xf.prob_eebar(0, 0)), "eb"),  # anti-nu_e that originated as anti-nu_e
+            ("xb", float(xf.prob_exbar(0, 0)), "eb"),  # anti-nu_e that originated as anti-nu_x
+            ("e", 2 * float(xf.prob_xe(0, 0)), "x"),  # nu_x that originated as nu_e
+            ("x", 2 * float(xf.prob_xx(0, 0)), "x"),  # nu_x that originated as nu_x
+            ("eb", 2 * float(xf.prob_xebar(0, 0)), "xb"),  # anti-nu_x that originated as anti-nu_e
+            ("xb", 2 * float(xf.prob_xxbar(0, 0)), "xb"),  # anti-nu_x that originated as anti-nu_x
+        )
+
+        self.transformation = tuple(c for c in transformation if c[1] > 0)
+
+    def __repr__(self):
+        return f"<Transformation object adapted from snewpy.flavor_transformation.{self.name}>"

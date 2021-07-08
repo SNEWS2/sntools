@@ -84,8 +84,14 @@ def parse_command_line_options():
     parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=default,
                         help="MC output format for simulations. Choices: %s. Default: %s." % (choices, default))
 
+    # NOTE: Deprecated since v1.0 in favor of '--transformation'
     choices = ("noosc", "normal", "inverted")
-    parser.add_argument("-H", "--hierarchy", "--ordering", choices=choices, help=argparse.SUPPRESS)
+    parser.add_argument("-H", "--hierarchy", "--ordering", choices=choices, help=argparse.SUPPRESS, action=DeprecationAction)
+
+    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO")
+    parser.add_argument("-t", "--transformation", metavar="TRANSFORM", choices=choices, default=choices[0],
+                        help="Transformation between neutrino flux inside SN and flux in the detector on Earth. \
+                              Choices: %(choices)s. Default: %(default)s.")
 
     choices = ["ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc"]
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
@@ -121,7 +127,7 @@ def parse_command_line_options():
 
     args = parser.parse_args()
 
-    args.transformation = Transformation(args.hierarchy)
+    args.transformation = Transformation(args.transformation)
     args.detector = Detector(args.detector)
     args.channels = args.detector.material["channel_weights"] if args.channel == "all" else [args.channel]
     del args.hierarchy  # see args.transformation
@@ -133,6 +139,24 @@ def parse_command_line_options():
             print(f"  {k}: {v}")
 
     return args
+
+
+class DeprecationAction(argparse.Action):
+    """argparse.Action subclass to deprecate options"""
+
+    def __init__(self, option_strings, dest, **kwargs):
+        super().__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if self.dest == 'hierarchy':
+            replacement = {"noosc": "NoTransformation", "normal": "AdiabaticMSW_NMO", "inverted": "AdiabaticMSW_IMO"}[values]
+            print(f"❌ '{option_string} {values}' is deprecated. Please switch to using '--transformation {replacement}'.")
+            self.dest = 'transformation'
+            values = replacement
+        else:
+            print(f"❌ '{option_string}' is deprecated. No replacement available.")
+
+        setattr(namespace, self.dest, values)
 
 
 if __name__ == "__main__":
