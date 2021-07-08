@@ -23,6 +23,8 @@ except ImportError:
 
 from sntools.channel import gen_evts
 from sntools.detectors import Detector, supported_detectors
+from sntools.formats import CompositeFlux
+from sntools.transformation import Transformation
 
 import sys
 if sys.version_info < (3, 6):
@@ -35,54 +37,13 @@ if sys.version_info < (3, 6):
     tryprint(u"\u274c", "[WARNING]")
     print("See https://github.com/JostMigenda/sntools/issues/29 for more information.\n")
 
-# mixing parameters from P.A. Zyla et al. (Particle Data Group), Prog. Theor. Exp. Phys. 2020, 083C01 (2020)
-s12 = 0.307  # sin^2 theta_12
-c12 = 1 - s12
-s13 = 0.0218  # sin^2 theta_13
-c13 = 1 - s13
-
-# While exiting the supernova, neutrinos experience mass hierarchy-dependent
-# flavor transitions via the MSW effect. This dictionary contains 3-tuples of
-#   * original flavor at production (i.e. in input files from computer simulations),
-#   * mixing probability,
-#   * resulting flavor in detector.
-# See the section "Treatment of Neutrino Flavour Conversion" in the documentation.
-mixings = {
-    "noosc": (
-        ("e", 1, "e"),
-        ("eb", 1, "eb"),
-        ("x", 2, "x"),  # scale = 2 to include both nu_mu and nu_tau
-        ("xb", 2, "xb"),
-    ),
-    "normal": (
-        ("e", s13, "e"),  # nu_e that originated as nu_e
-        ("x", c13, "e"),  # nu_e that originated as nu_x
-        ("eb", c12 * c13, "eb"),  # anti-nu_e that originated as anti-nu_e
-        ("xb", 1 - c12 * c13, "eb"),  # anti-nu_e that originated as anti-nu_x
-        ("e", c13, "x"),  # nu_x that originated as nu_e
-        ("x", 1 + s13, "x"),  # nu_x that originated as nu_x
-        ("eb", 1 - c12 * c13, "xb"),  # anti-nu_x that originated as anti-nu_e
-        ("xb", 1 + c12 * c13, "xb"),  # anti-nu_x that originated as anti-nu_x
-    ),
-    "inverted": (
-        ("e", s12 * c13, "e"),  # nu_e that originated as nu_e
-        ("x", 1 - s12 * c13, "e"),  # nu_e that originated as nu_x
-        ("eb", s13, "eb"),  # anti-nu_e that originated as anti-nu_e
-        ("xb", c13, "eb"),  # anti-nu_e that originated as anti-nu_x
-        ("e", 1 - s12 * c13, "x"),  # nu_x that originated as nu_e
-        ("x", 1 + s12 * c13, "x"),  # nu_x that originated as nu_x
-        ("eb", c13, "xb"),  # anti-nu_x that originated as anti-nu_e
-        ("xb", 1 + s13, "xb"),  # anti-nu_x that originated as anti-nu_x
-    ),
-}
-
 
 def main():
     args = parse_command_line_options()
 
     detector = Detector(args.detector)
     channels = detector.material["channel_weights"] if args.channel == "all" else [args.channel]
-    hierarchy = args.hierarchy
+    transformation = Transformation(args.hierarchy)
     input = args.input_file
     format = args.format
     output = args.output
@@ -95,7 +56,7 @@ def main():
 
     if verbose:
         print("channel(s) =", channels)
-        print("hierarchy  =", hierarchy)
+        print("transform. =", transformation)
         print("input file =", input, "--- format =", format)
         print("output     =", output)
         print("mcformat   =", mcformat)
@@ -108,31 +69,21 @@ def main():
 
     random.seed(seed)
 
-    # Take into account hierarchy-dependent flavor mixing and let channel.py
-    # generate the actual events for each channel.
+    # Calculate fluxes at detector
+    raw_flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
+    flux_at_detector = raw_flux.transformed_by(transformation, args.distance)
+
+    # Generate events for each (sub-)channel and combine them
     pool = ProcessPoolExecutor(max_workers=args.maxworkers)
     results = []
     for channel in sorted(channels):
         mod_channel = import_module("sntools.interaction_channels." + channel)
-        for (original_flv, scale, detected_flv) in mixings[hierarchy]:
-            if detected_flv in mod_channel.possible_flavors:
-                scale *= (10.0 / distance) ** 2  # flux is proportional to 1/distance**2
-                scale *= detector.n_molecules
-                scale *= detector.material["channel_weights"][channel]
+        n_targets = detector.n_molecules * detector.material["channel_weights"][channel]
+        for flv in mod_channel.possible_flavors:
+            channel_instance = mod_channel.Channel(flv)
+            for flux in flux_at_detector.components[flv]:
+                results.append(pool.submit(gen_evts, channel_instance, flux, n_targets, seed + random.random(), args.verbose))
 
-                # Create flux from input file
-                mod_format = import_module("sntools.formats." + format)
-                flux = mod_format.Flux()
-                flux.parse_input(input, original_flv, starttime, endtime)
-
-                # Setup channel
-                channel_instance = mod_channel.Channel(detected_flv)
-
-                if verbose:
-                    print(f"[{channel}] Now generating events for original_flv = {original_flv}, scale = {scale}")
-                results.append(pool.submit(gen_evts, channel_instance, flux, scale, seed + random.random(), verbose))
-
-    # Combine events from all subchannels
     events = []
     for result in as_completed(results):
         events.extend(result.result())
@@ -175,10 +126,8 @@ def parse_command_line_options():
     parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=default,
                         help="MC output format for simulations. Choices: %s. Default: %s." % (choices, default))
 
-    choices = ["noosc", "normal", "inverted"]
-    default = choices[0]
-    parser.add_argument("-H", "--hierarchy", "--ordering", metavar="HIERARCHY", choices=choices, default=default,
-                        help="Oscillation scenario. Choices: %s. Default: '%s'." % (choices, default))
+    choices = ("noosc", "normal", "inverted")
+    parser.add_argument("-H", "--hierarchy", "--ordering", choices=choices, help=argparse.SUPPRESS)
 
     choices = ["ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc"]
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
