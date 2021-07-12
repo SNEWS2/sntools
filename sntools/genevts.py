@@ -20,7 +20,7 @@ except ImportError:
 from sntools.channel import gen_evts
 from sntools.detectors import Detector, supported_detectors
 from sntools.formats import CompositeFlux
-from sntools.transformation import Transformation
+from sntools.transformation import SNEWPYTransformation, Transformation
 
 
 def main():
@@ -88,10 +88,11 @@ def parse_command_line_options():
     choices = ("noosc", "normal", "inverted")
     parser.add_argument("-H", "--hierarchy", "--ordering", choices=choices, help=argparse.SUPPRESS, action=DeprecationAction)
 
-    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO")
-    parser.add_argument("-t", "--transformation", metavar="TRANSFORM", choices=choices, default=choices[0],
-                        help="Transformation between neutrino flux inside SN and flux in the detector on Earth. \
-                              Choices: %(choices)s. Default: %(default)s.")
+    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO", "SNEWPY-CompleteExchange", "SNEWPY-NonAdiabaticMSWH",
+               "SNEWPY-TwoFlavorDecoherence_NMO", "SNEWPY-TwoFlavorDecoherence_IMO", "SNEWPY-ThreeFlavorDecoherence")
+    parser.add_argument("-t", "--transformation", metavar="TRANSFORMATION", choices=choices, default=choices[0], action=TransformationAction,
+                        help=f"Transformation between neutrino flux inside SN and flux in the detector on Earth. \
+                               Choices: {choices[:3]}. Default: %(default)s.")
 
     choices = ["ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc"]
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
@@ -127,7 +128,6 @@ def parse_command_line_options():
 
     args = parser.parse_args()
 
-    args.transformation = Transformation(args.transformation)
     args.detector = Detector(args.detector)
     args.channels = args.detector.material["channel_weights"] if args.channel == "all" else [args.channel]
     del args.hierarchy  # see args.transformation
@@ -152,11 +152,23 @@ class DeprecationAction(argparse.Action):
             replacement = {"noosc": "NoTransformation", "normal": "AdiabaticMSW_NMO", "inverted": "AdiabaticMSW_IMO"}[values]
             print(f"❌ '{option_string} {values}' is deprecated. Please switch to using '--transformation {replacement}'.")
             self.dest = 'transformation'
-            values = replacement
+            values = Transformation(replacement)
         else:
             print(f"❌ '{option_string}' is deprecated. No replacement available.")
 
         setattr(namespace, self.dest, values)
+
+
+class TransformationAction(argparse.Action):
+    """argparse.Action subclass to handle transformations inherited from SNEWPy."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values[:7] == "SNEWPY-":
+            transformation = SNEWPYTransformation(values[7:])
+        else:
+            transformation = Transformation(values)
+
+        setattr(namespace, self.dest, transformation)
 
 
 if __name__ == "__main__":

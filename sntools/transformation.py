@@ -62,8 +62,8 @@ class Transformation:
                 yield (original_flv, scale)
 
 
-class SNEWPYTransformationAdapter(Transformation):
-    """Adapter to turn a SNEWPy FlavorTransformation into an sntools Transformation.
+class SNEWPYTransformation(Transformation):
+    """Adapter class to turn a SNEWPY.flavor_transformation.FlavorTransformation into an sntools.transformation.Transformation
 
     Some limitations currently apply:
         * the FlavorTransformation must not depend on time or energy

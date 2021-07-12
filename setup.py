@@ -99,10 +99,10 @@ setup(
     # Users can install these using the "extras" syntax, for example:
     #   $ pip install sntools[dev]
     #
-    # extras_require={  # Optional
-    #     'dev': ['black', 'flake8'],
-    #     'test': [],  # just `unittest` for now
-    # },
+    extras_require={  # Optional
+        # 'dev': ['black', 'flake8'],
+        'snewpy': ['snewpy @ git+https://github.com/SNEWS2/snewpy.git@fb8fba99cde45f09fdf5b5aba3c61f3c0d90c531'],
+    },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.
