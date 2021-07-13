@@ -80,6 +80,54 @@ class CompositeFlux:
         return tf
 
 
+class SNEWPYFlux(BaseFlux):
+    """Adapter class to turn a SNEWPY.models.SupernovaModel component into an sntools.formats.BaseFlux"""
+
+    def __init__(self, sn_model, flv, starttime, endtime) -> None:
+        from astropy import units as u
+        from snewpy.neutrino import Flavor
+
+        super().__init__()
+        self._flv = {'e': Flavor.NU_E, 'eb': Flavor.NU_E_BAR, 'x': Flavor.NU_X, 'xb': Flavor.NU_X_BAR}[flv]
+        self._sn_model = sn_model
+
+        times = [t.to(u.ms).value for t in sn_model.get_time()]
+        self.starttime = get_starttime(starttime, times[0])
+        self.endtime = get_endtime(endtime, times[-1])
+        self.raw_times = times  # TODO: enforce starttime/endtime in self.raw_times
+
+    def parse_input(self, *args):
+        # handled in SNEWPYCompositeFlux.from_file()
+        pass
+
+    def prepare_evt_gen(self, *args):
+        pass
+
+    def nu_emission(self, eNu, time):
+        from astropy import units as u
+        nl = self._sn_model.get_initialspectra(time * u.ms, eNu * u.MeV)[self._flv]
+        # SNEWPY uses cgs units internally, so convert before returning
+        return nl.to(1 / u.MeV / u.ms).value
+
+
+class SNEWPYCompositeFlux(CompositeFlux):
+    """Adapter class to turn a SNEWPY.models.SupernovaModel into an sntools.formats.CompositeFlux"""
+
+    @classmethod
+    def from_file(cls, file, format, starttime=None, endtime=None):
+        """Create a SNEWPYCompositeFlux from an input file."""
+        self = SNEWPYCompositeFlux()
+        self._repr = f"SNEWPYCompositeFlux.from_file('{file}', '{format}', {starttime}, {endtime})"
+
+        sn_model = getattr(import_module('snewpy.models'), format)(file)
+
+        for flv in ('e', 'eb', 'x', 'xb'):
+            f = SNEWPYFlux(sn_model, flv, starttime, endtime)
+            self.components[flv] = [f]
+
+        return self
+
+
 def get_starttime(starttime, minimum):
     """
     Return sensible start time.

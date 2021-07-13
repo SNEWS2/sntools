@@ -19,8 +19,8 @@ except ImportError:
 
 from sntools.channel import gen_evts
 from sntools.detectors import Detector, supported_detectors
-from sntools.formats import CompositeFlux
-from sntools.transformation import SNEWPYTransformation, Transformation
+from sntools.formats import CompositeFlux, SNEWPYCompositeFlux
+from sntools.transformation import Transformation, SNEWPYTransformation
 
 
 def main():
@@ -28,7 +28,11 @@ def main():
     random.seed(args.randomseed)
 
     # Calculate fluxes at detector
-    raw_flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
+    if args.format[:7] == "SNEWPY-":
+        raw_flux = SNEWPYCompositeFlux.from_file(args.input_file, args.format[7:], args.starttime, args.endtime)
+    else:
+        raw_flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
+
     flux_at_detector = raw_flux.transformed_by(args.transformation, args.distance)
 
     # Generate events for each (sub-)channel and combine them
@@ -69,11 +73,11 @@ def parse_command_line_options():
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-    choices = ["gamma", "nakazato", "princeton", "totani", "warren2020"]
+    choices = ["gamma", "nakazato", "princeton", "totani", "warren2020", "SNEWPY-Nakazato_2013"]
     default = "totani"
     parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=default,
-                        help="Format of input files. See parsers in folder 'formats/' \
-                              for details. Choices: %s. Default: '%s'." % (choices, default))
+                        help=f"Format of input files. See parsers in folder 'formats/' for details. \
+                               Choices: {choices[-1:]}. Default: %(default)s.")
 
     default = "outfile.kin"
     parser.add_argument("-o", "--output", metavar="FILE", default=default,
