@@ -9,7 +9,7 @@ See parsing code below for details.
 """
 
 from scipy import interpolate
-from sntools.formats import BaseFlux, get_endtime, get_starttime
+from sntools.formats import BaseFlux, get_endtime, get_raw_times, get_starttime
 
 
 class Flux(BaseFlux):
@@ -58,17 +58,7 @@ class Flux(BaseFlux):
 
         self.starttime = get_starttime(starttime, self.times[0])
         self.endtime = get_endtime(endtime, self.times[-1])
-
-        # if user entered a custom start/end time, find indices of relevant time bins
-        i_min, i_max = 0, len(self.times) - 1
-        for (i, time) in enumerate(self.times):
-            if time < self.starttime:
-                i_min = i
-            elif time > self.endtime:
-                i_max = i
-                break
-
-        self.raw_times = self.times[i_min : i_max + 1]
+        self.raw_times = get_raw_times(self.times, self.starttime, self.endtime)
 
     def prepare_evt_gen(self, binned_t):
         """Pre-compute values necessary for event generation.

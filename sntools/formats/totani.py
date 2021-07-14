@@ -8,7 +8,7 @@ in the raw input files. We fix this when reading from the files in _parse().
 
 from math import log10
 from scipy.interpolate import InterpolatedUnivariateSpline
-from sntools.formats import BaseFlux, get_endtime, get_starttime
+from sntools.formats import BaseFlux, get_endtime, get_raw_times, get_starttime
 
 zero = 1e-99  # not exactly zero to ensure log interpolation is still possible
 
@@ -33,34 +33,24 @@ class Flux(BaseFlux):
         self._parse(input + "-early.txt", "early", inflv)
         self._parse(input + "-late.txt", "late", inflv)
         self._calculate_dNLde()  # calculate number luminosity for early and late files
-        self.times = self.times_el
+        times = self.times_el
 
-        self.starttime = get_starttime(starttime, self.times[0])
-        self.endtime = get_endtime(endtime, self.times[-1])
-
-        # If user entered a custom start/end time, select only relevant time bins
-        i_min, i_max = 0, len(self.times) - 1
-        for (i, time) in enumerate(self.times):
-            if time < self.starttime:
-                i_min = i
-            elif time > self.endtime:
-                i_max = i
-                break
-        self.times = self.times[i_min: i_max + 1]
+        self.starttime = get_starttime(starttime, times[0])
+        self.endtime = get_endtime(endtime, times[-1])
 
         # nu_e fluxes during the neutronization burst (40-50 ms) are in a separate
         # file, with more precise time bins and a different format.
         if inflv == "e" and self.starttime < 50:
             self._parse_nb(input + "-nb.txt")
-            self.times = sorted(self.times + self.times_nb)
+            times = sorted(times + self.times_nb)
+
+        self.raw_times = get_raw_times(times, self.starttime, self.endtime)
 
         # Get spectra for relevant time bins by log cubic spline interpolation
         log_group_e = [log10(e_bin) for e_bin in self.e_bins]
-        for time in self.times:
+        for time in self.raw_times:
             log_dNLde = [log10(d) for d in self.dNLde_dict[time]]
             self.log_spectrum[time] = InterpolatedUnivariateSpline(log_group_e, log_dNLde)
-
-        self.raw_times = self.times
 
     def prepare_evt_gen(self, binned_t):
         """Pre-compute values necessary for event generation.
@@ -79,9 +69,9 @@ class Flux(BaseFlux):
 
             if 40 <= time <= 49.99 and self.times_nb != []:
                 # take fluxes from nb file into account
-                _times = [x for x in self.times_nb if x in self.times]
+                _times = [x for x in self.times_nb if x in self.raw_times]
             else:  # use fluxes from early/late file
-                _times = [x for x in self.times_el if x in self.times]
+                _times = [x for x in self.times_el if x in self.raw_times]
 
             # find closest time bins -> t0, t1
             for t_bin in _times:
