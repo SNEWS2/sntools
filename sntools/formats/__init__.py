@@ -94,7 +94,7 @@ class SNEWPYFlux(BaseFlux):
         times = [t.to(u.ms).value for t in sn_model.get_time()]
         self.starttime = get_starttime(starttime, times[0])
         self.endtime = get_endtime(endtime, times[-1])
-        self.raw_times = times  # TODO: enforce starttime/endtime in self.raw_times
+        self.raw_times = get_raw_times(times, self.starttime, self.endtime)
 
     def parse_input(self, *args):
         # handled in SNEWPYCompositeFlux.from_file()
@@ -154,3 +154,20 @@ def get_endtime(endtime, maximum):
     elif endtime > maximum:
         raise ValueError("End time cannot be later than %f (last entry in input file)." % maximum)
     return endtime
+
+
+def get_raw_times(times, starttime, endtime):
+    """
+    Return list of times covering only the relevant time range.
+
+    times - all times in input file
+    starttime, endtime - relevant time range
+    """
+    i_min, i_max = 0, len(times) - 1
+    for (i, time) in enumerate(times):
+        if time < starttime:
+            i_min = i
+        elif time > endtime:
+            i_max = i
+            break
+    return times[i_min: i_max + 1]
