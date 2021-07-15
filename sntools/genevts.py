@@ -73,11 +73,11 @@ def parse_command_line_options():
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-    choices = ["gamma", "nakazato", "princeton", "totani", "warren2020", "SNEWPY-Nakazato_2013"]
+    choices = ("gamma", "nakazato", "princeton", "totani", "warren2020", "SNEWPY-Bollig_2016", "SNEWPY-Kuroda_2020", "SNEWPY-Nakazato_2013", "SNEWPY-OConnor_2015", "SNEWPY-Sukhbold_2015", "SNEWPY-Zha_2021")
     default = "totani"
     parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=default,
                         help=f"Format of input files. See parsers in folder 'formats/' for details. \
-                               Choices: {choices[-1:]}. Default: %(default)s.")
+                               Choices: {choices[:5]}. Default: %(default)s.")
 
     default = "outfile.kin"
     parser.add_argument("-o", "--output", metavar="FILE", default=default,
