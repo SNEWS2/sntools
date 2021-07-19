@@ -32,11 +32,6 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     # To save time, we cache results in a dictionary.
     cached_flux = {}
 
-    # Set options for numerical integration. Not needed for all channels, so
-    # default to returning an empty dictionary.
-    if not hasattr(channel, "_opts"):
-        channel._opts = lambda *args: {"points": []}
-
     thr_e = 3.511  # detection threshold in HK: 3 MeV kinetic energy + rest mass
 
     # integrate over eE and then eNu to obtain the event rate at time t
