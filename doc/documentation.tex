@@ -450,8 +450,12 @@ Finally, add a new detector configuration which uses this detector material (see
 \subsection{Add a New Interaction Channel}\label{sec:new-interaction-channel}
 
 \begin{itemize}
-\item In the \texttt{fluxes/} folder, copy \texttt{\_example.py} to create a new module for your interaction channel and implement the relevant physics in there.
-(The source code contains extensive comments explaining all variables and functions.)
+\item In the \texttt{fluxes/} folder, create a new file for your interaction channel. It must define two things:
+	\begin{itemize}
+		\item A list of neutrino flavors that can interact in this channel (e.g. if all flavors interact in your channel: \texttt{possible\_flavors = ["e", "eb", "x", "xb"]})
+		\item A class named \texttt{Channel}, which inherits from the \texttt{BaseChannel} class defined in \texttt{interaction\_channels/\_\_init\_\_.py}. Overwrite all functions that are marked \texttt{@abstractmethod} in the \texttt{BaseChannel} class to implement the relevant physics.
+		(See docstrings for explanations of all variables and functions.)
+	\end{itemize}
 \item In \texttt{genevts.py}, add the channel in the \texttt{parse\_command\_line\_options()} function.
 \item In \texttt{detectors.py}, add the channel to all relevant detector materials.
 \end{itemize}
