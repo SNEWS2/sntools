@@ -59,7 +59,7 @@ Additionally, sntools can be used as a Python library that implements neutrino c
 % sntools should support *at least* the python/scipy/numpy versions required by NEP 29:
 % https://numpy.org/neps/nep-0029-deprecation_policy.html
 
-First, make sure you have Python\footnote{Python 3.6 or higher is strongly recommended; support for earlier versions (including Python 2.7) will be removed in a future version of sntools.} installed on your computer.
+First, make sure you have Python 3.6 or higher installed on your computer.
 (If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
 In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
@@ -91,10 +91,11 @@ The input file is a required argument. The following optional arguments are avai
 
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
 \item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
-\item[\texttt{--ordering <value>}] Neutrino mass ordering. See section~\ref{sec:mass-ordering}.
+\item[\texttt{--transformation <value>}] Transformation between initial flux (inside the supernova) and detected flux on Earth. See section~\ref{sec:transformation}.
 \item[\texttt{--distance <value>}] Distance to supernova (in kpc).
 \item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
-\item[\texttt{--randomseed <value>}] Set an integer as a seed for the random number generator, to generate events reproducibly.\footnote{Note: Python 2.7 will not give identical results to Python 3.x for the oxygen-16 CC channels.}
+\item[\texttt{--randomseed <value>}] Set an integer as a seed for the random number generator, to generate events reproducibly.
+\item[\texttt{--maxworkers <value>}] Maximum number of parallel processes. sntools will generate events for up to this many channels in parallel, which may improve performance on multi-core CPUs.
 \item[\texttt{--verbose}] Print more detailed output.
 \item[\texttt{--version}] Print the current version number and exit.
 \end{description}
@@ -246,15 +247,14 @@ where $E_\nu$ is the neutrino energy, $E_\text{thr} \approx \SI{15}{MeV}$ is the
 The energy of the outgoing $\gamma$ is $E_\gamma = E_\text{thr}$.
 
 
-\subsection{Treatment of Neutrino Flavour Conversion} \label{sec:mass-ordering}
+\subsection{Treatment of Neutrino Flavour Conversion} \label{sec:transformation}
 
-sntools implements three different mass ordering scenarios that can be selected by using the \texttt{--ordering <value>} command line argument.%
-\footnote{The alias \texttt{--hierarchy <value>} also exists.}
+sntools implements different transformations between the original neutrino flux generated in the supernova and the flux detected on Earth, which can be selected by using the \texttt{--transformation <value>} command line argument.
 
-The first scenario, \texttt{noosc}, assumes that neutrino oscillations do not take place such that the flux of a neutrino species $\nu_i$ observed by a detector on Earth, $\Phi_{\nu_i}$, is identical to the fluxes originating within the supernova, $\Phi_{\nu_i}^0$, which are given in the input files that sntools uses.\footnote{For simplicity, throughout this section I omit the geometrical factor $\frac{1}{4 \pi d^2}$ which depends on the distance $d$ of the supernova.}
+In the simplest case, \texttt{NoTransformation}, no flavor transformation takes place. Apart from the geometrical factor $\frac{1}{4 \pi d^2}$ (which depends only on the distance $d$ of the supernova\footnote{This geometrical factor is always taken into account by sntools. For simplicity, I will omit it in the following.}), the flux of a neutrino species $\nu_i$ observed by a detector on Earth, $\Phi_{\nu_i}$, is identical to the flux originating within the supernova, $\Phi_{\nu_i}^0$, which is given by the input file(s).
 
-The other two scenarios, \texttt{normal} and \texttt{inverted}, assume that adiabatic flavour conversion happens via the MSW effect since neutrinos traverse a smoothly varying density profile while exiting the star.
-The resulting observed fluxes are linear combinations of the initial fluxes, which, for normal mass ordering, are given by~\cite{Dighe2000}
+The two transformations \texttt{AdiabaticMSW\_NMO} and \texttt{AdiabaticMSW\_IMO} assume that neutrinos traverse a smoothly varying density profile while exiting the star and undergo adiabatic flavour conversion via the MSW effect.
+The resulting detected fluxes are linear combinations of the initial fluxes, which, for normal mass ordering (NMO), are given by~\cite{Dighe2000}
 \begin{align}
 \begin{split}
 \Phi_{\nue} &= \sin^2 \theta_{13} \cdot \Phi_{\nue}^0 + \cos^2 \theta_{13} \cdot \Phi_{\nux}^0\\
@@ -263,7 +263,7 @@ The resulting observed fluxes are linear combinations of the initial fluxes, whi
 2 \Phi_{\nuxbar} &= (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuebar} + (1 + \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar},
 \end{split}
 \end{align}
-while for inverted ordering, they are
+while for inverted mass ordering (IMO), they are
 \begin{align}
 \begin{split}
 \Phi_{\nue} &= \sin^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi_{\nue}^0 + (1 - \sin^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi_{\nux}^0\\
@@ -278,11 +278,11 @@ These equations assume purely adiabatic transition (corresponding to $P_H = 0$ i
 Values for $\theta_{12}$ and $\theta_{13}$ are taken from the Particle Data Group~\cite{PDG2020}.
 
 In cases where the detected flux is a mixture of original fluxes of different species, sntools generates events for each original species separately with the appropriate weighting factor applied.
-For example, when generating inverse beta decay events in the normal ordering, sntools will generate events first using the input flux $\Phi_{\nuebar} = \cos^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi^0_{\nuebar}$ and then using the input flux $\Phi_{\nuebar} = (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar}$, before finally combining both sets of events into one output file.
+For example, when generating inverse beta decay events using the \texttt{AdiabaticMSW\_NMO} transformation, sntools will generate events first using the input flux $\Phi_{\nuebar} = \cos^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi^0_{\nuebar}$ and then using the input flux $\Phi_{\nuebar} = (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar}$, before finally combining both sets of events into one output file.
 
-Several other effects that may induce additional time- and energy-dependent flavour conversion are not currently implemented in sntools.
-They are discussed in the following.
-
+If SNEWPY is installed, sntools supports additional transformations as described in section~\ref{sec:snewpy}.
+Finally, some other effects that may induce additional time- and energy-dependent flavour conversion cannot currently be implemented in sntools.%
+\footnote{
 After the accretion phase, the revived shock front travels outwards and passes through the layer within the star where the adiabatic flavour conversion described above takes place.
 This causes a sudden change in the matter and electron density and can severely impact the flavour conversion processes~\cite{Schirato2002}.
 Since this occurs after the shock wave is revived, it mainly affects the late-time part of the supernova neutrino signal.\footnote{For the Totani model, this effect is expected to become relevant more than \SI{1}{s} after core-bounce~\cite{Fogli2005}. Most other computer simulations don’t extend out to more than a few \SI{100}{ms} and would thus likely not exhibit this effect.}
@@ -302,12 +302,14 @@ As neutrinos traverse the Earth’s matter potential before detection, they can 
 The presence and amplitude of this shadowing effect depends on a combination of the location of the progenitor within the Milky Way, the detector location on Earth~\cite{Mirizzi2006} and, due to the Earth’s rotation, the time of day that the neutrinos arrive on Earth.
 These are not currently included in sntools.%
 %\footnote{A possible workaround is to pre-process the neutrino fluxes to include Earth matter effects before using them as an input for sntools. However, note that the current input formats all assume a smooth spectrum, so the narrow, energy-dependent flavour transition may not be represented accurately. It may be necessary to define a more versatile input format.}
+}
 
 
 \subsection{Input Formats} \label{sec:input-formats}
 sntools supports multiple different input formats for the neutrino fluxes from a simulation.
 To select one, use the \texttt{--format <value>} command line argument, where \texttt{<value>} can be one of \texttt{gamma}, \texttt{warren2020}, \texttt{nakazato}, \texttt{princeton} or \texttt{totani}.
 This section will briefly describe each format and the processing steps necessary to calculate the spectral number luminosity.
+(If SNEWPY is installed, sntools supports additional input formats described in section~\ref{sec:snewpy}.)
 
 All formats contain separate information on the three species \nue, \nuebar and \nux.
 The fluxes of \nux and \nuxbar are typically assumed to be equal and most simulations don’t provide separate fluxes for \nux and \nuxbar.
@@ -376,6 +378,29 @@ The spectral number luminosity at time $t_n$ and energy $E_k$ is given by
 \end{equation}
 Finally, a linear interpolation in time and log cubic spline interpolation in energy are used to determine the spectral number luminosity at an arbitrary time and energy.%
 \footnote{This approach closely follows the one used in code provided by Totani. There is excellent agreement of the calculated fluxes between Totani’s code and sntools, with differences of at most a few per mille due to slight differences in the numerical interpolation algorithms used.}
+
+
+\subsection{Integration of SNEWPY}\label{sec:snewpy}
+SNEWPY (\url{https://github.com/SNEWS2/snewpy/}) is a SNOwGLoBES frontend developed by members of the SNEWS 2.0 collaboration. It includes a large collection of fluxes from different supernova simulations and implements several flux transformations.
+
+When SNEWPY is installed, sntools imports a submodule of SNEWPY that provides the following additional transformations:
+\texttt{CompleteExchange},
+\texttt{NonAdiabaticMSWH},
+\texttt{TwoFlavorDecoherence\_NMO},
+\texttt{TwoFlavorDecoherence\_IMO},
+\texttt{ThreeFlavorDecoherence}.
+See SNEWPY for a full description of these.
+To use these transformations in sntools (in addition to the natively supported transformations described in section~\ref{sec:transformation}), prefix them with \texttt{SNEWPY-}. For example, to apply three flavor decoherence, use sntools with the command line argument \texttt{--transformation SNEWPY-ThreeFlavorDecoherence}.
+
+When SNEWPY is installed, sntools also imports another submodule of SNEWPY that provides the following input formats:
+\texttt{Bollig\_2016},
+\texttt{Kuroda\_2020},
+\texttt{Nakazato\_2013},
+\texttt{OConnor\_2015},
+\texttt{Sukhbold\_2015},
+\texttt{Zha\_2021}.
+The SNEWPY repository also contains neutrino flux files from each of the corresponding simulations.
+To use these flux files in sntools (in addition to the natively supported input formats described in section~\ref{sec:input-formats}), prefix them with \texttt{SNEWPY-}. For example, to use an \texttt{OConnor\_2015} input file, use sntools with the command line argument \texttt{--format SNEWPY-OConnor\_2015}.
 
 
 
