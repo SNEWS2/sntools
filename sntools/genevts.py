@@ -7,6 +7,12 @@ from importlib import import_module
 import random
 
 try:
+    import snewpy  # noqa
+    snewpy_installed = True
+except ImportError:
+    snewpy_installed = False
+
+try:
     import sntools  # if sntools was installed via pip
 except ImportError:
     # if running this directly from the repo, modify `sys.path` to ensure all imports work
@@ -28,12 +34,7 @@ def main():
     random.seed(args.randomseed)
 
     # Calculate fluxes at detector
-    if args.format[:7] == "SNEWPY-":
-        raw_flux = SNEWPYCompositeFlux.from_file(args.input_file, args.format[7:], args.starttime, args.endtime)
-    else:
-        raw_flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
-
-    flux_at_detector = raw_flux.transformed_by(args.transformation, args.distance)
+    flux_at_detector = args.flux.transformed_by(args.transformation, args.distance)
 
     # Generate events for each (sub-)channel and combine them
     pool = ProcessPoolExecutor(max_workers=args.maxworkers)
@@ -73,46 +74,40 @@ def parse_command_line_options():
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-    choices = ("gamma", "nakazato", "princeton", "totani", "warren2020", "SNEWPY-Bollig_2016", "SNEWPY-Kuroda_2020", "SNEWPY-Nakazato_2013", "SNEWPY-OConnor_2015", "SNEWPY-Sukhbold_2015", "SNEWPY-Zha_2021")
-    default = "totani"
-    parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=default,
-                        help=f"Format of input files. See parsers in folder 'formats/' for details. \
-                               Choices: {choices[:5]}. Default: %(default)s.")
+    choices = ("gamma", "nakazato", "princeton", "totani", "warren2020")
+    if snewpy_installed:
+        choices += ("SNEWPY-Bollig_2016", "SNEWPY-Kuroda_2020", "SNEWPY-Nakazato_2013", "SNEWPY-OConnor_2015", "SNEWPY-Sukhbold_2015", "SNEWPY-Zha_2021")
+    parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=choices[1],
+                        help="Format of input file(s). Choices: %(choices)s. Default: %(default)s.")
 
-    default = "outfile.kin"
-    parser.add_argument("-o", "--output", metavar="FILE", default=default,
-                        help="Name of the output file. Default: '%s'." % default)
+    parser.add_argument("-o", "--output", metavar="FILE", default="outfile.kin", help="Name of the output file. Default: %(default)s.")
 
-    choices = ["NUANCE", "RATPAC"]
-    default = "NUANCE"
-    parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=default,
-                        help="MC output format for simulations. Choices: %s. Default: %s." % (choices, default))
+    choices = ("NUANCE", "RATPAC")
+    parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=choices[0],
+                        help="MC output format for simulations. Choices: %(choices)s. Default: %(default)s.")
 
     # NOTE: Deprecated since v1.0 in favor of '--transformation'
     choices = ("noosc", "normal", "inverted")
     parser.add_argument("-H", "--hierarchy", "--ordering", choices=choices, help=argparse.SUPPRESS, action=DeprecationAction)
 
-    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO", "SNEWPY-CompleteExchange", "SNEWPY-NonAdiabaticMSWH",
-               "SNEWPY-TwoFlavorDecoherence_NMO", "SNEWPY-TwoFlavorDecoherence_IMO", "SNEWPY-ThreeFlavorDecoherence")
-    parser.add_argument("-t", "--transformation", metavar="TRANSFORMATION", choices=choices, default=choices[0], action=TransformationAction,
-                        help=f"Transformation between neutrino flux inside SN and flux in the detector on Earth. \
-                               Choices: {choices[:3]}. Default: %(default)s.")
+    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO")
+    if snewpy_installed:
+        choices += ("SNEWPY-CompleteExchange", "SNEWPY-NonAdiabaticMSWH", "SNEWPY-TwoFlavorDecoherence_NMO", "SNEWPY-TwoFlavorDecoherence_IMO", "SNEWPY-ThreeFlavorDecoherence")
+    parser.add_argument("-t", "--transformation", metavar="TRANSFORMATION", choices=choices, default=choices[0],
+                        help="Transformation between neutrino flux inside SN and flux in the detector on Earth. \
+                              Choices: %(choices)s. Default: %(default)s.")
 
-    choices = ["ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc"]
+    choices = ("ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc")
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
-                        help="Interaction channels to consider. Currently, inverse beta decay (ibd), \
-                              electron scattering (es), nu_e + oxygen CC (o16e), nu_e-bar + oxygen CC \
-                              (o16eb), nu_e + carbon CC (c12e), nu_e-bar + carbon CC (c12eb) \
-                              and nu + carbon NC (c12nc) are supported. \
-                              Choices: %s. Default: All supported channels." % choices)
+                        help="Interaction channels to consider. Currently supported: inverse beta decay (ibd), \
+                              electron scattering (es), nu_e + oxygen CC (o16e), nu_e-bar + oxygen CC (o16eb), \
+                              nu_e + carbon CC (c12e), nu_e-bar + carbon CC (c12eb) and nu + carbon NC (c12nc). \
+                              Default: All channels available in selected detector.")
 
-    default = "HyperK"
-    parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default=default,
-                        help="Detector configuration. Choices: %s. Default: '%s'." % (supported_detectors, default))
+    parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default="HyperK",
+                        help="Detector configuration. Choices: %(choices)s. Default: %(default)s.")
 
-    default = 10.0
-    parser.add_argument("--distance", type=float, default=default,
-                        help="Distance to supernova in kpc. Default: '%s'." % default)
+    parser.add_argument("--distance", type=float, default=10.0, help="Distance to supernova in kpc. Default: %(default)s.")
 
     parser.add_argument("--starttime", metavar="T", type=float,
                         help="Start generating events at T milliseconds. Default: First time bin in input file.")
@@ -123,8 +118,7 @@ def parse_command_line_options():
     parser.add_argument("--randomseed", metavar="SEED", type=int,  # non-ints may not give reproducible results
                         help="Integer used as a random number seed to reproducibly generate events. Default: None.")
 
-    parser.add_argument("--maxworkers", metavar="N", type=int,
-                        help="Maximum number of parallel processes. Default: [number of CPU cores].")
+    parser.add_argument("--maxworkers", metavar="N", type=int, help="Maximum number of parallel processes. Default: [number of CPU cores].")
 
     parser.add_argument("-v", "--verbose", action="count", help="Verbose output, e.g. for debugging. Off by default.")
 
@@ -134,11 +128,23 @@ def parse_command_line_options():
 
     args.detector = Detector(args.detector)
     args.channels = args.detector.material["channel_weights"] if args.channel == "all" else [args.channel]
+
+    if args.format[:7] == "SNEWPY-":
+        args.flux = SNEWPYCompositeFlux.from_file(args.input_file, args.format[7:], args.starttime, args.endtime)
+    else:
+        args.flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
+
+    if args.transformation[:7] == "SNEWPY-":
+        args.transformation = SNEWPYTransformation(args.transformation[7:])
+    else:
+        args.transformation = Transformation(args.transformation)
+
     del args.hierarchy  # see args.transformation
     del args.channel  # see args.channels
+    del args.format, args.input_file, args.starttime, args.endtime  # see args.flux
 
     if args.verbose:
-        print("Arguments:")
+        print("Parsed arguments:")
         for (k, v) in vars(args).items():
             print(f"  {k}: {v}")
 
@@ -161,18 +167,6 @@ class DeprecationAction(argparse.Action):
             print(f"❌ '{option_string}' is deprecated. No replacement available.")
 
         setattr(namespace, self.dest, values)
-
-
-class TransformationAction(argparse.Action):
-    """argparse.Action subclass to handle transformations inherited from SNEWPy."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        if values[:7] == "SNEWPY-":
-            transformation = SNEWPYTransformation(values[7:])
-        else:
-            transformation = Transformation(values)
-
-        setattr(namespace, self.dest, transformation)
 
 
 if __name__ == "__main__":

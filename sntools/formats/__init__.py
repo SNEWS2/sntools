@@ -56,7 +56,7 @@ class CompositeFlux:
     def from_file(cls, file, format, starttime=None, endtime=None):
         """Create a CompositeFlux from an input file."""
         self = CompositeFlux()
-        self._repr = f"CompositeFlux.from_file('{file}', '{format}', {starttime}, {endtime})"
+        self._repr = f"CompositeFlux.from_file('{file}', format='{format}', starttime={starttime}, endtime={endtime})"
         format = import_module('sntools.formats.' + format)
 
         for flv in ('e', 'eb', 'x', 'xb'):
@@ -117,7 +117,7 @@ class SNEWPYCompositeFlux(CompositeFlux):
     def from_file(cls, file, format, starttime=None, endtime=None):
         """Create a SNEWPYCompositeFlux from an input file."""
         self = SNEWPYCompositeFlux()
-        self._repr = f"SNEWPYCompositeFlux.from_file('{file}', '{format}', {starttime}, {endtime})"
+        self._repr = f"SNEWPYCompositeFlux.from_file('{file}', format='{format}', starttime={starttime}, endtime={endtime})"
 
         sn_model = getattr(import_module('snewpy.models'), format)(file)
 
