@@ -12,8 +12,6 @@ Instead, below we implement an approximation to DiracDelta: a function that's
 2*epsilon wide and 1/(2*epsilon) high, so that the integral is 1.
 """
 
-from __future__ import division
-
 from math import log10
 import random
 
