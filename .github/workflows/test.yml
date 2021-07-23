@@ -10,7 +10,7 @@ on:
     branches: [ main ]
 
 jobs:
-  unit-test:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,29 +32,11 @@ jobs:
       run: |
         python -m unittest discover
 
-  integration-test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install sntools
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
         # Setting environment variable: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
         # Eliminate UnicodeEncodeError under Python 2.7
         echo "PYTHONIOENCODING=utf8:ignore" >> $GITHUB_ENV
-    - name: Install sntools
-      run: |
         # Install
         pip install . -v
         # Change into sub-directory, so we import the installed version and not the local directory
@@ -62,9 +44,34 @@ jobs:
         cd foo
         # Run setup function
         python -c 'import sntools; sntools.setup()'
+        # Compare with sample output
+        diff outfile.kin ../tests/sample_outfile.kin
     - name: Run integration test
       run: |
         # Generate output file
         sntools fluxes/intp2001.data -f nakazato --detector WATCHMAN-LS --distance 2 --transformation AdiabaticMSW_NMO --starttime 100 --endtime 300 --randomseed 314 -o outfile.kin
         # Compare with sample output
         diff outfile.kin tests/sample_outfile.kin
+
+  lint:
+    runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
