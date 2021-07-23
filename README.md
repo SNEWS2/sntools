@@ -10,14 +10,13 @@ This README file should give a brief overview over sntools and help you get star
 
 ## Getting Started
 ### Installation Instructions
-First, make sure you have Python installed on your computer. (Python 3.6 or higher is recommended; support for earlier versions, including Python 2.7, will be removed in a future version of sntools.)
-
+First, make sure you have Python 3.6 or higher installed on your computer.
 Then, in a terminal, run
 ```
 pip install sntools
 ```
 to install the latest version of sntools and all dependencies.
-(sntools currently requires at least numpy 1.8, scipy 0.17 and h5py 2.10, but newer versions are recommended.)
+(sntools currently requires at least numpy 1.12, scipy 1.0 and h5py 2.10, but newer versions are recommended.)
 
 Finally, run
 ```
