@@ -37,6 +37,8 @@ jobs:
         # Setting environment variable: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
         # Eliminate UnicodeEncodeError under Python 2.7
         echo "PYTHONIOENCODING=utf8:ignore" >> $GITHUB_ENV
+        # Eliminate UnicodeEncodeError under Windows (only works for Python >=3.7, see PEP 540)
+        echo "PYTHONUTF8=1" >> $GITHUB_ENV
         # Install
         pip install . -v
         # Change into sub-directory, so we import the installed version and not the local directory
@@ -48,8 +50,8 @@ jobs:
         python -c 'import sntools; sntools.setup()'
         # Compare with sample output
         diff outfile.kin ../tests/sample_outfile.kin
-        head outfile.kin
-        head ../test/sample_outfile.kin
+        tail outfile.kin
+        tail ../tests/sample_outfile.kin
 #     - name: Run integration test
 #       run: |
 #         # Generate output file
