@@ -36,28 +36,20 @@ jobs:
       run: |
         # Setting environment variable: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
         # Eliminate UnicodeEncodeError under Python 2.7
-        echo "PYTHONIOENCODING=utf8:ignore" >> $GITHUB_ENV
-        # Eliminate UnicodeEncodeError under Windows (only works for Python >=3.7, see PEP 540)
-        echo "PYTHONUTF8=1" >> $GITHUB_ENV
+        # echo "PYTHONIOENCODING=utf8:ignore" >> $GITHUB_ENV
         # Install
         pip install . -v
+    - name: Run integration test
+      run: |
         # Change into sub-directory, so we import the installed version and not the local directory
         mkdir foo
         cd foo
-        pwd
-        ls -l ..
         # Run setup function
         python -c 'import sntools; sntools.setup()'
         # Compare with sample output
         diff outfile.kin ../tests/sample_outfile.kin
-        tail outfile.kin
         tail ../tests/sample_outfile.kin
-#     - name: Run integration test
-#       run: |
-#         # Generate output file
-#         sntools fluxes/intp2001.data -f nakazato --detector WATCHMAN-LS --distance 2 --transformation AdiabaticMSW_NMO --starttime 100 --endtime 300 --randomseed 314 -o outfile.kin
-#         # Compare with sample output
-#         diff outfile.kin tests/sample_outfile.kin
+        tail outfile.kin
 
   lint:
     runs-on: 'ubuntu-latest'
