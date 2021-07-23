@@ -162,7 +162,7 @@ class DeprecationAction(argparse.Action):
             replacement = {"noosc": "NoTransformation", "normal": "AdiabaticMSW_NMO", "inverted": "AdiabaticMSW_IMO"}[values]
             print(f"❌ '{option_string} {values}' is deprecated. Please switch to using '--transformation {replacement}'.")
             self.dest = 'transformation'
-            values = Transformation(replacement)
+            values = replacement
         else:
             print(f"❌ '{option_string}' is deprecated. No replacement available.")
 

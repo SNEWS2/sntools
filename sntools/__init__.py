@@ -54,7 +54,7 @@ def setup():
 
     tryprint(u"\U0001f6e0")
     print("Testing event generation ...")
-    sys.argv += [flux_file, '--format', 'nakazato', '--detector', 'WATCHMAN-LS', '--distance', '2', '--ordering', 'normal', '--starttime', '100', '--endtime', '300', '-o', 'outfile.kin', '--randomseed', '314']
+    sys.argv += [flux_file, '--format', 'nakazato', '--detector', 'WATCHMAN-LS', '--distance', '2', '--transformation', 'AdiabaticMSW_NMO', '--starttime', '100', '--endtime', '300', '-o', 'outfile.kin', '--randomseed', '314']
     genevts.main()
 
     tryprint(u"\U0001f6e0")
