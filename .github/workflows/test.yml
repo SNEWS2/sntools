@@ -42,22 +42,23 @@ jobs:
         # Change into sub-directory, so we import the installed version and not the local directory
         mkdir foo
         cd foo
+        pwd
+        ls -l ..
         # Run setup function
         python -c 'import sntools; sntools.setup()'
         # Compare with sample output
         diff outfile.kin ../tests/sample_outfile.kin
-    - name: Run integration test
-      run: |
-        # Generate output file
-        sntools fluxes/intp2001.data -f nakazato --detector WATCHMAN-LS --distance 2 --transformation AdiabaticMSW_NMO --starttime 100 --endtime 300 --randomseed 314 -o outfile.kin
-        # Compare with sample output
-        diff outfile.kin tests/sample_outfile.kin
+        head outfile.kin
+        head ../test/sample_outfile.kin
+#     - name: Run integration test
+#       run: |
+#         # Generate output file
+#         sntools fluxes/intp2001.data -f nakazato --detector WATCHMAN-LS --distance 2 --transformation AdiabaticMSW_NMO --starttime 100 --endtime 300 --randomseed 314 -o outfile.kin
+#         # Compare with sample output
+#         diff outfile.kin tests/sample_outfile.kin
 
   lint:
     runs-on: 'ubuntu-latest'
-    strategy:
-      fail-fast: false
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -67,7 +68,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # pip install -r requirements.txt
         pip install flake8
     - name: Lint with flake8
       run: |
