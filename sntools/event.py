@@ -9,12 +9,11 @@ class Event(object):
         self.outgoing_particles = outgoing or []
 
     def __repr__(self):
-        return "Event(code=%i, time=%s, vertex=%s, incoming=%s, outgoing=%s)" \
-                % (self.code, self.time, self.vertex, self.incoming_particles, self.outgoing_particles)
+        return f"Event(code={self.code}, time={self.time}, vertex={self.vertex}, incoming={self.incoming_particles}, outgoing={self.outgoing_particles})"
 
     def __setattr__(self, name, value):
         if name in ("incoming_particles", "outgoing_particles") and hasattr(self, name):
-            raise AttributeError("%s is a list. Append to it instead of overwriting it." % name)
+            raise AttributeError(f"{name} is a list. Append to it instead of overwriting it.")
         object.__setattr__(self, name, value)
 
     def nuance_string(self, i):
@@ -26,13 +25,13 @@ class Event(object):
             String describing event."""
 
         s = "$ begin\n"
-        s += "$ nuance %i\n" % self.code
-        s += "$ vertex %.5f %.5f %.5f %.8f\n" % (self.vertex[0], self.vertex[1], self.vertex[2], self.time)
+        s += f"$ nuance {self.code}\n"
+        s += f"$ vertex {self.vertex[0]:.5f} {self.vertex[1]:.5f} {self.vertex[2]:.5f} {self.time:.8f}\n"
         for (pid, e, dirx, diry, dirz) in self.incoming_particles:
-            s += "$ track %i %.5f %.5f %.5f %.5f -1\n" % (pid, e, dirx, diry, dirz)
-        s += "$ info 0 0 %i\n" % i
+            s += f"$ track {pid} {e:.5f} {dirx:.5f} {diry:.5f} {dirz:.5f} -1\n"
+        s += f"$ info 0 0 {i}\n"
         for (pid, e, dirx, diry, dirz) in self.outgoing_particles:
-            s += "$ track %i %.5f %.5f %.5f %.5f 0\n" % (pid, e, dirx, diry, dirz)
+            s += f"$ track {pid} {e:.5f} {dirx:.5f} {diry:.5f} {dirz:.5f} 0\n"
         s += "$ end\n"
         return s
 
@@ -53,7 +52,7 @@ class Event(object):
         if i > 0:
             dt -= events[i-1].time
         
-        s = "%i\n"  % len(self.outgoing_particles)
+        s = f"{len(self.outgoing_particles)}\n"
         for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
             mass = 0.0
             if pid == 11 or pid == -11:
@@ -69,5 +68,5 @@ class Event(object):
             pz = dirz*p
             if idx > 0:
                 dt = 0.0
-            s += "1 %i 0 0 %.8e %.8e %.8e %.8e %.5e %.5e %.5e %.5e\n" % (pid, px*GeV, py*GeV, pz*GeV, mass*GeV, dt*ns, self.vertex[0]*mm, self.vertex[1]*mm, self.vertex[2]*mm)
+            s += f"1 {pid} 0 0 {px * GeV:.8e} {py * GeV:.8e} {pz * GeV:.8e} {mass * GeV:.8e} {dt * ns:.5e} {self.vertex[0] * mm:.5e} {self.vertex[1] * mm:.5e} {self.vertex[2] * mm:.5e}\n"
         return s

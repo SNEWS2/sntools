@@ -55,8 +55,8 @@ def main():
     events.sort(key=lambda evt: evt.time)
     with open(args.output, "w") as outfile:
         if args.verbose:  # write parameters to file as a comment
-            outfile.write("# Generated on %s with the options:\n" % datetime.now())
-            outfile.write("# " + str(args) + "\n")
+            outfile.write(f"# Generated on {datetime.now()} with the options:\n")
+            outfile.write(f"# {args}\n")
         if args.mcformat == 'NUANCE':
             for (i, evt) in enumerate(events):
                 evt.vertex = args.detector.generate_random_vertex()

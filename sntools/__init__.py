@@ -12,8 +12,6 @@ For usage information, run `sntools -h` or `python sntools/genevts.py -h`.
 For more extensive documentation, to report issues or to contribute code,
 see https://github.com/JostMigenda/sntools.
 """
-from __future__ import print_function
-
 __version__ = '0.7.4'
 
 
@@ -39,10 +37,8 @@ def setup():
         print("Downloading sample flux file from " + flux_url)
         if not os.path.isdir(flux_dir):
             os.mkdir(flux_dir)
-        try:
-            from urllib.request import urlretrieve  # Python 3.x
-        except ImportError:
-            from urllib import urlretrieve  # Python 2.7
+
+        from urllib.request import urlretrieve
         try:
             urlretrieve(flux_url, filename=flux_file)
             tryprint(u"\u2705", "[SUCCESS]")

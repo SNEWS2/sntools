@@ -8,8 +8,6 @@ see https://www.kvi.nl/~loehner/saf_seminar/2010/neutrino-electron-interactions.
 Note that it uses different conventions (e.g. minus signs) from Bahcall et al.!
 """
 
-from __future__ import division
-
 from math import pi, sqrt, log
 from scipy import integrate
 
@@ -122,7 +120,7 @@ class Channel(BaseChannel):
                 # This is below threshold in HK anyway, so we suppress it.
                 result = 0
             else:
-                raise ValueError("Calculated negative cross section for E_nu=%f, E_e=%f. Aborting..." % (eNu, eE))
+                raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
 
         return result
 

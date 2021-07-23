@@ -3,8 +3,6 @@
 Based on Strumia/Vissani (2003), arXiv:astro-ph/0302055.
 """
 
-from __future__ import division
-
 from math import pi, sqrt, log
 from sntools.interaction_channels import BaseChannel
 
@@ -95,7 +93,7 @@ class Channel(BaseChannel):
         result = sigma0 / eNu**2 * abs_M_squared * (1 + rad_correction)
 
         if result < 0:
-            raise ValueError("Calculated negative cross section for E_nu=%f, E_e=%f. Aborting..." % (eNu, eE))
+            raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
 
         return result
 

@@ -1,4 +1,3 @@
-from __future__ import division
 from math import pi
 import random
 
@@ -91,7 +90,7 @@ class Detector(object):
             self.radius = 5000 / 2
             self.material = wbls(0.10)  # 10% LS, 90% water
         else:
-            raise ValueError("Unknown detector name: %s" % name)
+            raise ValueError(f"Unknown detector name: {name}")
 
         # calculate number of target molecules in detector
         if self.shape == "box":
@@ -99,12 +98,12 @@ class Detector(object):
         elif self.shape == "cylinder":
             volume = pi * self.radius ** 2 * self.height  # assumes cylindrical detector
         else:
-            raise ValueError("Unknown detector shape: %s" % self.shape)
+            raise ValueError(f"Unknown detector shape: {self.shape}")
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
         self.n_molecules = volume * number_density
 
     def __repr__(self):
-        return "Detector('%s')" % self.name
+        return f"Detector('{self.name}')"
 
     def __setattr__(self, attr, value):
         if hasattr(self, attr):
@@ -124,5 +123,5 @@ class Detector(object):
                     break
             z = random.uniform(-self.height / 2, self.height / 2)
         else:
-            raise ValueError("Unknown detector shape: %s" % self.shape)
+            raise ValueError(f"Unknown detector shape: {self.shape}")
         return x, y, z
