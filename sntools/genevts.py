@@ -115,8 +115,8 @@ def parse_command_line_options():
     parser.add_argument("--endtime", metavar="T", type=float,
                         help="Stop generating events at T milliseconds. Default: Last time bin in input file.")
 
-    parser.add_argument("--randomseed", metavar="SEED", type=int,  # non-ints may not give reproducible results
-                        help="Integer used as a random number seed to reproducibly generate events. Default: None.")
+    parser.add_argument("--randomseed", metavar="SEED", default=random.randint(0, 2**32 - 1), type=int,  # non-ints may not give reproducible results
+                        help="Integer between 0 and 2^32 - 1 used as a random number seed to reproducibly generate events. Default: Random.")
 
     parser.add_argument("--maxworkers", metavar="N", type=int, help="Maximum number of parallel processes. Default: [number of CPU cores].")
 
