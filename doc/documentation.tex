@@ -200,18 +200,13 @@ In water, charged-current interactions of \nue and \nuebar on $^{16}$O nuclei,
 \nuebar + ^{16}\text{O} &\rightarrow e^+ + X,
 \end{align}
 are a subdominant interaction channel.\footnote{\label{fn:cc-interactions}Charged-current interactions of other neutrino species do not occur, since the energy of supernova neutrinos is too small to produce muons or $\tau$ leptons.}
-Due to the high energy threshold of both interactions of approximately \SI{15}{MeV} and \SI{11}{MeV}, respectively, as well as the steep energy-dependence of the cross sections, the number of events in each channel is a very sensitive probe of the high-energy tail of the supernova neutrino flux.
+Due to the high energy threshold of both interactions of approximately \SI{15}{MeV} and \SI{11}{MeV}, respectively, as well as the steep energy dependence of the cross sections, the number of events in each channel is a very sensitive probe of the high-energy tail of the supernova neutrino flux.
 It may vary by more than two orders of magnitude depending on the supernova models and oscillation scenario.
 
 In sntools, the cross section for both interaction channels is based on a new shell model calculation~\cite{Suzuki2018} which selected 42 different nuclear states and calculated their respective partial cross sections.
 To simplify the evaluation of the cross section, the implementation in sntools uses the four-group fit presented in reference~\cite{Nakazato2018}.
 This fit matches the cross sections calculated from the full set of nuclear states to within a few per cent at neutrino energies of up to \SI{100}{MeV}.
 For a typical supernova neutrino flux, the difference in the resulting event spectra when using the four groups instead of all 42 nuclear states is very small.
-
-An older approximation of both cross sections, which was commonly used in the literature until recently, can still be found in \texttt{interaction\_channels/o16e\_old.py} and \texttt{interaction\_channels/o16eb\_old.py}.%
-\footnote{That approximation is based on a fit~\cite{Tomas2003} to an earlier calculation~\cite{Kolbe2002} which tabulated the resulting total cross sections, instead of partial cross sections for each excitation energy.
-Therefore, the fit assumed a simplified scenario where all final nuclear states shared the energy of the ground state.
-This significantly overestimated the energy spectrum of the emitted $e^\pm$.}
 
 
 \subsubsection{\texttt{c12e} and \texttt{c12eb}: Charged-Current Interactions on $^{12}$C}
@@ -221,7 +216,7 @@ In liquid scintillator, charged-current interactions of \nue and \nuebar on $^{1
 \nuebar + ^{12}\text{C} &\rightarrow e^+ + X,
 \end{align}
 are a subdominant interaction channel.\footnote{Footnote \ref{fn:cc-interactions} applies here as well.}
-Due to the high energy threshold of both interactions of approximately \SI{17}{MeV} and \SI{14}{MeV}, respectively, as well as the steep energy-dependence of the cross sections, the number of events in each channel is a very sensitive probe of the high-energy tail of the supernova neutrino flux.
+Due to the high energy threshold of both interactions of approximately \SI{17}{MeV} and \SI{14}{MeV}, respectively, as well as the steep energy dependence of the cross sections, the number of events in each channel is a very sensitive probe of the high-energy tail of the supernova neutrino flux.
 
 In sntools, the cross section for both interaction channels is based on the calculation in reference~\cite{Kolbe1999}.
 To interpolate between the tabulated cross sections, sntools uses the fit
