@@ -1,31 +1,70 @@
 from abc import ABC, abstractmethod
 from importlib import import_module
-from math import ceil, floor
+from math import ceil, floor, pi
 
 
 class BaseFlux(ABC):
     """Abstract base class that defines the interface for all submodules in `sntools.formats`."""
+    def __repr__(self) -> str:
+        if hasattr(self, '_repr'):
+            return self._repr
+        else:
+            return super().__repr__()
+
     @abstractmethod
-    def parse_input():
+    def parse_input(self, input, inflv, starttime, endtime):
+        """Read simulations data from input file.
+
+        Arguments:
+        input -- prefix of file containing neutrino fluxes
+        inflv -- neutrino flavor to consider
+        starttime -- start time set by user via command line option (or None)
+        endtime -- end time set by user via command line option (or None)
+        """
+        # self.raw_times, self.starttime and self.endtime must be set in parse_input().
+        # See get_raw_times(), get_starttime() and get_endtime() below.
         pass
 
     @abstractmethod
-    def prepare_evt_gen():
+    def prepare_evt_gen(self, binned_t):
+        """Pre-compute values necessary for event generation.
+
+        Scipy/numpy are optimized for parallel operation on large arrays, making
+        it orders of magnitude faster to pre-compute all values at one time
+        instead of computing them lazily when needed.
+
+        Argument:
+        binned_t -- list of time bins for generating events
+        """
         pass
 
     @abstractmethod
-    def nu_emission():
+    def nu_emission(self, eNu, time):
+        """Number of neutrinos emitted, as a function of energy.
+
+        This does not include the geometry factor 1/(4 pi r**2).
+
+        Arguments:
+        eNu -- neutrino energy
+        time -- time ;)
+        """
         pass
 
 
 class WeightedFlux(BaseFlux):
-    def __init__(self, unweighted_flux, weight) -> None:
+    def __init__(self, unweighted_flux, scale, distance=10.0) -> None:
+        """Initialize a WeightedFlux.
+        
+        Arguments:
+        unweighted_flux -- BaseFlux instance corresponding to original flux (at supernova)
+        scale -- scaling factor from flux transformation, e.g. 1.0 for NoTransformation
+        distance -- distance in kpc
+        """
         super().__init__()
+        self._repr = f"WeightedFlux({unweighted_flux}, scale={scale}, distance={distance})"
         self._flux = unweighted_flux
-        self._weight = weight
-
-    def __repr__(self) -> str:
-        return f"WeightedFlux({self._flux}, {self._weight})"
+        distance *= 1.563738e32  # 1 kpc/(hbar * c) in MeV**(-1)
+        self._weight = scale / (4 * pi * distance ** 2)
 
     def __getattr__(self, name: str):
         if name != "_flux":
@@ -61,6 +100,7 @@ class CompositeFlux:
 
         for flv in ('e', 'eb', 'x', 'xb'):
             f = format.Flux()
+            f._repr = repr(f)[:-1] + f": file='{file}', flavor='{flv}', starttime={starttime}, endtime={endtime}>"
             f.parse_input(file, flv, starttime, endtime)
             self.components[flv] = [f]
 
@@ -74,7 +114,7 @@ class CompositeFlux:
         for detected_flv in tf.components:
             for (original_flv, scale) in transformation.components_producing(detected_flv):
                 for flux in self.components[original_flv]:
-                    wf = WeightedFlux(flux, scale * (10.0 / distance)**2)
+                    wf = WeightedFlux(flux, scale, distance)
                     tf.components[detected_flv].append(wf)
 
         return tf

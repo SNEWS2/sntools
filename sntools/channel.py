@@ -27,8 +27,8 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     channel = _channel
     tag = str(channel.__class__).split('.')[-2]
 
-    # dFlux_dE(eNu, time) is called hundreds of times for each generated event,
-    # often with repetitive arguments (when integrating ddEventRate over eE).
+    # ddEventRate(eE, eNu, time) is called hundreds of times for each generated event,
+    # often with identical eNu and time values (when integrating over eE).
     # To save time, we cache results in a dictionary.
     cached_flux = {}
 
@@ -92,15 +92,9 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
 # Helper functions
 def ddEventRate(eE, eNu, time):
     """Double differential event rate."""
-    return channel.dSigma_dE(eNu, eE) * dFlux_dE(eNu, time)
-
-
-def dFlux_dE(eNu, time):
     if (eNu, time) not in cached_flux:
-        fiducial_distance = 1.563738e33  # 10 kpc/(hbar * c) in MeV**(-1)
-        emission = flux.nu_emission(eNu, time)
-        cached_flux[(eNu, time)] = emission / (4 * pi * fiducial_distance ** 2)
-    return cached_flux[(eNu, time)]
+        cached_flux[(eNu, time)] = flux.nu_emission(eNu, time)
+    return channel.dSigma_dE(eNu, eE) * cached_flux[(eNu, time)]
 
 
 def rejection_sample(dist, min_val, max_val, n_bins=100):
