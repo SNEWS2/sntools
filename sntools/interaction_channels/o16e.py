@@ -102,7 +102,7 @@ class Channel(BaseChannel):
         for g in range(1, 5):
             sigma += self.partial_dSigma_dE(eNu, eE, g)
 
-        sigma *= (5.067731E10)**2  # convert cm^2 to MeV^-2, see http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
+        sigma *= (5.067731E10)**2  # convert cm^2 to MeV^-2: http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
         return sigma / (2 * epsilon)  # Ensure that integration over eE yields sigma
 
     def partial_dSigma_dE(self, eNu, eE, g):  # eq. (4) of arXiv:1809.08398

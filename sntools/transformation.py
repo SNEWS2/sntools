@@ -87,7 +87,7 @@ class SNEWPYTransformation(Transformation):
 
         if xf.prob_ee(0, 10) != xf.prob_ee(0, 20) or xf.prob_ee(0, 10) != xf.prob_ee(0.2, 10):
             # Probability appears to depend on time and/or energy
-            raise ValueError(f"The transformation '{name}' from SNEWPy appears to be time- or energy-dependent. This is not currently supported.")
+            raise ValueError(f"The transformation 'SNEWPY-{name}' is time- or energy-dependent. This is not yet supported.")
 
         transformation = (
             ("e", float(xf.prob_ee(0, 0)), "e"),  # nu_e that originated as nu_e

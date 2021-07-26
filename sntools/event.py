@@ -47,11 +47,11 @@ class Event(object):
         GeV = 0.001   # convert from MeV
         mm = 10       # convert from cm
         ns = 1000000  # convert from ms
-        
+
         dt = self.time
         if i > 0:
-            dt -= events[i-1].time
-        
+            dt -= events[i - 1].time
+
         s = f"{len(self.outgoing_particles)}\n"
         for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
             mass = 0.0
@@ -63,9 +63,9 @@ class Event(object):
                 mass = 939.56563
             p2 = (e**2) - (mass**2)
             p = p2**0.5
-            px = dirx*p
-            py = diry*p
-            pz = dirz*p
+            px = dirx * p
+            py = diry * p
+            pz = dirz * p
             if idx > 0:
                 dt = 0.0
             s += f"1 {pid} 0 0 {px * GeV:.8e} {py * GeV:.8e} {pz * GeV:.8e} {mass * GeV:.8e} {dt * ns:.5e} {self.vertex[0] * mm:.5e} {self.vertex[1] * mm:.5e} {self.vertex[2] * mm:.5e}\n"

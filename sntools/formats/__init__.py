@@ -54,7 +54,7 @@ class BaseFlux(ABC):
 class WeightedFlux(BaseFlux):
     def __init__(self, unweighted_flux, scale, distance=10.0) -> None:
         """Initialize a WeightedFlux.
-        
+
         Arguments:
         unweighted_flux -- BaseFlux instance corresponding to original flux (at supernova)
         scale -- scaling factor from flux transformation, e.g. 1.0 for NoTransformation

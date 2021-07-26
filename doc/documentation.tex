@@ -169,7 +169,8 @@ By default, it will generate events across all channels that are available in th
 For all supported channels, sntools includes code to calculate the differential cross sections, outgoing particle energy as a function of neutrino energy and other quantities.
 These could be used as a library from other Python code, e.\,g. as follows:\\
 \texttt{>> from sntools.interaction\_channels import ibd}\\
-\texttt{>> ibd.bounds\_eE(eNu=20)  \# min/max energy of outgoing positron in MeV}\\
+\texttt{>> c = ibd.Channel('eb')}\\
+\texttt{>> c.bounds\_eE(eNu=20)  \# min/max energy of outgoing positron in MeV}\\
 \texttt{[17.941220926704954, 18.70577898514169]}
 
 Type \texttt{help(ibd)} on the Python command line for documentation or see \href{https://github.com/SNOwGLoBES/snowglobes/pull/12/commits/f1cf96d8c326b99ac35474bb6a36ef4d1fde809d}{this SNOwGLoBES pull request} for a full usage example.
@@ -445,11 +446,11 @@ Finally, add a new detector configuration which uses this detector material (see
 \subsection{Add a New Interaction Channel}\label{sec:new-interaction-channel}
 
 \begin{itemize}
-\item In the \texttt{fluxes/} folder, create a new file for your interaction channel. It must define two things:
+\item In the \texttt{interaction\_channels/} folder, create a new file for your interaction channel. It must define two things:
 	\begin{itemize}
 		\item A list of neutrino flavors that can interact in this channel (e.g. if all flavors interact in your channel: \texttt{possible\_flavors = ["e", "eb", "x", "xb"]})
-		\item A class named \texttt{Channel}, which inherits from the \texttt{BaseChannel} class defined in \texttt{interaction\_channels/\_\_init\_\_.py}. Overwrite all functions that are marked \texttt{@abstractmethod} in the \texttt{BaseChannel} class to implement the relevant physics.
-		(See docstrings for explanations of all variables and functions.)
+		\item A class named \texttt{Channel}, which inherits from the \texttt{BaseChannel} class defined in \texttt{interaction\_channels/\_\_init\_\_.py}. Overwrite all functions and properties that are marked \texttt{@abstractmethod} in the \texttt{BaseChannel} class to implement the relevant physics.
+		(See docstrings for explanations.)
 	\end{itemize}
 \item In \texttt{genevts.py}, add the channel in the \texttt{parse\_command\_line\_options()} function.
 \item In \texttt{detectors.py}, add the channel to all relevant detector materials.
@@ -457,11 +458,11 @@ Finally, add a new detector configuration which uses this detector material (see
 
 
 \subsection{Add a New Input Format}\label{sec:new-input-format}
-Ask whoever provided you with that input file, whether they could make the fluxes available in the \texttt{gamma} format described in section~\ref{sec:format-gamma}.
-If that’s not possible:
+First, check if it is straightforward to transform the input files into one of the supported formats described in section~\ref{sec:input-formats}.
+If not:
 \begin{itemize}
-\item In the \texttt{formats/} folder, copy \texttt{gamma.py} to create a new module for your interaction channel and implement the three functions in there.
-(See the doc strings in the source code for details.)
+\item In the \texttt{formats/} folder, create a new file for your interaction channel. It must contain a class named \texttt{Flux}, which inherits from the \texttt{BaseFlux} class defined in \texttt{formats/\_\_init\_\_.py}. Overwrite all functions that are marked \texttt{@abstractmethod} in the \texttt{BaseFlux} class.
+(See docstrings for explanations.)
 \item In \texttt{genevts.py}, add the format in the \texttt{parse\_command\_line\_options()} function.
 \end{itemize}
 

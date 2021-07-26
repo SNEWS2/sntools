@@ -11,6 +11,9 @@ class BaseChannel(ABC):
     def __init__(self, flv) -> None:
         self.flavor = flv
 
+    def __repr__(self) -> str:
+        return f"{self.__module__}.Channel('{self.flavor}')"
+
     @abstractmethod
     def generate_event(self, eNu, dirx, diry, dirz):
         """Return an event with the appropriate incoming/outgoing particles.

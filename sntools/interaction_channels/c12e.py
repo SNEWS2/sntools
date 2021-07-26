@@ -69,9 +69,9 @@ class Channel(BaseChannel):
             # ... but just in case:
             return 0
 
-        sigma0 = 3.439E-44 * (5.067731E10)**2  # convert cm^2 to MeV^-2, see http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
         a1, a2, a3 = 10.164, -0.4666, 0.0546
-        sigma = sigma0 * (a1 * (eNu - e_thr) + a2 * (eNu - e_thr)**2 + a3 * (eNu - e_thr)**3)
+        sigma = 3.439e-44 * (a1 * (eNu - e_thr) + a2 * (eNu - e_thr)**2 + a3 * (eNu - e_thr)**3)
+        sigma *= (5.067731E10)**2  # convert cm^2 to MeV^-2: http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
         return sigma / (2 * epsilon)  # Ensure that integration over eE yields sigma
 
     def dSigma_dCosT(self, eNu, cosT):

@@ -11,6 +11,7 @@ dist/
 *.egg-info/
 
 # LaTeX documentation
+documentation.pdf
 *.aux
 *.bbl
 *.blg

@@ -46,11 +46,10 @@ class Flux(BaseFlux):
 
         # save mean energy, mean squared energy, luminosity to dictionary to look up in nu_emission() below
         self.flux = {}
+        # input files contain time in column 1 and data for nu_e (cols 2-4), anti-nu_e (cols 5-7) and nu_x (cols 8-10)
+        offset = {"e": 1, "eb": 4, "x": 7, "xb": 7}[inflv]
         for timebin in indata:
-            # input files contain information for nu_e in columns 1-3, for
-            # anti-nu_e in cols 4-6 and for nu_x in columns 7-9
-            offset = {"e": 1, "eb": 4, "x": 7, "xb": 7}[inflv]
-            (mean_e, mean_e_sq, lum) = timebin[offset : offset + 3]
+            (mean_e, mean_e_sq, lum) = timebin[offset: offset + 3]
             t = timebin[0]
             self.flux[t] = (mean_e, mean_e_sq, lum * 624.151)  # convert lum from erg/s to MeV/ms
 

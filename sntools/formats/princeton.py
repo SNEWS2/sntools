@@ -43,7 +43,7 @@ class Flux(BaseFlux):
             self.times.append(time)
 
             diff_number_flux = [0]  # Set flux at 0 MeV to 0
-            for emean, diff_lum in zip(ebins[1:-1], line[offset : offset + 20]):
+            for emean, diff_lum in zip(ebins[1:-1], line[offset: offset + 20]):
                 diff_lum *= 1e50  # file gives spectral luminosity in 10^50 erg/s/MeV
                 diff_lum *= 624.151  # convert erg/s/MeV to MeV/ms/MeV
                 if offset == 41:

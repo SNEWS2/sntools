@@ -119,13 +119,13 @@ class Flux(BaseFlux):
         if format == "early":
             # 42 lines per time bin, 26 bins in wilson-early.txt
             for i in range(26):
-                chunks.append(raw_indata[42 * i : 42 * (i + 1)])
+                chunks.append(raw_indata[42 * i: 42 * (i + 1)])
             line_N = 6
             range_egroup = range(19, 39)
         elif format == "late":
             # 46 lines per time bin, 36 bins in wilson-late.txt
             for i in range(36):
-                chunks.append(raw_indata[46 * i : 46 * (i + 1)])
+                chunks.append(raw_indata[46 * i: 46 * (i + 1)])
             line_N = 8
             range_egroup = range(21, 41)
 
@@ -171,7 +171,7 @@ class Flux(BaseFlux):
 
         # 26 lines per time bin, 99 bins in wilson-nb.txt. Bin 6 is equivalent to
         # 40ms post-bounce & bin 56 is 50ms, so we only select that range:
-        chunks = [raw_indata[26 * i : 26 * (i + 1)] for i in range(6, 57)]
+        chunks = [raw_indata[26 * i: 26 * (i + 1)] for i in range(6, 57)]
 
         # for each time bin, save data to dictionaries to look up later
         for chunk in chunks:

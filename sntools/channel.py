@@ -32,8 +32,6 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     # To save time, we cache results in a dictionary.
     cached_flux = {}
 
-    thr_e = 3.511  # detection threshold in HK: 3 MeV kinetic energy + rest mass
-
     # integrate over eE and then eNu to obtain the event rate at time t
     raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
                  for t in flux.raw_times]
@@ -55,14 +53,6 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     binned_nevt = np.random.poisson(binned_nevt_th)  # Get random number of events in each bin from Poisson distribution
     flux.prepare_evt_gen(binned_t)  # give flux script a chance to pre-compute values
 
-    if verbose:  # compute events above threshold energy `thr_e`
-        thr_bounds_eE = lambda _eNu, *args: [max(thr_e, channel.bounds_eE(_eNu)[0]), max(thr_e, channel.bounds_eE(_eNu)[1])]
-        thr_raw_nevts = [scale * integrate.nquad(ddEventRate, [thr_bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
-                         for t in flux.raw_times]
-        thr_event_rate = interpolate.pchip(flux.raw_times, thr_raw_nevts)
-        thr_binned_nevt_th = thr_event_rate(binned_t)
-        thr_nevt = sum(binned_nevt)
-
     events = []
     for i in range(n_bins):
         t0 = flux.starttime + i * bin_width
@@ -78,13 +68,7 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
             evt.time = t0 + random.random() * bin_width
             events.append(evt)
 
-            if verbose and evt.outgoing_particles[0][1] < thr_e:
-                thr_nevt -= 1
-
     print(f"[{tag}] Generated {sum(binned_nevt)} particles (expected: {sum(binned_nevt_th):.2f} particles)")
-    if verbose:
-        print(f"[{tag}] -> above threshold of {thr_e} MeV: {thr_nevt} particles (expected: {sum(thr_binned_nevt_th):.2f})")
-        print("**************************************")
 
     return events
 
@@ -129,9 +113,8 @@ def rejection_sample(dist, min_val, max_val, n_bins=100):
 
 def get_eNu(time):
     """Get energy of interacting neutrino using rejection sampling."""
-    dist = lambda _eNu: integrate.quad(
-        ddEventRate, *channel.bounds_eE(_eNu), args=(_eNu, time), points=channel._opts(_eNu)["points"]
-    )[0]
+    def dist(eNu):
+        return integrate.quad(ddEventRate, *channel.bounds_eE(eNu), args=(eNu, time), points=channel._opts(eNu)["points"])[0]
     eNu = rejection_sample(dist, *channel.bounds_eNu, n_bins=200)
     return eNu
 
@@ -140,7 +123,8 @@ def get_direction(eNu):
     """Get direction of outgoing particle using rejection sampling.
     (Assumes that incoming neutrino with energy eNu moves in z direction.)
     """
-    dist = lambda _cosT: channel.dSigma_dCosT(eNu, _cosT)
+    def dist(cosT):
+        return channel.dSigma_dCosT(eNu, cosT)
     cosT = rejection_sample(dist, -1, 1, 200)
     sinT = sin(acos(cosT))
     phi = 2 * pi * random.random()  # randomly distributed in [0, 2 pi)
