@@ -55,8 +55,8 @@ def setup():
 
     tryprint(u"\U0001f6e0")
     print("Checking output file ...")
-    with open('outfile.kin', 'rb') as f:
-        output_sha = hashlib.sha256(f.read()).hexdigest()
+    with open('outfile.kin', 'r') as f:
+        output_sha = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
 
     test_sha = "4424b738d32b6c4baa459fb6fb76d63f944b572a02d319bde4fd247a520f1e29"
     if output_sha == test_sha:
