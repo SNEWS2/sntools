@@ -99,7 +99,7 @@ setup(
     #
     extras_require={  # Optional
         # 'dev': ['black', 'flake8'],
-        'snewpy': ['snewpy @ git+https://github.com/SNEWS2/snewpy.git@fb8fba99cde45f09fdf5b5aba3c61f3c0d90c531'],
+        'snewpy': ['snewpy @ git+https://github.com/SNEWS2/snewpy.git@5f9dd618805b99befb9191bd439095cde3307b4d'],  # TODO: PyPI will not accept this, see https://github.com/pypa/pip/issues/6301
     },
 
     # If there are data files included in your packages that need to be

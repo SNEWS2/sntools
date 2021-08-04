@@ -1,4 +1,4 @@
 numpy >= 1.12.0
 scipy >= 1.0
 h5py >= 2.10
-git+https://github.com/SNEWS2/snewpy@fb8fba99cde45f09fdf5b5aba3c61f3c0d90c531#egg=snewpy
+git+https://github.com/SNEWS2/snewpy@5f9dd618805b99befb9191bd439095cde3307b4d#egg=snewpy
