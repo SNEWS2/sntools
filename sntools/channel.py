@@ -26,6 +26,8 @@ def gen_evts(_channel, _flux, n_targets, seed, verbose):
     flux = _flux
     channel = _channel
     tag = str(channel.__class__).split('.')[-2]
+    if tag in ('c12nc', 'es'):
+        tag += '-' + str(channel).split("'")[-2]
 
     # ddEventRate(eE, eNu, time) is called hundreds of times for each generated event,
     # often with identical eNu and time values (when integrating over eE).
@@ -33,6 +35,8 @@ def gen_evts(_channel, _flux, n_targets, seed, verbose):
     cached_flux = {}
 
     # integrate over eE and then eNu to obtain the event rate at time t
+    if verbose:
+        print(f"[{tag}] Calculating event rate for {flux} ...")
     raw_nevts = [n_targets * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
                  for t in flux.raw_times]
     event_rate = interpolate.pchip(flux.raw_times, raw_nevts)
@@ -40,7 +44,7 @@ def gen_evts(_channel, _flux, n_targets, seed, verbose):
     bin_width = 1  # in ms
     n_bins = int((flux.endtime - flux.starttime) / bin_width)  # number of full-width bins; int() implies floor()
     if verbose:
-        print(f"[{tag}] Now generating events in {bin_width} ms bins from {flux.starttime} to {flux.endtime} ms")
+        print(f"[{tag}] Generating events in {bin_width} ms bins from {flux.starttime} to {flux.endtime} ms ...")
 
     # scipy is optimized for operating on large arrays, making it orders of
     # magnitude faster to pre-compute all values of the interpolated functions.
