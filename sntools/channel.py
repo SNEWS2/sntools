@@ -6,7 +6,7 @@ import random
 from scipy import integrate, interpolate
 
 
-def gen_evts(_channel, _flux, scale, seed, verbose):
+def gen_evts(_channel, _flux, n_targets, seed, verbose):
     """Generate events.
 
     * Get event rate by interpolating from time steps in the input data.
@@ -15,8 +15,8 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
 
     Arguments:
     _channel -- BaseChannel instance for the current interaction channel
-    _flux -- BaseFlux instance with appropriate flavor and time range
-    scale -- constant factor, accounts for oscillation probability, distance of SN, size of detector
+    _flux -- BaseFlux instance with appropriate flavor and time range (includes weighting due to flux transformation and distance)
+    n_targets -- number of target particles in detector
     seed -- random number seed to reproducibly generate events
     """
     random.seed(seed)
@@ -33,7 +33,7 @@ def gen_evts(_channel, _flux, scale, seed, verbose):
     cached_flux = {}
 
     # integrate over eE and then eNu to obtain the event rate at time t
-    raw_nevts = [scale * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
+    raw_nevts = [n_targets * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
                  for t in flux.raw_times]
     event_rate = interpolate.pchip(flux.raw_times, raw_nevts)
 
