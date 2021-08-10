@@ -379,24 +379,24 @@ Finally, a linear interpolation in time and log cubic spline interpolation in en
 \subsection{Integration of SNEWPY}\label{sec:snewpy}
 SNEWPY (\url{https://github.com/SNEWS2/snewpy/}) is a SNOwGLoBES frontend developed by members of the SNEWS 2.0 collaboration. It includes a large collection of fluxes from different supernova simulations and implements several flux transformations.
 
-When SNEWPY is installed, sntools imports a submodule of SNEWPY that provides the following additional transformations:
+SNEWPY provides the following transformations (in addition to the natively supported transformations described in section~\ref{sec:transformation}):
 \texttt{CompleteExchange},
 \texttt{NonAdiabaticMSWH},
 \texttt{TwoFlavorDecoherence\_NMO},
 \texttt{TwoFlavorDecoherence\_IMO},
 \texttt{ThreeFlavorDecoherence}.
-See SNEWPY for a full description of these.
-To use these transformations in sntools (in addition to the natively supported transformations described in section~\ref{sec:transformation}), prefix them with \texttt{SNEWPY-}. For example, to apply three flavor decoherence, use sntools with the command line argument \texttt{--transformation SNEWPY-ThreeFlavorDecoherence}.
+See SNEWPY documentation for a full description of these.
+To use these transformations in sntools, prefix them with \texttt{SNEWPY-}. For example, use sntools with the command line argument \texttt{--transformation SNEWPY-ThreeFlavorDecoherence} to apply three flavor decoherence.
 
-When SNEWPY is installed, sntools also imports another submodule of SNEWPY that provides the following input formats:
+SNEWPY also provides the following input formats (in addition to the natively supported input formats described in section~\ref{sec:input-formats}):
 \texttt{Bollig\_2016},
 \texttt{Kuroda\_2020},
 \texttt{Nakazato\_2013},
 \texttt{OConnor\_2015},
 \texttt{Sukhbold\_2015},
 \texttt{Zha\_2021}.
-The SNEWPY repository also contains neutrino flux files from each of the corresponding simulations.
-To use these flux files in sntools (in addition to the natively supported input formats described in section~\ref{sec:input-formats}), prefix them with \texttt{SNEWPY-}. For example, to use an \texttt{OConnor\_2015} input file, use sntools with the command line argument \texttt{--format SNEWPY-OConnor\_2015}.
+SNEWPY also lets you download neutrino flux files from each of the corresponding simulations. See SNEWPY documentation for instructions.
+To use these flux files in sntools, prefix them with \texttt{SNEWPY-}. For example, to use an \texttt{OConnor\_2015} input file, use sntools with the command line argument \texttt{--format SNEWPY-OConnor\_2015}.
 
 
 

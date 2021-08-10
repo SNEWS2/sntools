@@ -91,15 +91,13 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.12', 'scipy>=1.0', 'h5py>=2.10'],  # Optional
+    install_requires=['numpy>=1.12', 'scipy>=1.0', 'h5py>=2.10', 'snewpy'],  # Optional
 
     # Additional groups of dependencies (e.g. for development).
     # Users can install these using the "extras" syntax, for example:
     #   $ pip install sntools[dev]
-    #
     extras_require={  # Optional
         # 'dev': ['black', 'flake8'],
-        'snewpy': ['snewpy @ git+https://github.com/SNEWS2/snewpy.git@5f9dd618805b99befb9191bd439095cde3307b4d'],  # TODO: PyPI will not accept this, see https://github.com/pypa/pip/issues/6301
     },
 
     # If there are data files included in your packages that need to be
