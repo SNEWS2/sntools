@@ -13,7 +13,7 @@ For more extensive documentation, to report issues or to contribute code,
 see https://github.com/JostMigenda/sntools.
 """
 
-__version__ = '0.7.2'
+__version__ = '0.7.2.post1'
 
 
 def setup():
