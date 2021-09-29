@@ -149,3 +149,16 @@ def _opts(eNu, *args):
             p.append(eNu - fit_parameters[g][0] + epsilon)
 
     return {'points': p}
+
+
+def _opts2(self, eE, *args):
+    """Options for numerical integration
+
+    Values of eNu where dSigma_dE(eNu, eE) has a discontinuity, to increase accuracy
+    """
+    p = []
+    for g in range(1, 5):
+        p.append(eE + fit_parameters[g][0] - epsilon)
+        p.append(eE + fit_parameters[g][0] + epsilon)
+
+    return {'points': p}
