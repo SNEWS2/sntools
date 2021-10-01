@@ -152,7 +152,7 @@ def _opts(eNu, *args):
     return {'points': p}
 
 
-def _opts2(self, eE, *args):
+def _opts2(eE, *args):
     """Options for numerical integration
 
     Values of eNu where dSigma_dE(eNu, eE) has a discontinuity, to increase accuracy
