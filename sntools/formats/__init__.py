@@ -145,7 +145,7 @@ class SNEWPYFlux(BaseFlux):
 
     def nu_emission(self, eNu, time):
         from astropy import units as u
-        nl = self._sn_model.get_initialspectra(time * u.ms, eNu * u.MeV, flavors=[self._flv])[self._flv]
+        nl = self._sn_model.get_initial_spectra(time * u.ms, eNu * u.MeV, flavors=[self._flv])[self._flv]
         # SNEWPY uses cgs units internally, so convert before returning
         return nl.to(1 / u.MeV / u.ms).value
 
