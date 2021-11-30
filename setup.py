@@ -67,6 +67,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 
     # Comma-separated list of keywords which will appear on the PyPI project
@@ -91,7 +92,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.12', 'scipy>=1.0', 'h5py>=2.10', 'snewpy'],  # Optional
+    install_requires=['numpy>=1.12', 'scipy>=1.0', 'h5py>=2.10', 'snewpy~=1.1.0'],  # Optional
 
     # Additional groups of dependencies (e.g. for development).
     # Users can install these using the "extras" syntax, for example:
