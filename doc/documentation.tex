@@ -249,7 +249,14 @@ sntools implements different transformations between the original neutrino flux 
 
 In the simplest case, \texttt{NoTransformation}, no flavor transformation takes place. Apart from the geometrical factor $\frac{1}{4 \pi d^2}$ (which depends only on the distance $d$ of the supernova\footnote{This geometrical factor is always taken into account by sntools. For simplicity, I will omit it in the following.}), the flux of a neutrino species $\nu_i$ observed by a detector on Earth, $\Phi_{\nu_i}$, is identical to the flux originating within the supernova, $\Phi_{\nu_i}^0$, which is given by the input file(s).
 
-The two transformations \texttt{AdiabaticMSW\_NMO} and \texttt{AdiabaticMSW\_IMO} assume that neutrinos traverse a smoothly varying density profile while exiting the star and undergo adiabatic flavour conversion via the MSW effect.
+\subsubsection{Adiabatic MSW Effect}
+The two transformations \texttt{AdiabaticMSW\_NMO} and \texttt{AdiabaticMSW\_IMO} assume that neutrinos traverse a smoothly varying density profile%
+\footnote{After the accretion phase, the revived shock front travels outwards and passes through the layer within the star where the adiabatic flavour conversion takes place.
+This causes a sudden change in the matter and electron density and can severely impact the flavour conversion processes~\cite{Schirato2002}.
+Since this occurs after the shock wave is revived, it mainly affects the late-time part of the supernova neutrino signal (e.\,g. for the Totani model, this effect is expected to become relevant more than \SI{1}{s} after core-bounce~\cite{Fogli2005}). Many simulations only cover the first few \SI{100}{ms} and would thus likely not exhibit this effect; making the assumption of a smoothly varying density profile reasonable.}
+while exiting the star and undergo adiabatic flavour conversion via the MSW effect.
+
+
 The resulting detected fluxes are linear combinations of the initial fluxes, which, for normal mass ordering (NMO), are given by~\cite{Dighe2000}
 \begin{align}
 \begin{split}
@@ -276,36 +283,34 @@ Values for $\theta_{12}$ and $\theta_{13}$ are taken from the Particle Data Grou
 In cases where the detected flux is a mixture of original fluxes of different species, sntools generates events for each original species separately with the appropriate weighting factor applied.
 For example, when generating inverse beta decay events using the \texttt{AdiabaticMSW\_NMO} transformation, sntools will generate events first using the input flux $\Phi_{\nuebar} = \cos^2 \theta_{12} \cos^2 \theta_{13} \cdot \Phi^0_{\nuebar}$ and then using the input flux $\Phi_{\nuebar} = (1 - \cos^2 \theta_{12} \cos^2 \theta_{13}) \cdot \Phi^0_{\nuxbar}$, before finally combining both sets of events into one output file.
 
-If SNEWPY is installed, sntools supports additional transformations as described in section~\ref{sec:snewpy}.
-Finally, some other effects that may induce additional time- and energy-dependent flavour conversion cannot currently be implemented in sntools.%
-\footnote{
-After the accretion phase, the revived shock front travels outwards and passes through the layer within the star where the adiabatic flavour conversion described above takes place.
-This causes a sudden change in the matter and electron density and can severely impact the flavour conversion processes~\cite{Schirato2002}.
-Since this occurs after the shock wave is revived, it mainly affects the late-time part of the supernova neutrino signal.\footnote{For the Totani model, this effect is expected to become relevant more than \SI{1}{s} after core-bounce~\cite{Fogli2005}. Most other computer simulations don’t extend out to more than a few \SI{100}{ms} and would thus likely not exhibit this effect.}
-Furthermore, this effect is highly dependent on the the density structure of each individual progenitor and cannot be taken into account by sntools.
-Instead, where appropriate, groups performing supernova simulations will need to include this effect in their codes and publish neutrino flux data that takes it into account.
+\subsubsection{Additional Transformations}
+sntools also supports the following flavour transformations, which are implemented by SNEWPY~\cite{Baxter2021}:
+\texttt{CompleteExchange},
+\texttt{NonAdiabaticMSWH},
+\texttt{TwoFlavorDecoherence\_NMO},
+\texttt{TwoFlavorDecoherence\_IMO},
+\texttt{ThreeFlavorDecoherence}.
+See reference~\cite{SNEWS:2021ezc} for a full description.
+To use these transformations in sntools, prefix them with \texttt{SNEWPY-}. For example, to apply three flavor decoherence use sntools with the command line argument \texttt{--transformation SNEWPY-ThreeFlavorDecoherence}.
 
-Near the centre of the supernova, the high neutrino density could induce a matter effect that causes self-induced flavour conversion~\cite{Duan2006a,Duan2006}.
-These collective effects---and their observable consequences, which could include energy-dependent flavour conversion (so called “spectral splits”)---are the subject of intense theoretical study~\cite{Raffelt2007,Dasgupta2009,Friedland2010,Duan2011,Izaguirre2017}, though no clear picture has yet emerged of how these effects will manifest in a given supernova.
-See reference~\cite{Chakraborty2016} for a recent review.
-Flavour conversion may also be suppressed in dense matter~\cite{Esteban-Pretel2008,Zaizen2018}.
-As a result, the consequences in a realistic supernova are currently not well understood and may depend on the progenitor~\cite{Chakraborty2014}.
-They can therefore not be taken into account by sntools.
-Once theoretical understanding has improved, it may be more appropriate to include these effects in individual supernova simulations and publish neutrino flux data that takes this into account.
-
-Finally, depending on the location of the supernova relative to the detector, the neutrino detector may be “shadowed” by the Earth.
-As neutrinos traverse the Earth’s matter potential before detection, they can undergo energy-dependent flavour transitions which are, in principle, detectable in large liquid scintillator or water Cherenkov detectors~\cite{Dighe2003}.
-The presence and amplitude of this shadowing effect depends on a combination of the location of the progenitor within the Milky Way, the detector location on Earth~\cite{Mirizzi2006} and, due to the Earth’s rotation, the time of day that the neutrinos arrive on Earth.
-These are not currently included in sntools.%
-%\footnote{A possible workaround is to pre-process the neutrino fluxes to include Earth matter effects before using them as an input for sntools. However, note that the current input formats all assume a smooth spectrum, so the narrow, energy-dependent flavour transition may not be represented accurately. It may be necessary to define a more versatile input format.}
-}
+Some additional flavour transformations, like \texttt{NeutrinoDecay}, are implemented in SNEWPY but require some more work to be supported by sntools. If you are interested in these, \href{https://github.com/JostMigenda/sntools/issues/28}{please join the discussion on GitHub}!
 
 
 \subsection{Input Formats} \label{sec:input-formats}
 sntools supports multiple different input formats for the neutrino fluxes from a simulation.
 To select one, use the \texttt{--format <value>} command line argument, where \texttt{<value>} can be one of \texttt{gamma}, \texttt{warren2020}, \texttt{nakazato}, \texttt{princeton} or \texttt{totani}.
 This section will briefly describe each format and the processing steps necessary to calculate the spectral number luminosity.
-(If SNEWPY is installed, sntools supports additional input formats described in section~\ref{sec:snewpy}.)
+
+In addition, sntools supports the following input formats, which are implemented by SNEWPY~\cite{Baxter2021,SNEWS:2021ezc}:
+\texttt{Bollig\_2016},
+\texttt{Kuroda\_2020},
+\texttt{Nakazato\_2013},
+\texttt{OConnor\_2015},
+\texttt{Sukhbold\_2015},
+\texttt{Zha\_2021}.
+SNEWPY also lets you download neutrino flux files from each of the corresponding simulations. See SNEWPY documentation for instructions.
+To use these flux files in sntools, prefix them with \texttt{SNEWPY-}. For example, to use an \texttt{OConnor\_2015} input file, use sntools with the command line argument \texttt{--format SNEWPY-OConnor\_2015}.
+
 
 All formats contain separate information on the three species \nue, \nuebar and \nux.
 The fluxes of \nux and \nuxbar are typically assumed to be equal and most simulations don’t provide separate fluxes for \nux and \nuxbar.
@@ -376,29 +381,6 @@ Finally, a linear interpolation in time and log cubic spline interpolation in en
 \footnote{This approach closely follows the one used in code provided by Totani. There is excellent agreement of the calculated fluxes between Totani’s code and sntools, with differences of at most a few per mille due to slight differences in the numerical interpolation algorithms used.}
 
 
-\subsection{Integration of SNEWPY}\label{sec:snewpy}
-SNEWPY (\url{https://github.com/SNEWS2/snewpy/}) is a SNOwGLoBES frontend developed by members of the SNEWS 2.0 collaboration. It includes a large collection of fluxes from different supernova simulations and implements several flux transformations.
-
-SNEWPY provides the following transformations (in addition to the natively supported transformations described in section~\ref{sec:transformation}):
-\texttt{CompleteExchange},
-\texttt{NonAdiabaticMSWH},
-\texttt{TwoFlavorDecoherence\_NMO},
-\texttt{TwoFlavorDecoherence\_IMO},
-\texttt{ThreeFlavorDecoherence}.
-See SNEWPY documentation for a full description of these.
-To use these transformations in sntools, prefix them with \texttt{SNEWPY-}. For example, use sntools with the command line argument \texttt{--transformation SNEWPY-ThreeFlavorDecoherence} to apply three flavor decoherence.
-
-SNEWPY also provides the following input formats (in addition to the natively supported input formats described in section~\ref{sec:input-formats}):
-\texttt{Bollig\_2016},
-\texttt{Kuroda\_2020},
-\texttt{Nakazato\_2013},
-\texttt{OConnor\_2015},
-\texttt{Sukhbold\_2015},
-\texttt{Zha\_2021}.
-SNEWPY also lets you download neutrino flux files from each of the corresponding simulations. See SNEWPY documentation for instructions.
-To use these flux files in sntools, prefix them with \texttt{SNEWPY-}. For example, to use an \texttt{OConnor\_2015} input file, use sntools with the command line argument \texttt{--format SNEWPY-OConnor\_2015}.
-
-
 
 \section{Getting Help and Contributing}
 
@@ -409,10 +391,10 @@ sntools is designed to be versatile and support many different detectors and inp
 To help extend sntools, follow these steps:
 
 \begin{itemize}
-	\item Clone the GitHub repository and run \texttt{pip install -r requirements.txt} to install all dependencies.
-	\item Then, edit the code---see the subsections below for help with the most common ways to extend sntools.
-	\item To run the code you developed, use \texttt{python sntools/genevts.py [arguments]} instead of \texttt{sntools [arguments]}.
-	\item To ensure that your changes have not introduced any bugs, run \texttt{python -m unittest discover} from the top-level directory of the repository. (Tests will also run automatically whenever you submit a pull request on GitHub.)
+	\item Clone the GitHub repository to your local computer.
+	\item Edit the code---see the subsections below for help with the most common ways to extend sntools.
+	\item Use \texttt{pip install .} to install the modified code; then try it out.
+	\item To test your changes, run \texttt{python -m unittest discover} from the top-level directory of the repository. (Tests will also run automatically whenever you submit a pull request on GitHub.)
 	\item Finally, please \href{https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests}{submit a pull request} with your contributions!
 \end{itemize}
 
@@ -436,7 +418,7 @@ In \texttt{detectors.py}, create a new dictionary for your detector material whi
 \begin{itemize}
 \item \texttt{molecular\_weight}: Molecular weight of the material in \si{g/mol}.
 \item \texttt{density}: Density of the material in \si{g/cm^3}.
-\item \texttt{channel\_weight}: Dictionary with supported interaction channels as keys and their respective weighting factors as values. The weighting factors are the number of potential targets per molecule. For example, water has 2 protons and 10 electrons per molecule, so the weighting factor is 2 for \texttt{ibd} and 10 for \texttt{es}.
+\item \texttt{channel\_weight}: Dictionary with supported interaction channels as keys and their respective weighting factors as values. The weighting factor is the number of potential targets per molecule. For example, water has 2 protons and 10 electrons per molecule, so the weighting factor is 2 for \texttt{ibd} and 10 for \texttt{es}.
 \end{itemize}
 % In more advanced cases, you can also write a function, which generates and returns such a dictionary. -> See implementation of WbLS, which lets the user give the fraction of LS as an argument.
 
