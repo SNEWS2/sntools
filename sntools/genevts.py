@@ -7,12 +7,6 @@ from importlib import import_module
 import random
 
 try:
-    import snewpy  # noqa
-    snewpy_installed = True
-except ImportError:
-    snewpy_installed = False
-
-try:
     import sntools  # if sntools was installed via pip
 except ImportError:
     # if running this directly from the repo, modify `sys.path` to ensure all imports work
@@ -74,9 +68,8 @@ def parse_command_line_options():
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
 
-    choices = ("gamma", "nakazato", "princeton", "totani", "warren2020")
-    if snewpy_installed:
-        choices += ("SNEWPY-Bollig_2016", "SNEWPY-Kuroda_2020", "SNEWPY-Nakazato_2013", "SNEWPY-OConnor_2015", "SNEWPY-Sukhbold_2015", "SNEWPY-Zha_2021")
+    choices = ("gamma", "nakazato", "princeton", "totani", "warren2020",
+               "SNEWPY-Bollig_2016", "SNEWPY-Kuroda_2020", "SNEWPY-Nakazato_2013", "SNEWPY-OConnor_2015", "SNEWPY-Sukhbold_2015", "SNEWPY-Zha_2021")
     parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=choices[1],
                         help="Format of input file(s). Choices: %(choices)s. Default: %(default)s.")
 
@@ -90,9 +83,8 @@ def parse_command_line_options():
     choices = ("noosc", "normal", "inverted")
     parser.add_argument("-H", "--hierarchy", "--ordering", choices=choices, help=argparse.SUPPRESS, action=DeprecationAction)
 
-    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO")
-    if snewpy_installed:
-        choices += ("SNEWPY-CompleteExchange", "SNEWPY-NonAdiabaticMSWH", "SNEWPY-TwoFlavorDecoherence_NMO", "SNEWPY-TwoFlavorDecoherence_IMO", "SNEWPY-ThreeFlavorDecoherence")
+    choices = ("NoTransformation", "AdiabaticMSW_NMO", "AdiabaticMSW_IMO",
+               "SNEWPY-CompleteExchange", "SNEWPY-NonAdiabaticMSWH", "SNEWPY-TwoFlavorDecoherence_NMO", "SNEWPY-TwoFlavorDecoherence_IMO", "SNEWPY-ThreeFlavorDecoherence")
     parser.add_argument("-t", "--transformation", metavar="TRANSFORMATION", choices=choices, default=choices[0],
                         help="Transformation between neutrino flux inside SN and flux in the detector on Earth. \
                               Choices: %(choices)s. Default: %(default)s.")
