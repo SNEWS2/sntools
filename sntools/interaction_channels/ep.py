@@ -1,10 +1,10 @@
 """
 Implementation of nu + p -> nu + p
 
-Based on Von Krosigk, Belina SNO+ Thesis 2015 (https://s3.cern.ch/inspire-prod-files-6/6dcbe50b21f767559adc283442a7ad27).
+Largely based on John F Beacom et al., 2002: 10.1103/PhysRevD.66.033001.
 This neutrino-proton scattering process only has a NC channel. The calculation assumes neutrinos at SN neutrino energies.
 
-Written by S. Valder (2022), based largely off implementation in EstrellaNeuva.
+Written by S. Valder (2022), based on other interaction channels in sntools.
 """
 
 from math import pi, sqrt, log
@@ -18,10 +18,8 @@ from sntools.interaction_channels import BaseChannel, cherenkov_threshold
 possible_flavors = ["e", "eb", "x", "xb"]
 
 sin2theta_w = 0.23155  # weak mixing angle
-alpha = 1 / 137.036  # fine structure constant
 mP = 938.272046  # proton mass (MeV)
 gF = 1.16637e-11  # Fermi coupling constant
-rho_NC = 1.0126  # numerical factor from Bahcall et al.
 gA_0 = 1.267 # axial proton form factor
 eta = 0.12 # proton strangeness
 cA_0 = (gA_0 * (1 + eta)) / 2 # axial vector coupling constant
@@ -68,18 +66,12 @@ class Channel(BaseChannel):
         if self.flavor in ("eb", "xb"):  # antineutrino
             cA = -cA_0
 
-        T = eE - mP
+        T = eE - mP # Kinetic energy of outgoing proton
 
-        result = (((gF**2 * mP) / (2 * pi * eNu**2)) * (((cV + cA)**2 * eNu**2) + ((cV - cA)**2 * (eNu - T)**2) - (cV**2 - cA**2 * mP * T)))  # valid at SN neutrino energies FIXME: eE or T?
+        result = (((gF**2 * mP) / (2 * pi * eNu**2)) * (((cV + cA)**2 * eNu**2) + ((cV - cA)**2 * (eNu - T)**2) - (cV**2 - cA**2 * mP * T)))
 
         if result < 0:
-            if eNu < cherenkov_threshold:
-                # Approximations in f_* may be imprecise at very low energies.
-                # This is below threshold in HK anyway, so we suppress it.a
-                #raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. eNu is below Chenkov threshold. Aborting..." #FIXME: think about what needs to change here
-                result = 0
-            else:
-                raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
+            raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
 
         return result
 
@@ -117,15 +109,13 @@ class Channel(BaseChannel):
         Output:
             list with minimum & maximum allowed energy of outgoing (detected) particle
         """
- #       eE_max = (2 * eNu**2) / (mP + 2 * eNu)   # this is get_eE(eNu, cosT=1)
-
-        eE_max = mP + ((2 * eNu**2) / mP)   # this is get_eE(eNu, cosT=1) 
         
+        eE_max = mP + ((2 * eNu**2) / mP)   # this is get_eE(eNu, cosT=1); could use eE_max = mP + ((2 * eNu**2) / (mP + 2 * eNu)) ?
         return [self.eE_min, eE_max]
 
     # Bounds for integration over eNu
     def eNu_min(self, eE):
-        T = eE - mP  # FIXME
+        T = eE - mP  
         return ((T + (sqrt(T * (T + (2 * mP))))) / 2) # see 10.1103/PhysRevD.66.033001
 
     bounds_eNu = [eNu_min(None, eE_min), 100]
