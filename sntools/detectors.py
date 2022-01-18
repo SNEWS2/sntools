@@ -6,21 +6,21 @@ import random
 water = {
     "molecular_weight": 18.0153,  # g/mol
     "density": 1.0,  # g/cm^3
-    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1},  # targets per molecule
+    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1, "ep": 2},  # targets per molecule
 }
 
 # liquid scintillator: approximated here as CH_2
 ls = {
     "molecular_weight": 14.0266,  # g/mol
     "density": 0.86,  # g/cm^3
-    "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1},
+    "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1, "ep": 2},
 }
 
 # liquid scintillator: LAB, average structure -> C_16.65H_27.3 (C6H5CnH2n+1 where n is 95% 9-12, 5% 13-14)
 lab = {
     "molecular_weight": 227.50,  # g/mol
     "density": 0.856,  # g/cm^3
-    "channel_weights": {"ibd": 27.3, "es": 127.2, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
+    "channel_weights": {"ibd": 27.3, "es": 127.2, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65, "ep": 27.3},
 }
 
 
