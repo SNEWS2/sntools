@@ -16,6 +16,13 @@ ls = {
     "channel_weights": {"ibd": 2, "es": 8, "c12e": 1, "c12eb": 1, "c12nc": 1},
 }
 
+# liquid scintillator: LAB, average structure -> C_16.65H_27.3 (C6H5CnH2n+1 where n is 95% 9-12, 5% 13-14)
+lab = {
+    "molecular_weight": 227.50,  # g/mol
+    "density": 0.856,  # g/cm^3
+    "channel_weights": {"ibd": 27.3, "es": 127.2, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
+}
+
 
 def wbls(x):
     """Generates dictionary characterizing Water-based Liquid Scintillator.
@@ -38,7 +45,7 @@ def wbls(x):
 # List of supported detector configurations
 supported_detectors = ["HyperK", "HyperKDR", "SuperK",
                        "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
-                       "THEIA25", "THEIA100"]
+                       "THEIA25", "THEIA100", "SNOplusAV", "SNOplusEW"]
 
 
 class Detector(object):
@@ -89,6 +96,15 @@ class Detector(object):
             self.height = 5000
             self.radius = 5000 / 2
             self.material = wbls(0.10)  # 10% LS, 90% water
+        elif name == "SNOplusAV": # SNO+ inner AV only
+            self.shape = "sphere"
+            self.radius = 600
+            self.material = lab
+        elif name == "SNOplusEW": # SNO+ external water
+            self.shape = "hollowSphere"
+            self.innerRadius = 605
+            self.outerRadius = 900
+            self.material = water
         else:
             raise ValueError(f"Unknown detector name: {name}")
 
@@ -97,6 +113,10 @@ class Detector(object):
             volume = self.x * self.y * self.z
         elif self.shape == "cylinder":
             volume = pi * self.radius ** 2 * self.height  # assumes cylindrical detector
+        elif self.shape == "sphere":
+            volume = (4 * pi * self.radius ** 3) / 3
+        elif self.shape == "hollowSphere":
+            volume = ((4 * pi * self.outerRadius ** 3) / 3) - ((4 * pi * self.innerRadius ** 3) / 3)
         else:
             raise ValueError(f"Unknown detector shape: {self.shape}")
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
@@ -122,6 +142,20 @@ class Detector(object):
                 if x ** 2 + y ** 2 < self.radius ** 2:
                     break
             z = random.uniform(-self.height / 2, self.height / 2)
+        elif self.shape == "sphere":
+            while True:
+                x = random.uniform(-self.radius, self.radius) 
+                y = random.uniform(-self.radius, self.radius)
+                z = random.uniform(-self.radius, self.radius)
+                if x ** 2 + y ** 2 + z ** 2 < self.radius ** 2:
+                    break
+        elif self.shape == "hollowSphere":
+            while True:
+                x = random.uniform(-self.outerRadius, self.outerRadius)
+                y = random.uniform(-self.outerRadius, self.outerRadius)
+                z = random.uniform(-self.outerRadius, self.outerRadius)
+                if (x**2 + y**2 + z**2 < self.outerRadius**2) and (x**2 + y**2 + z**2 > self.innerRadius**2):
+                    break
         else:
             raise ValueError(f"Unknown detector shape: {self.shape}")
         return x, y, z
