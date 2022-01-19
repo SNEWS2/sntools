@@ -71,8 +71,10 @@ class Channel(BaseChannel):
         result = (((gF**2 * mP) / (2 * pi * eNu**2)) * (((cV + cA)**2 * eNu**2) + ((cV - cA)**2 * (eNu - T)**2) - (cV**2 - cA**2 * mP * T)))
 
         if result < 0:
-            raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
-
+            if eNu < cherenkov_threshold: # Inaccuracies at low energies, supress below cherenkov threshold may need to think here FIXME
+                result = 0
+            else:
+                raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
         return result
 
     def get_eE(self, eNu, cosT):
