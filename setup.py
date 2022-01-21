@@ -63,7 +63,6 @@ setup(
         # checked by 'pip install'. See instead 'python_requires' below.
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
@@ -85,14 +84,15 @@ setup(
     # Supported Python versions. 'pip install' will check this
     # and refuse to install the project if the version does not match. See
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires='>=3.6, <4',
+    # When the supported version changes, remember to also update `classifiers` above!
+    python_requires='>=3.7, <4',
 
     # This field lists other packages that your project depends on to run.
     # These packages will be installed by pip when your project is installed.
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.12', 'scipy>=1.0', 'h5py>=2.10', 'snewpy~=1.1.0'],  # Optional
+    install_requires=['numpy>=1.12', 'scipy>=1.0', 'h5py>=2.10', 'snewpy~=1.2.0'],  # Optional
 
     # Additional groups of dependencies (e.g. for development).
     # Users can install these using the "extras" syntax, for example:
