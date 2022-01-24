@@ -159,7 +159,7 @@ class SNEWPYCompositeFlux(CompositeFlux):
         self = SNEWPYCompositeFlux()
         self._repr = f"SNEWPYCompositeFlux.from_file('{file}', format='{format}', starttime={starttime}, endtime={endtime})"
 
-        sn_model = getattr(import_module('snewpy.models'), format)(file)
+        sn_model = getattr(import_module('snewpy.models.ccsn'), format)(file)
 
         for flv in ('e', 'eb', 'x', 'xb'):
             f = SNEWPYFlux(sn_model, flv, starttime, endtime)
