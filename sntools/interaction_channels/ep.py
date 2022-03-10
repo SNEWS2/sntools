@@ -23,7 +23,7 @@ gF = 1.16637e-11  # Fermi coupling constant
 gA_0 = 1.267 # axial proton form factor
 eta = 0.12 # proton strangeness
 cA_0 = (gA_0 * (1 + eta)) / 2 # axial vector coupling constant
-cV = (1 - (4 * sin2theta_w) / 2) # axial vector coupling constant
+cV = (1 - (4 * sin2theta_w)) / 2 # axial vector coupling constant
 
 _cache = {}  # save time by avoiding repeat calculations
 def spence(n):
@@ -68,13 +68,11 @@ class Channel(BaseChannel):
 
         T = eE - mP # Kinetic energy of outgoing proton
 
-        result = (((gF**2 * mP) / (2 * pi * eNu**2)) * (((cV + cA)**2 * eNu**2) + ((cV - cA)**2 * (eNu - T)**2) - (cV**2 - cA**2 * mP * T)))
+        result = (((gF**2 * mP) / (2 * pi * eNu**2)) * (((cV + cA)**2 * eNu**2) + ((cV - cA)**2 * (eNu - T)**2) - ((cV**2 - cA**2) * mP * T)))
 
         if result < 0:
-            if eNu < cherenkov_threshold: # Inaccuracies at low energies, supress below cherenkov threshold may need to think here FIXME
-                result = 0
-            else:
-                raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
+            raise ValueError(f"Calculated negative cross section for E_nu={eNu}, E_e={eE}. Aborting...")
+        
         return result
 
     def get_eE(self, eNu, cosT):
@@ -100,7 +98,8 @@ class Channel(BaseChannel):
         eE = self.get_eE(eNu, cosT)
         return dE_dCosT * self.dSigma_dE(eNu, eE) 
 
-    eE_min = mP + 0
+    # Minuimum energy of the outgoing proton is the mass of the proton
+    eE_min = mP
 
     def bounds_eE(self, eNu, *args):  # ignore additional arguments handed over by integrate.nquad()
         """Return kinematic bounds for integration over eE.
@@ -112,7 +111,9 @@ class Channel(BaseChannel):
             list with minimum & maximum allowed energy of outgoing (detected) particle
         """
         
-        eE_max = mP + ((2 * eNu**2) / mP)   # this is get_eE(eNu, cosT=1); could use eE_max = mP + ((2 * eNu**2) / (mP + 2 * eNu)) ?
+        #eE_max = mP + ((2 * eNu**2) / mP)   # this is get_eE(eNu, cosT=1); could use 
+        eE_max = mP + ((2 * eNu**2) / (mP + 2 * eNu))
+
         return [self.eE_min, eE_max]
 
     # Bounds for integration over eNu
