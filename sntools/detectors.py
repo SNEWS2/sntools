@@ -6,7 +6,7 @@ import random
 water = {
     "molecular_weight": 18.0153,  # g/mol
     "density": 1.0,  # g/cm^3
-    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1, "ep": 2},  # targets per molecule
+    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1},  # targets per molecule
 }
 
 # liquid scintillator: approximated here as CH_2
