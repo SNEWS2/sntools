@@ -38,14 +38,18 @@ def wbls(x):
 # List of supported detector configurations
 supported_detectors = ["HyperK", "HyperKDR", "SuperK",
                        "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
-                       "THEIA25", "THEIA100"]
+                       "THEIA25", "THEIA100",
+                       "CUSTOM-BOX", "CUSTOM-CYLINDER", "CUSTOM-SPHERE"]
 
+# List of supported custom detector materials (to-do: more elegant parsing of WbLS ratios)
+supported_materials = ["water", "ls", "wbls0.03", "wbls0.10"]
 
 class Detector(object):
     """A neutrino detector."""
 
-    def __init__(self, name):
+    def __init__(self, name, arg_radius, arg_x, arg_y, arg_z, arg_material):
         self.name = name
+
         if name == "HyperK":  # inner detector only, 2019 optimized design
             self.shape = "cylinder"
             self.height = 6580
@@ -89,14 +93,53 @@ class Detector(object):
             self.height = 5000
             self.radius = 5000 / 2
             self.material = wbls(0.10)  # 10% LS, 90% water
+        elif name == "CUSTOM-BOX":
+            if arg_x <= 0.0 or arg_y <= 0.0 or arg_z <= 0.0:
+                raise ValueError(f"Ill-defined detector measurements: x={arg_x} mm, y={arg_y} mm. z={arg_z} mm")
+            self.shape = "box"
+            # take values directly from function call
+            # materials will be set later for streamlining
+            self.x = arg_x
+            self.y = arg_y
+            self.z = arg_z
+        elif name == "CUSTOM-CYLINDER":
+            if arg_radius <= 0.0 or arg_z <= 0.0:
+                raise ValueError(f"Ill-defined detector measurements: r={arg_radius} mm, z={arg_z} mm")
+            self.shape = "cylinder"
+            # take values directly from function call
+            # materials will be set later for streamlining
+            self.radius = arg_radius
+            self.height = arg_z
+        elif name == "CUSTOM-SPHERE":
+            if arg_radius <= 0.0:
+                raise ValueError(f"Ill-defined detector measurements: r={arg_radius} mm")
+            self.shape = "sphere"
+            # take values directly from function call
+            # materials will be set later for streamlining
+            self.radius = arg_radius
         else:
             raise ValueError(f"Unknown detector name: {name}")
+
+        # parse material only for custom cylinder/box/sphere
+        if name == "CUSTOM-BOX" or name == "CUSTOM-CYLINDER" or name == "CUSTOM-SPHERE":
+            if arg_material == "water":
+                self.material = water
+            elif arg_material == "ls":
+                self.material = ls
+            elif arg_material == "wbls0.03":
+                self.material = wbls(0.03)
+            elif arg_material == "wbls0.10":
+                self.material = wbls(0.10)
+            else:
+                raise ValueError(f"Unknown custom material chosen: {arg_material}")
 
         # calculate number of target molecules in detector
         if self.shape == "box":
             volume = self.x * self.y * self.z
         elif self.shape == "cylinder":
             volume = pi * self.radius ** 2 * self.height  # assumes cylindrical detector
+        elif self.shape == "sphere":
+            volume = 4/3 * pi * self.radius ** 3 # assumes perfect sphere
         else:
             raise ValueError(f"Unknown detector shape: {self.shape}")
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
@@ -122,6 +165,13 @@ class Detector(object):
                 if x ** 2 + y ** 2 < self.radius ** 2:
                     break
             z = random.uniform(-self.height / 2, self.height / 2)
+        elif self.shape == "sphere":
+            while True:
+                x = random.uniform(-self.radius, self.radius)
+                y = random.uniform(-self.radius, self.radius)
+                z = random.uniform(-self.radius, self.radius)
+                if x ** 2 + y ** 2 + z ** 2 < self.radius ** 2:
+                    break
         else:
             raise ValueError(f"Unknown detector shape: {self.shape}")
         return x, y, z
