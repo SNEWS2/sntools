@@ -7,9 +7,10 @@
 #   Column 4: luminosity of nu_e (erg/s)
 #   Column 5-7: like 2-4, but for anti-nu_e
 #   Column 8-10: like 2-4, but for nu_x (i.e. one of nu_mu, nu_tau or their antiparticles)
+# Note: nu_x luminosity in column 10 is for one neutrino type, not the sum of all four.)
 
 # Example usage:
-# $ python genevts.py fluxes/sample-gamma.txt --format gamma --starttime 110 --endtime 120 -v
+# $ python sntools/genevts.py fluxes/sample-gamma.txt --format gamma --starttime 110 --endtime 120 -v
 
 # The nu_e sample data was generated using
 #   time = 0.1 + 0.0005 * i + 0.00001 * (random() - 0.5))

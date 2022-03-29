@@ -1,4 +1,3 @@
-from __future__ import division
 from math import pi
 import random
 
@@ -37,7 +36,7 @@ def wbls(x):
 
 
 # List of supported detector configurations
-supported_detectors = ["HyperK", "SuperK",
+supported_detectors = ["HyperK", "HyperKDR", "SuperK",
                        "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
                        "THEIA25", "THEIA100"]
 
@@ -51,7 +50,11 @@ class Detector(object):
             self.shape = "cylinder"
             self.height = 6580
             self.radius = 6480 / 2
-            # 2018 Design Report: radius = 7080 / 2; height = 5480
+            self.material = water
+        elif name == "HyperKDR":  # 2018 Design Report (outdated, only for backwards compatibility)
+            self.shape = "cylinder"
+            self.height = 5480
+            self.radius = 7080 / 2
             self.material = water
         elif name == "SuperK":  # inner detector only
             self.shape = "cylinder"
@@ -87,7 +90,7 @@ class Detector(object):
             self.radius = 5000 / 2
             self.material = wbls(0.10)  # 10% LS, 90% water
         else:
-            raise ValueError("Unknown detector name: %s" % name)
+            raise ValueError(f"Unknown detector name: {name}")
 
         # calculate number of target molecules in detector
         if self.shape == "box":
@@ -95,12 +98,12 @@ class Detector(object):
         elif self.shape == "cylinder":
             volume = pi * self.radius ** 2 * self.height  # assumes cylindrical detector
         else:
-            raise ValueError("Unknown detector shape: %s" % self.shape)
+            raise ValueError(f"Unknown detector shape: {self.shape}")
         number_density = self.material["density"] * 6.022e23 / self.material["molecular_weight"]
         self.n_molecules = volume * number_density
 
     def __repr__(self):
-        return "Detector('%s')" % self.name
+        return f"Detector('{self.name}')"
 
     def __setattr__(self, attr, value):
         if hasattr(self, attr):
@@ -120,5 +123,5 @@ class Detector(object):
                     break
             z = random.uniform(-self.height / 2, self.height / 2)
         else:
-            raise ValueError("Unknown detector shape: %s" % self.shape)
+            raise ValueError(f"Unknown detector shape: {self.shape}")
         return x, y, z

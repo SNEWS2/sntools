@@ -5,7 +5,7 @@ from ._crosssectiontest import CrossSectionTest
 
 
 class O16ETest(CrossSectionTest):
-    c = o16e  # ensure we can access interaction channel module as self.c
+    c = o16e.Channel('e')  # ensure we can access interaction channel module as self.c
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
     test_dSigma_dE_values = (
@@ -53,7 +53,7 @@ class O16ETest(CrossSectionTest):
     )
 
     # value of bounds_eNu[0]
-    test_bounds_eNu_minvalue = 16.01
+    test_bounds_eNu_minvalue = 15.98
 
 
 # ensure that unittest doesn't run tests in the base class, via https://stackoverflow.com/a/22836015
