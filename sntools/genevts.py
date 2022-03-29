@@ -18,7 +18,7 @@ except ImportError:
     import sntools
 
 from sntools.channel import gen_evts
-from sntools.detectors import Detector, supported_detectors
+from sntools.detectors import Detector, supported_detectors, supported_materials
 from sntools.formats import CompositeFlux, SNEWPYCompositeFlux
 from sntools.transformation import Transformation, SNEWPYTransformation
 
@@ -99,6 +99,21 @@ def parse_command_line_options():
     parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default="HyperK",
                         help="Detector configuration. Choices: %(choices)s. Default: %(default)s.")
 
+    parser.add_argument("-r", "--radius", metavar="R", type=float, default="-1",
+                        help="Radius of custom cylindrical/spherical detector in millimeters.")
+
+    parser.add_argument("-x", "--x", metavar="X", type=float, default="-1",
+                        help="Width in x of custom box detector in millimeters.")
+
+    parser.add_argument("-y", "--y", metavar="Y", type=float, default="-1",
+                        help="Width in y of custom box detector in millimeters.")
+
+    parser.add_argument("-z", "--z", metavar="Z", type=float, default="-1",
+                        help="Height of custom detector in millimeters.")
+
+    parser.add_argument("--material", metavar="MATERIAL", choices=supported_materials, default="water",
+                        help="Custom detector material. Only used for custom detectors. Choices: %(choices)s. Default: %(default)s.")
+
     parser.add_argument("--distance", type=float, default=10.0, help="Distance to supernova in kpc. Default: %(default)s.")
 
     parser.add_argument("--starttime", metavar="T", type=float,
@@ -118,7 +133,7 @@ def parse_command_line_options():
 
     args = parser.parse_args()
 
-    args.detector = Detector(args.detector)
+    args.detector = Detector(args.detector, args.radius, args.x, args.y, args.z, args.material)
     args.channels = args.detector.material["channel_weights"] if args.channel == "all" else [args.channel]
 
     if args.format[:7] == "SNEWPY-":
