@@ -91,27 +91,28 @@ class Channel(BaseChannel):
         evt.incoming_particles.append([nu_flv, eNu, 0, 0, 1])  # incoming nu
         evt.incoming_particles.append((8016, 14900, 0, 0, 1))  # oxygen nucleus at rest
 
-        if eNu > e_thr_g:   #above this energy there is a high chance of a de-excitation photon emission
-            if  self.random() > 0.310107949:
-                evt.outgoing_particles.append([22, 6.18, dirx, diry, dirz])  # emitted photon
-                evt.outgoing_particles.append([2112, eN, dirxN, diryN, dirzN])  # emitted neutron
-            else:
-                evt.outgoing_particles.append([2112, eN, dirxN, diryN, dirzN])  # emitted neutron
+        if self.gamma(eNu) is True:   # de-excitation photon emmitted from N-15 nucleus
+            evt.outgoing_particles.append([22, 6.18, dirx, diry, dirz])  # emitted photon
+            evt.outgoing_particles.append([2112, eN, dirxN, diryN, dirzN])  # emitted neutron
         else:
             evt.outgoing_particles.append([2112, eN, dirxN, diryN, dirzN])  # emitted neutron
-        """NOTE: this code currently assumes that the neutron is emitted in the same direction as the incoming neutrino
+        """
         NOTE: Need to define gamma and neutron energies as de-excitation energy and distribution energy respectively
         """
         # evt.outgoing_particles.append([nu_flv, eNu-e_thr, 0, 0, 1])  # outgoing nu
         return evt
 
-    def random():
-        """Return random number between 0 and 1.
-        If r > 0.310107949 and eNu > e_thr_g, then the O-15 nucleus is left in the excited state.
-        Therefore a de-excitation photon is produced in addition to the knocked-out neutron.
+    def gamma(eNu):
+        """Returns True if a gamma emission occurs.
+        If eNu > e_thr_g, then the O-15 nucleus is left in the excited state in ~70% of interactions.
+        Therefore a de-excitation gamma is produced in addition to the knocked-out neutron.
         """
         r = random.random()
-        return r
+        if eNu > e_thr_g and r > 0.310107949:
+            return True
+        else: 
+            return False
+        
     # List with minimum & maximum energy of incoming neutrino.
     bounds_eNu = (e_thr, 90)
 
