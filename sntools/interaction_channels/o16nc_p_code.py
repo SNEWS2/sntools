@@ -10,6 +10,7 @@ total cross section, we approximate a DiracDelta function with one that is
 from sntools.event import Event
 from sntools.interaction_channels import BaseChannel
 from scipy.interpolate import interp1d
+import numpy as np
 import random
 
 """ The following table of data is taken from Suzuki et al. 2018. 
@@ -83,24 +84,24 @@ class Channel(BaseChannel):
         nu_flv = {'e': 12, 'eb': -12, 'x': 14, 'xb': -14}[self.flavor]
         
         eE = self.get_eE(eNu, dirz)
-        eP, dirxP, diryP, dirzP = self.get_proton_kinematics(eNu, eE, dirx, diry, dirz)
 
         evt = Event(2006012 if nu_flv > 0 else -2006012)
         evt.incoming_particles.append([nu_flv, eNu, 0, 0, 1])  # incoming nu
-        evt.incoming_particles.append((8016, 14900, 0, 0, 1))  # oxygen nucleus at rest
+        evt.incoming_particles.append((8016, 14900, 0, 0, 1))  # oxygen-16 nucleus at rest
         
-        if self.gamma(eNu) is True:   # de-excitation photon emmitted from N-15 nucleus
-            evt.outgoing_particles.append([22, 6.18, dirx, diry, dirz])  # emitted gamma
-            evt.outgoing_particles.append([2212, eP, dirxP, diryP, dirzP])  # emitted proton
-        else:
-            evt.outgoing_particles.append([2212, eP, dirxP, diryP, dirzP])  # emitted proton
+        if self.gamma(eNu) is True:   # excited O-16 nucleus emits a proton and a photon
+            g_dirx, g_diry, g_dirzN = self.get_photon_direction()
+            evt.outgoing_particles.append([22, 6.32, -dirx, -diry, -dirz])  # emitted gamma
+            evt.outgoing_particles.append([2212, eE, dirx, diry, dirz])  # emitted proton
+        else:           # excited O-16 nucleus emits just a proton
+            evt.outgoing_particles.append([2212, eE, dirx, diry, dirz])  # emitted proton
         """
         NOTE: Need to define gamma and proton energies as de-excitation energy and distribution energy respectively
         """
         # evt.outgoing_particles.append([nu_flv, eNu-e_thr, 0, 0, 1])  # outgoing nu
         return evt
 
-def gamma(eNu):
+def gamma(self, eNu):
     """Returns True if a gamma emission occurs.
     If eNu > e_thr_g, then the O-15 nucleus is left in the excited state in ~70% of interactions.
     Therefore a de-excitation gamma is produced in addition to the knocked-out neutron.
@@ -110,9 +111,6 @@ def gamma(eNu):
         return True
     else: 
         return False
-
-    # List with minimum & maximum energy of incoming neutrino.
-    bounds_eNu = (e_thr, 100)
 
     def bounds_eE(self, eNu, *args):
         """Return kinematic bounds for integration over eE.
@@ -132,20 +130,27 @@ def gamma(eNu):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        return 6.32
+        if self.gamma(eNu) is True:
+            eE = random.random()*(eNu - e_thr_g) # energy of emitted proton generated randomly from energy excess of neutrino over gamma emission threshold energy
+        else: eE = random.random()*(eNu-e_thr)    # energy of emitted proton generated randomly from energy excess of neutrino over threshold energy           
+        return eE
     
-    def get_proton_kinematics(self, eNu, eE, dirx, diry, dirz):
-        '''
-        eN = mP + eNu - eE  # proton energy
-
-        # calculate 3-momentum of proton ...
-        pE = sqrt(eE**2 - mE**2)
-        pN_x = - dirx * pE
-        pN_y = - diry * pE
-        pN_z = eNu - dirz * pE
-        # ... and normalize it to get unit vector of proton direction
-        pN = sqrt(pN_x**2 + pN_y**2 + pN_z**2)''' #code used in ibd code
-        return (eP, pP_x / pP, pP_y / pP, pP_z / pP)
+    def get_photon_direction(self):
+        """
+        In the case where nucleon emission leaves the daughter nucleus in an
+        excited state, a photon is emitted to de-excite the nucleus.
+        
+        This function returns a random direction (normalised to 1) for this 
+        photon emission.
+        """
+        phi = 2*np.pi*random.random()
+        theta = np.pi*random.random()
+        
+        dirx = np.sin(theta)*np.cos(phi)
+        diry = np.sin(theta)*np.sin(phi)
+        dirz = np.cos(theta)
+        
+        return (dirx,diry,dirz)
     
     def dSigma_dE(self, eNu, eE):
         """Return differential cross section in MeV^-2.
@@ -175,6 +180,10 @@ def gamma(eNu):
             return 0
         return 0.5
 
+    # List with minimum & maximum energy of incoming neutrino.
+    bounds_eNu = (e_thr, 100)
+
     def _bounds_eNu(self, eE):
         """Min/max neutrino energy that can produce a given positron energy."""
         return self.bounds_eNu
+
