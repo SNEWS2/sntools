@@ -89,11 +89,12 @@ def parse_command_line_options():
                         help="Transformation between neutrino flux inside SN and flux in the detector on Earth. \
                               Choices: %(choices)s. Default: %(default)s.")
 
-    choices = ("ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc")
+    choices = ("ibd", "es", "o16e", "o16eb", "c12e", "c12eb", "c12nc", "o16nc_n", "o16nc_p")
     parser.add_argument("-c", "--channel", metavar="INTCHANNEL", choices=choices, default="all",
                         help="Interaction channels to consider. Currently supported: inverse beta decay (ibd), \
                               electron scattering (es), nu_e + oxygen CC (o16e), nu_e-bar + oxygen CC (o16eb), \
-                              nu_e + carbon CC (c12e), nu_e-bar + carbon CC (c12eb) and nu + carbon NC (c12nc). \
+                              nu_e + carbon CC (c12e), nu_e-bar + carbon CC (c12eb), nu + carbon NC (c12nc), \
+                              nu + oxygen NC neutron emission (o16nc_n) and nu + oxygen NC proton emission (o16nc_p). \
                               Default: All channels available in selected detector.")
 
     parser.add_argument("-d", "--detector", metavar="DETECTOR", choices=supported_detectors, default="HyperK",
