@@ -27,7 +27,7 @@ total cross section, we approximate a DiracDelta function with one that is
 from sntools.event import Event
 from sntools.interaction_channels import BaseChannel
 from scipy.interpolate import interp1d
-import numpy as np
+# import numpy as np
 import random
 
 """ This table shows the partial cross-section of 16O(nu, nu' X). It is taken 
@@ -90,7 +90,7 @@ def fit(emission):
     return f
 
 e_thr = 14  # approximate energy threshold of proton emission with no gamma emission (MeV)
-e_thr_g = e_thr + 6.32  # energy threshold of proton emission with gamma emission (MeV)
+'''e_thr_g = e_thr + 6.32  # energy threshold of proton emission with gamma emission (MeV)'''
 epsilon = 0.001  # for approximating DiracDelta distribution below
 
 # List of neutrino flavors ("e", "eb", "x", "xb") that interact in this channel.
@@ -113,17 +113,17 @@ class Channel(BaseChannel):
         evt = Event(2006012 if nu_flv > 0 else -2006012)
         evt.incoming_particles.append([nu_flv, eNu, 0, 0, 1])  # incoming nu
         evt.incoming_particles.append((8016, 14900, 0, 0, 1))  # oxygen-16 nucleus at rest
-        
-        if self.gamma(eNu) is True:   # excited O-16 nucleus emits a proton and a photon
+        evt.outgoing_particles.append([2212, eE, dirx, diry, dirz])  # emitted proton
+        # evt.outgoing_particles.append([nu_flv, eNu-e_thr, 0, 0, 1])  # outgoing nu
+        '''if self.gamma(eNu) is True:   # excited O-16 nucleus emits a proton and a photon
             g_dirx, g_diry, g_dirzN = self.get_photon_direction()
             evt.outgoing_particles.append([22, 6.32, g_dirx, g_diry, g_dirzN])  # emitted gamma
             evt.outgoing_particles.append([2212, eE, dirx, diry, dirz])  # emitted proton
         else:           # excited O-16 nucleus emits just a proton
-            evt.outgoing_particles.append([2212, eE, dirx, diry, dirz])  # emitted proton
-        # evt.outgoing_particles.append([nu_flv, eNu-e_thr, 0, 0, 1])  # outgoing nu
+            evt.outgoing_particles.append([2212, eE, dirx, diry, dirz])  # emitted proton'''
         return evt
 
-    def gamma(self, eNu):
+    '''def gamma(self, eNu):
         """Returns True if a gamma emission occurs.
         If eNu > e_thr_g, then the N-15 nucleus is left in the excited state in ~70% of interactions.
         Therefore a de-excitation gamma is produced in addition to the knocked-out proton.
@@ -135,8 +135,8 @@ class Channel(BaseChannel):
         if eNu > e_thr_g and r > 0.310107949:
             return True
         else: 
-            return False
-
+            return False'''
+    
     def bounds_eE(self, eNu, *args):
         """Return kinematic bounds for integration over eE.
 
@@ -155,12 +155,13 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        if self.gamma(eNu) is True:
+        eE = random.random()*(eNu-e_thr)
+        '''if self.gamma(eNu) is True:
             eE = random.random()*(eNu - e_thr_g) # energy of emitted proton generated randomly from energy excess of neutrino over gamma emission threshold energy
-        else: eE = random.random()*(eNu-e_thr)    # energy of emitted proton generated randomly from energy excess of neutrino over threshold energy           
+        else: eE = random.random()*(eNu-e_thr)    # energy of emitted proton generated randomly from energy excess of neutrino over threshold energy  '''         
         return eE
-    
-    def get_photon_direction(self):
+
+    '''def get_photon_direction(self):
         """
         In the case where nucleon emission leaves the daughter nucleus in an
         excited state, a photon is emitted to de-excite the nucleus.
@@ -175,7 +176,7 @@ class Channel(BaseChannel):
         diry = np.sin(theta)*np.sin(phi)
         dirz = np.cos(theta)
         
-        return (dirx,diry,dirz)
+        return (dirx,diry,dirz)'''
     
     def dSigma_dE(self, eNu, eE):
         """Return differential cross section in MeV^-2.
