@@ -89,6 +89,7 @@ def fit(emission):
     return f
 
 e_thr = 19.5  # approximate energy threshold of neutron emission with no gamma emission (MeV)
+mN = 939.7 # neutron mass
 '''e_thr_g = e_thr + 6.18  # energy threshold of neutron emission with gamma emission (MeV)'''
 epsilon = 0.001  # for approximating DiracDelta distribution below
 
@@ -155,10 +156,10 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        eE = random.random()*(eNu-e_thr)
+        eE = random.random()*(eNu-e_thr) + mN
         '''if self.gamma(eNu) is True:
-            eE = random.random()*(eNu - e_thr_g) # energy of emitted neutron generated randomly from energy excess of neutrino over gamma emission threshold energy
-        else: eE = random.random()*(eNu-e_thr)    # energy of emitted neutron generated randomly from energy excess of neutrino over threshold energy'''          
+            eE = random.random()*(eNu - e_thr_g) + mN # energy of emitted neutron generated randomly from energy excess of neutrino over gamma emission threshold energy
+        else: eE = random.random()*(eNu-e_thr) + mN   # energy of emitted neutron generated randomly from energy excess of neutrino over threshold energy'''          
         return eE
     
     '''def get_photon_direction(self):

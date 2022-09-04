@@ -89,6 +89,7 @@ def fit(emission):
     return f
 
 e_thr = 14  # approximate energy threshold of proton emission with no gamma emission (MeV)
+mP = 138.3  # proton mass
 '''e_thr_g = e_thr + 6.32  # energy threshold of proton emission with gamma emission (MeV)'''
 epsilon = 0.001  # for approximating DiracDelta distribution below
 
@@ -154,10 +155,10 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        eE = random.random()*(eNu-e_thr)
+        eE = random.random()*(eNu-e_thr) + mP
         '''if self.gamma(eNu) is True:
-            eE = random.random()*(eNu - e_thr_g) # energy of emitted proton generated randomly from energy excess of neutrino over gamma emission threshold energy
-        else: eE = random.random()*(eNu-e_thr)    # energy of emitted proton generated randomly from energy excess of neutrino over threshold energy  '''         
+            eE = random.random()*(eNu - e_thr_g) + mP # energy of emitted proton generated randomly from energy excess of neutrino over gamma emission threshold energy
+        else: eE = random.random()*(eNu-e_thr) + mP   # energy of emitted proton generated randomly from energy excess of neutrino over threshold energy  '''         
         return eE
 
     '''def get_photon_direction(self):
