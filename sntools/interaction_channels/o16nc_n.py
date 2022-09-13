@@ -36,17 +36,18 @@ ensure a smooth spline fit. (cross-section units 10^-42 cm^2)
 (eNu, gamma, n, p, d, pp, 3H, 3He, alpha, alpha_n, alpha_p, total)
 """
 
-x_sec_data = [#(14  , None    , None    , 0.0     , None    , None    , None    , None    , None    , None    , None    , 0.0     ), #Estimated
+e_thr = 19.5  # approximate energy threshold of neutron emission with no gamma emission (MeV)
+mN = 939.7 # neutron mass
+'''e_thr_g = e_thr + 6.18  # energy threshold of neutron emission with gamma emission (MeV)'''
+epsilon = 0.001  # for approximating DiracDelta distribution below
+
+# List of neutrino flavors ("e", "eb", "x", "xb") that interact in this channel.
+possible_flavors = ("e", "eb", "x", "xb")
+
+x_sec_data = [(e_thr, None    , 0.0     , None    , None    , None    , None    , None    , None    , None    , None    , None    ), #Estimated Threshold Energy
               (15.0, 1.35E-07, None    , 6.05E-04, None    , None    , None    , None    , 1.35E-25, None    , None    , 6.05E-04), 
-              #(16.0, 5E-07   , None    , None    , None    , None    , None    , None    , 1E-19   , None    , None    , None    ), #Estimated
-              #(16.5, None    , None    , 3E-03   , None    , None    , None    , None    , None    , None    , None    , None    ), #Estimated
-              #(18.0, None    , None    , None    , None    , None    , None    , None    , None    , None    , None    , 1.00E-02), #Estimated
-              (19.5, None    , 0.0     , None    , None    , None    , None    , None    , None    , None    , None    , None    ), #Estimated Threshold Energy
               (20.0, 1.02E-05, 1.93E-04, 3.08E-02, 0.0     , 0.0     , 0.0     , 0.0     , 1.47E-10, None    , 0.0     , 3.10E-02), 
               (25.0, 9.97E-05, 1.63E-02, 1.98E-01, 2.88E-05, 1.09E-05, 2.46E-09, 1.82E-05, 1.74E-06, 0.0     , 4.30E-08, 2.14E-01), 
-              #(26.0, None    , None    , None    , None    , 1E-04   , 1E-06   , None    , None    , None    , None    , None    ), #Estimated
-              #(27.0, None    , None    , None    , 6E-04   , None    , None    , 4E-04   , None    , None    , 1E-04   , None    ), #Estimated
-              #(28.8, None    , None    , None    , None    , None    , None    , None    , None    , 1E-05   , None    , None    ), #Estimated
               (30.0, 5.54E-04, 1.29E-01, 7.76E-01, 7.92E-03, 5.71E-03, 1.82E-03, 4.19E-03, 4.14E-03, 3.76E-05, 4.83E-03, 9.34E-01), 
               (35.0, 1.83E-03, 4.80E-01, 2.16E+00, 6.43E-02, 4.74E-02, 1.48E-02, 3.56E-02, 3.17E-02, 6.86E-04, 5.39E-02, 2.89E+00), 
               (40.0, 4.46E-03, 1.22E+00, 4.76E+00, 2.06E-01, 1.51E-01, 4.52E-02, 1.18E-01, 9.55E-02, 3.74E-03, 1.99E-01, 6.80E+00), 
@@ -87,15 +88,6 @@ def fit(emission):
     f = interp1d(eNu, data[emission][1], kind='cubic', 
                  fill_value='extrapolate', bounds_error = False)
     return f
-
-e_thr = 19.5  # approximate energy threshold of neutron emission with no gamma emission (MeV)
-mN = 939.7 # neutron mass
-'''e_thr_g = e_thr + 6.18  # energy threshold of neutron emission with gamma emission (MeV)'''
-epsilon = 0.001  # for approximating DiracDelta distribution below
-
-# List of neutrino flavors ("e", "eb", "x", "xb") that interact in this channel.
-possible_flavors = ("e", "eb", "x", "xb")
-
 
 class Channel(BaseChannel):
     def generate_event(self, eNu, dirx, diry, dirz):
