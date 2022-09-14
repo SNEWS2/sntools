@@ -7,18 +7,6 @@ Some data points have been estimated from a by-eye fit in order to create a
 smooth spline fit. The threshold energy of the interaction was also estimated 
 from a by-eye fit as no explicit threshold energy could be found.
 
-The n emission from the 16O* nucleus will sometimes leave the daughter nucleus 
-in an excited state and a further emission of a gamma ray occurs. This only has
-a possibility of occurring if the nutrino energy is larger than the threshold 
-energy + the de-excitation gamma energy.
-The probability of an excited daughter nucleus after a nucleon de-excitation
-emission cound not be found. However, the probability after a nucleon
-knock-out is given in T2K Collaboration 2019 (Phys. Rev. D 100, 112009). We 
-have assumed the probabilities after nucleon knock-out hold true for nucleon 
-emission. Only the ground and first excited states of the daughter nucleus are
-considered here, the probabilities for these states are taken from the T2K 2019 
-paper and renormalised to 1.
-
 To determine the the differential cross section dSigma/dE (eNu, eE) from the
 total cross section, we approximate a DiracDelta function with one that is
 2*epsilon wide and 1/(2*epsilon) high, so that the integral is 1.
