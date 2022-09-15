@@ -90,7 +90,7 @@ class Channel(BaseChannel):
 
         eE = self.get_eE(eNu, dirz)
 
-        evt = Event(2006012 if nu_flv > 0 else -2006012)
+        evt = Event(2008016 if nu_flv > 0 else -2008016)
         evt.incoming_particles.append([nu_flv, eNu, 0, 0, 1])  # incoming nu
         evt.incoming_particles.append((8016, 14900, 0, 0, 1))  # oxygen-16 nucleus at rest
         evt.outgoing_particles.append([2112, eE, dirx, diry, dirz])  # emitted neutron
@@ -136,7 +136,7 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        eE = random.random()*(eNu-e_thr) + mN
+        eE = ((random.random()*(eNu-e_thr))**2 + mN**2)**0/5
         '''if self.gamma(eNu) is True:
             eE = random.random()*(eNu - e_thr_g) + mN # energy of emitted neutron generated randomly from energy excess of neutrino over gamma emission threshold energy
         else: eE = random.random()*(eNu-e_thr) + mN   # energy of emitted neutron generated randomly from energy excess of neutrino over threshold energy'''          
