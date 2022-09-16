@@ -1,5 +1,6 @@
 """Implementation of:
     nu + 16O -> nu' + 16O*, 16O* -> 15N + p.
+    
 Based on data provided in Suzuki et al. 2018 (Phys. Rev. C 98, 034613).
 A spline fit is used to obtain cross-section as a function of neutrino energy.
 Some data points have been estimated from a by-eye fit in order to create a 
@@ -24,7 +25,7 @@ ensure a smooth spline fit. (cross-section units 10^-42 cm^2)
 """
 
 e_thr = 14  # approximate energy threshold of proton emission with no gamma emission (MeV)
-mP = 138.3  # proton mass
+mP = 938.3  # proton mass
 '''e_thr_g = e_thr + 6.32  # energy threshold of proton emission with gamma emission (MeV)'''
 epsilon = 0.001  # for approximating DiracDelta distribution below
 
