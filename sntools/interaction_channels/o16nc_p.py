@@ -19,7 +19,7 @@ from scipy.interpolate import interp1d
 import random
 
 """ This table shows the partial cross-section of 16O(nu, nu' X). It is taken 
-directly from Suzuki et al. 2018 with a few extra estimated data points to 
+directly from Suzuki et al. 2018 with an estimated threshold energy data point to
 ensure a smooth spline fit. (cross-section units 10^-42 cm^2)
 (eNu, gamma, n, p, d, pp, 3H, 3He, alpha, alpha_n, alpha_p, total)
 """
