@@ -1,5 +1,5 @@
 """Implementation of:
-    nu + 16O -> nu' + 16O*, 16O* -> 15O(*) + n, (15O* -> 15O + gamma)
+    nu + 16O -> nu' + 16O*, 16O* -> 15O + n.
 
 Based on data provided in Suzuki et al. 2018 (Phys. Rev. C 98, 034613).
 A spline fit is used to obtain cross-section as a function of neutrino energy.
