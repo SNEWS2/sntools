@@ -25,7 +25,7 @@ ensure a smooth spline fit. (cross-section units 10^-42 cm^2)
 """
 
 e_thr = 14  # approximate energy threshold of proton emission with no gamma emission (MeV)
-mP = 938.3  # proton mass
+mP = 938.3  # proton mass (MeV)
 '''e_thr_g = e_thr + 6.32  # energy threshold of proton emission with gamma emission (MeV)'''
 epsilon = 0.001  # for approximating DiracDelta distribution below
 

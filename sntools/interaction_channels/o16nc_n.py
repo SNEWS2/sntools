@@ -25,7 +25,7 @@ ensure a smooth spline fit. (cross-section units 10^-42 cm^2)
 """
 
 e_thr = 19.5  # approximate energy threshold of neutron emission with no gamma emission (MeV)
-mN = 939.7 # neutron mass
+mN = 939.7 # neutron mass (MeV)
 '''e_thr_g = e_thr + 6.18  # energy threshold of neutron emission with gamma emission (MeV)'''
 epsilon = 0.001  # for approximating DiracDelta distribution below
 
