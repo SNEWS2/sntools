@@ -33,7 +33,7 @@ epsilon = 0.001  # for approximating DiracDelta distribution below
 possible_flavors = ("e", "eb", "x", "xb")
 
 x_sec_data = [(e_thr, None    , 0.0    , None    , None    , None    , None    , None    ,
-                           None    , None    , None    , 0.0     ), #Estimated Threshold Energy
+                           None    , None    , None    , None    ), #Estimated Threshold Energy
               (15.0, 1.35E-07, None    , 6.05E-04, None    , None    , None    , None    ,
                            1.35E-25, None    , None    , 6.05E-04),
               (20.0, 1.02E-05, 1.93E-04, 3.08E-02, 0.0     , 0.0     , 0.0     , 0.0     ,
