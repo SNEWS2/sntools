@@ -154,7 +154,7 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        eE = (random.random()*(eNu-e_thr) + mP
+        eE = random.random()*(eNu-e_thr) + mP
         '''if self.gamma(eNu) is True:
             eE = random.random()*(eNu - e_thr_g) + mP # energy of emitted proton generated randomly 
                                 #from energy excess of neutrino over gamma emission threshold energy
