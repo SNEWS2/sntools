@@ -144,8 +144,7 @@ class Channel(BaseChannel):
         Output:
             list with minimum & maximum allowed energy of outgoing (detected) particle
         """
-        eE_max = (eNu-e_thr) + mN
-        return [mN, eE_max]
+        return [self.get_eE(eNu) - epsilon, self.get_eE(eNu) + epsilon]
         
     def get_eE(self, eNu, cosT=0):
         """Return energy (in MeV) of outgoing (detected) particle.
