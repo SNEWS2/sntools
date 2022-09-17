@@ -144,7 +144,8 @@ class Channel(BaseChannel):
         Output:
             list with minimum & maximum allowed energy of outgoing (detected) particle
         """
-        return [self.get_eE(eNu) - epsilon, self.get_eE(eNu) + epsilon]
+        eE_max = (eNu-e_thr) + mN
+        return [mN, eE_max]
         
     def get_eE(self, eNu, cosT=0):
         """Return energy (in MeV) of outgoing (detected) particle.
@@ -153,7 +154,7 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        eE = ((random.random()*(eNu-e_thr))**2 + mN**2)**0/5
+        eE = (random.random()*(eNu-e_thr) + mN
         '''if self.gamma(eNu) is True:
             eE = random.random()*(eNu - e_thr_g) + mN # energy of emitted neutron generated randomly 
                                 #from energy excess of neutrino over gamma emission threshold energy
