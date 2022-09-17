@@ -214,5 +214,5 @@ class Channel(BaseChannel):
 
     def _bounds_eNu(self, eE):
         """Min/max neutrino energy that can produce a given proton energy."""
-        return self.bounds_eNu
+        return (e_thr + eE - mP, 100)
 
