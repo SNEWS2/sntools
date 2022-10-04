@@ -82,7 +82,14 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        return (((2 * cosT**2 * eNu**2) / (mP)) + mP)  # calculation from 10.1103/PhysRevD.66.033001, first order approximation
+        
+        eE = (((2 * cosT**2 * eNu**2) / (mP)) + mP)  # calculation from 10.1103/PhysRevD.66.033001, first order approximation
+
+        if eE**2 < mP**2:  # A check to avoid complex numbers later on due to first order approximation
+          print ("Energy calculated squared is lower than mass of the proton squared. Will result in complex number. Ignoring...")
+          return 0
+
+        return eE
 
     def dSigma_dCosT(self, eNu, cosT):
         """Return differential cross section in MeV^-2 as a function of the emission angle of the outgoing (detected) particle.
