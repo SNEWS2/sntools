@@ -20,8 +20,8 @@ possible_flavors = ["e", "eb", "x", "xb"]
 sin2theta_w = 0.23155  # weak mixing angle
 mP = 938.27205  # proton mass (MeV)
 gF = 1.16637e-11  # Fermi coupling constant
-gA_0 = 1.267 # axial proton form factor; from Beringer et al. 2012
-eta = 0.12 # proton strangeness; from Ahrens et al. 1987
+gA_0 = 1.267 # axial proton form factor; from Beringer et al. 2012, doi: 10.1103/PhysRevD.86.010001
+eta = 0.12 # proton strangeness; from Ahrens et al. 1987, doi 10.1103/PhysRevD.35.785
 cA_0 = (gA_0 * (1 + eta)) / 2 # axial vector coupling constant
 cV = (1 - (4 * sin2theta_w)) / 2 # axial vector coupling constant
 
