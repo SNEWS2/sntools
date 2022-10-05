@@ -18,19 +18,12 @@ from sntools.interaction_channels import BaseChannel, cherenkov_threshold
 possible_flavors = ["e", "eb", "x", "xb"]
 
 sin2theta_w = 0.23155  # weak mixing angle
-mP = 938.272046  # proton mass (MeV)
+mP = 938.27205  # proton mass (MeV)
 gF = 1.16637e-11  # Fermi coupling constant
-gA_0 = 1.267 # axial proton form factor
-eta = 0.12 # proton strangeness
+gA_0 = 1.267 # axial proton form factor; from Beringer et al. 2012
+eta = 0.12 # proton strangeness; from Ahrens et al. 1987
 cA_0 = (gA_0 * (1 + eta)) / 2 # axial vector coupling constant
 cV = (1 - (4 * sin2theta_w)) / 2 # axial vector coupling constant
-
-_cache = {}  # save time by avoiding repeat calculations
-def spence(n):
-    n = round(n, 6)  # negligible decrease in accuracy to save time & memory
-    if n not in _cache:
-        _cache[n] = integrate.quad(lambda t: log(abs(1 - t)) / t, 0, n)[0]
-    return _cache[n]
 
 
 class Channel(BaseChannel):
@@ -82,14 +75,9 @@ class Channel(BaseChannel):
             eNu:  neutrino energy (in MeV)
             cosT: cosine of the angle between neutrino and outgoing (detected) particle
         """
-        
-        eE = (((2 * cosT**2 * eNu**2) / (mP)) + mP)  # calculation from 10.1103/PhysRevD.66.033001, first order approximation
 
-        if eE**2 < mP**2:  # A check to avoid complex numbers later on due to first order approximation
-          print ("Energy calculated squared is lower than mass of the proton squared. Will result in complex number. Ignoring...")
-          return 0
+        return (((2 * cosT**2 * eNu**2) / (mP)) + mP)  # calculation from 10.1103/PhysRevD.66.033001, first order approximation
 
-        return eE
 
     def dSigma_dCosT(self, eNu, cosT):
         """Return differential cross section in MeV^-2 as a function of the emission angle of the outgoing (detected) particle.
