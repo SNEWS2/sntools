@@ -1,12 +1,12 @@
 # coding=utf-8
 import unittest
 
-from sntools.interaction_channels import ep
+from sntools.interaction_channels import ps
 from ._crosssectiontest import CrossSectionTest
 
 
-class EPTest(CrossSectionTest):
-    c = ep.Channel('e')  # ensure we can access interaction channel module as self.c
+class PSTest(CrossSectionTest):
+    c = ps.Channel('e')  # ensure we can access interaction channel module as self.c
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
     test_dSigma_dE_values = (
