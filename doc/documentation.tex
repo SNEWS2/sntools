@@ -141,7 +141,7 @@ The rest of this chapter describes the various components of the code and the ph
 \subsection{Detector Materials}
 sntools currently supports three detector materials: water, liquid scintillator and water-based liquid scintillator.
 Water is assumed to consist of an oxygen-16 nucleus and two hydrogen nuclei (free protons).
-Liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons).
+Generic liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons). In addition, linear alkylbenzene (LAB) is available as a liquid scintillator material and assumes a molecular structure of C$_6$H$_5$C$_n$H$_{2n+1}$ where $n$ is between 9-14 (95\% 9-12)  \cite{anderson2021development}.
 Water-based liquid scintillator is assumed to be a mixture of $x\,\%$ liquid scintillator and $(100-x)\,\%$ water.
 %Each material supports the appropriate detection channels presented in section~\ref{sec:interaction-channels}.
 
@@ -159,12 +159,14 @@ Select a detector configuration by using the \texttt{--detector <value>} command
 \item[\texttt{WATCHMAN-WbLS}] Same as \texttt{WATCHMAN}, but filled with water-based liquid scintillator (3\,\% LS, 97\,\% water).
 \item[\texttt{THEIA25}] THEIA-25 geometry~\cite{Askins2020}. Box with dimensions $\SI{20}{m}\times\SI{18}{m}\times\SI{70}{m}$, filled with \SI{25}{kt} of water-based liquid scintillator (10\,\% LS, 90\,\% water).
 \item[\texttt{THEIA100}] THEIA-100 geometry~\cite{Askins2020}. Cylindrical detector filled with \SI{100}{kt} of water-based liquid scintillator (10\,\% LS, 90\,\% water).
+\item[\texttt{SNOplusAV}] Inner acrylic vessel of SNO+ \cite{albanese2021sno+}. Sphere with a radius of \SI{6}{m}, filled with linear alkylbenzene (LAB) liquid scintillator.
+\item[\texttt{SNOplusEW}] External water of SNO+ \cite{albanese2021sno+}. Two concentric spheres of radii \SI{9}{m} and \SI{6.05}{m}. The outer sphere is filled with water, the inner sphere is empty.
 \end{description}
 
 
 \subsection{Interaction Channels} \label{sec:interaction-channels}
 sntools supports multiple different interaction channels described in this section.
-By default, it will generate events across all channels that are available in the selected detector, but it can be restricted to a single channel by using the \texttt{--channel <value>} command line argument, where \texttt{<value>} can be one of \texttt{ibd}, \texttt{es}, \texttt{o16e}, \texttt{o16eb}, \texttt{c12e}, \texttt{c12eb} and \texttt{c12nc}.
+By default, it will generate events across all channels that are available in the selected detector, but it can be restricted to a single channel by using the \texttt{--channel <value>} command line argument, where \texttt{<value>} can be one of \texttt{ibd}, \texttt{es}, \texttt{ps}, \texttt{o16e}, \texttt{o16eb}, \texttt{c12e}, \texttt{c12eb} and \texttt{c12nc}.
 
 For all supported channels, sntools includes code to calculate the differential cross sections, outgoing particle energy as a function of neutrino energy and other quantities.
 These could be used as a library from other Python code, e.\,g. as follows:\\
@@ -193,6 +195,12 @@ However, the cross section of \nue and \nuebar, which can interact through both 
 
 In sntools, elastic scattering is implemented using the tree-level cross sections from standard electroweak theory calculated by ’t~Hooft~\cite{t-Hooft1971} and including one-loop electroweak and QCD corrections as well as QED radiative corrections as calculated in reference~\cite{Bahcall1995}.
 
+\subsubsection{\texttt{ps}: Neutrino-Proton Scattering}
+In liquid scintillator, neutrino-proton scattering ($\nu + p \rightarrow \nu + p$) is an additional available subdominant interaction channel. The recoiling proton energy spectrum is soft meaning the deposited energy in the detector is relatively low ($<5$~MeV). These protons are invisible in water as they're below the Cherenkov threshold. Furthermore, the slow heavily ionizing protons lose energy very quickly, quenching the effective signal. Despite this, over a realistic detection threshold ($\mathcal{O}(100)$s~keV), the neutrino-proton scattering yield can be the second largest available to liquid scintillator detectors below IBD. 
+
+Neutrino-proton scattering is a neutral current interaction and is available to all (anti-)neutrino flavours. The proton recoil spectrum can also provide spectral information about the incoming neutrino, which could solve a long-standing problem of how to separately measure the total energy and temperature of $\nu_{\mu}$, $\nu_{\tau}$, $\bar{\nu}_{\mu}$, and $\bar{\nu}_{\tau}$ \cite{beacom2002detection}.
+
+In sntools, the implementation of neutrino-proton scattering is based a prediction by Beacom, Farr, and Vogel \cite{beacom2002detection}. Here the cross-section is calculated directly from the Standard Model, which has been extensively verified by GeV-scale experiments \cite{ahrens1987measurement}. 
 
 \subsubsection{\texttt{o16e} and \texttt{o16eb}: Charged-Current Interactions on $^{16}$O}
 In water, charged-current interactions of \nue and \nuebar on $^{16}$O nuclei,
