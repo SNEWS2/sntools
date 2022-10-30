@@ -61,6 +61,8 @@ class Event(object):
                 mass = 0.0
             if pid == 2112:
                 mass = 939.56563
+            if pid == 2212:
+                mass = 938.27205
             p2 = (e**2) - (mass**2)
             p = p2**0.5
             px = dirx * p
