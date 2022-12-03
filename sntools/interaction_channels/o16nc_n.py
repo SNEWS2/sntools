@@ -79,8 +79,8 @@ class Channel(BaseChannel):
             eNu: neutrino energy
             eE:  energy of outgoing (detected) particle
         """
-        if eNu < e_thr or abs(self.get_eE(eNu) - eE) > epsilon:
-            # This should never happen, since we set bounds for eE and eNu accordingly above
+        if eNu < e_thr:
+            # This should never happen, since we set bounds for eNu accordingly above
             # ... but just in case:
             return 0
 
