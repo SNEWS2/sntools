@@ -84,7 +84,7 @@ class Channel(BaseChannel):
             # ... but just in case:
             return 0
 
-        sigma = fit()(eNu)*10**(-42)  # cross-section at eNu from the interp1d fit 
+        sigma = fit(eNu)*10**(-42)  # cross-section at eNu from the interp1d fit 
                                                 # of Suzuki et al. 2018 data (units cm^2)
         sigma *= (5.067731E10)**2  # convert cm^2 to MeV^-2: 
                    # http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
