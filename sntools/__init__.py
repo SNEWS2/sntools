@@ -12,7 +12,7 @@ For usage information, run `sntools -h` or `python sntools/genevts.py -h`.
 For more extensive documentation, to report issues or to contribute code,
 see https://github.com/JostMigenda/sntools.
 """
-__version__ = '1.1'
+__version__ = '1.2'
 
 
 def setup():
