@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from importlib import import_module
 from math import ceil, floor, pi
+from os.path import abspath
 
 
 class BaseFlux(ABC):
@@ -159,7 +160,9 @@ class SNEWPYCompositeFlux(CompositeFlux):
         self = SNEWPYCompositeFlux()
         self._repr = f"SNEWPYCompositeFlux.from_file('{file}', format='{format}', starttime={starttime}, endtime={endtime})"
 
-        sn_model = getattr(import_module('snewpy.models.ccsn'), format)(file)
+        # snewpy.models.loaders classes treat relative file paths as relative to the snewpy cache directory,
+        # so we’ll turn it into an absolute path first.
+        sn_model = getattr(import_module('snewpy.models.loaders'), format)(abspath(file))
 
         for flv in ('e', 'eb', 'x', 'xb'):
             f = SNEWPYFlux(sn_model, flv, starttime, endtime)
