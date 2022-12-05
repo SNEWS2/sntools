@@ -1,4 +1,4 @@
-numpy >= 1.12.0
-scipy >= 1.0
+numpy
+scipy
 h5py >= 2.10
-snewpy ~=1.2.0
+snewpy ~=1.3.0
