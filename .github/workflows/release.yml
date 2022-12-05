@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build Documentation
         uses: xu-cheng/latex-action@v2
         with:
@@ -24,7 +24,7 @@ jobs:
           root_file: documentation.tex
       - name: Get Version Number
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       - name: Create Draft Release
         id: create_release
         uses: actions/create-release@v1
