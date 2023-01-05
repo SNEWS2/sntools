@@ -27,14 +27,13 @@ data = [[e_thr, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0
  [0.0, 0.000193, 0.0163, 0.129, 0.48, 1.22, 2.49, 4.44, 7.17, 10.7, 15.2, 20.4, 32.8, 46.8]]
  #list of energies and cross-sections for o16nc neutron emission taken from Suzuki et al 2018.
 
-def fit():
-    """ Return a spline fit for the given emission's partial cross-section as 
-    a function of energy.
-    """
-    eNu = data[0]
-    f = interp1d(eNu, data[1], kind='cubic', 
+
+""" Return a spline fit for the given emission's partial cross-section as 
+a function of energy.
+"""
+fit = interp1d(data[0], data[1], kind='cubic', 
                  fill_value='extrapolate', bounds_error = False)
-    return f
+
 
 class Channel(BaseChannel):
     def generate_event(self, eNu, dirx, diry, dirz):
@@ -65,7 +64,8 @@ class Channel(BaseChannel):
         Output:
             list with minimum & maximum allowed energy of outgoing (detected) particle
         """
-        return [self.get_eE(eNu) - epsilon, self.get_eE(eNu) + epsilon]
+        eE = self.get_eE(eNu)
+        return [eE - epsilon, eE + epsilon]
         
     def get_eE(self, eNu, cosT=0):
         """Return energy (in MeV) of outgoing (detected) particle.
@@ -84,12 +84,12 @@ class Channel(BaseChannel):
             eNu: neutrino energy
             eE:  energy of outgoing (detected) particle
         """
-        if eNu < e_thr or abs(self.get_eE(eNu) - eE) > epsilon:
+        if eNu < e_thr:
             # This should never happen, since we set bounds for eE and eNu accordingly above
             # ... but just in case:
             return 0
 
-        sigma = fit()(eNu)*10**(-42)  # cross-section at eNu from the interp1d fit 
+        sigma = fit(eNu)*10**(-42)  # cross-section at eNu from the interp1d fit 
                                                 # of Suzuki et al. 2018 data (units cm^2)
         sigma *= (5.067731E10)**2  # convert cm^2 to MeV^-2: 
                    # http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
@@ -106,7 +106,11 @@ class Channel(BaseChannel):
         # Energy dependence is unclear, so we use a constant value for now.
         if abs(cosT) > 1:
             return 0
-        return 0.5
+        sigma = fit(eNu)*10**(-42)  # cross-section at eNu from the interp1d fit 
+                                                # of Suzuki et al. 2018 data (units cm^2)
+        sigma *= (5.067731E10)**2  # convert cm^2 to MeV^-2: 
+                   # http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
+        return 0.5*sigma
     
     # List with minimum & maximum energy of incoming neutrino.
     bounds_eNu = (e_thr, 100)
