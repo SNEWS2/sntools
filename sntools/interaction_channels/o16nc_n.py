@@ -27,6 +27,7 @@ data = [[e_thr, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0
  [0.0, 0.000193, 0.0163, 0.129, 0.48, 1.22, 2.49, 4.44, 7.17, 10.7, 15.2, 20.4, 32.8, 46.8]]
  #list of energies and cross-sections for o16nc neutron emission taken from Suzuki et al 2018.
 
+<<<<<<< HEAD
 
 """ Return a spline fit for the given emission's partial cross-section as 
 a function of energy.
@@ -34,6 +35,10 @@ a function of energy.
 fit = interp1d(data[0], data[1], kind='cubic', 
                  fill_value='extrapolate', bounds_error = False)
 
+=======
+# Spline fit of the partial cross-section as a function of energy
+fit = interp1d(data[0], data[1], kind='cubic', fill_value='extrapolate', bounds_error = False)
+>>>>>>> f3fb1fcef8c964a0aac72ba65006114b912728e9
 
 class Channel(BaseChannel):
     def generate_event(self, eNu, dirx, diry, dirz):
@@ -85,7 +90,11 @@ class Channel(BaseChannel):
             eE:  energy of outgoing (detected) particle
         """
         if eNu < e_thr:
+<<<<<<< HEAD
             # This should never happen, since we set bounds for eE and eNu accordingly above
+=======
+            # This should never happen, since we set bounds for eNu accordingly above
+>>>>>>> f3fb1fcef8c964a0aac72ba65006114b912728e9
             # ... but just in case:
             return 0
 
