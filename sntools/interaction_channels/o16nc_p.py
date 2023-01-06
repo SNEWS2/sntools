@@ -24,8 +24,8 @@ epsilon = 0.001  # for approximating DiracDelta distribution below
 possible_flavors = ("e", "eb", "x", "xb")
 
 # Energies (MeV) and cross-sections (10^-42 cm^2) for o16nc proton emission taken from Suzuki et al 2018.
-data = [[e_thr, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 80.0, 90.0],
-        [0.0, 0.000605, 0.0308, 0.198, 0.776, 2.16, 4.76, 9.01, 15.2, 23.7, 34.5, 47.7, 62.9, 98.6, 138.0]]
+data = [[e_thr, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 80.0, 90.0, 100],
+        [0.0, 0.000605, 0.0308, 0.198, 0.776, 2.16, 4.76, 9.01, 15.2, 23.7, 34.5, 47.7, 62.9, 98.6, 138, 179]]
 
 # Spline fit of the partial cross-section as a function of energy
 fit = interp1d(data[0], data[1], kind='cubic', fill_value='extrapolate', bounds_error = False)
