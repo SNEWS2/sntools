@@ -218,6 +218,25 @@ This fit matches the cross sections calculated from the full set of nuclear stat
 For a typical supernova neutrino flux, the difference in the resulting event spectra when using the four groups instead of all 42 nuclear states is very small.
 
 
+\subsubsection{\texttt{o16nc\_n} and \texttt{o16nc\_p}: Neutral-Current Interactions on $^{16}$O}
+In water, neutral-current interactions on $^{16}$O nuclei are a subdominant interaction channel that neutrinos and antineutrinos of all flavours contribute to equally.
+The largest contribution to this channel comes from events where a single neutron or proton\footnote{
+	Since the energy of the emitted proton is below the Cherenkov threshold, it cannot be detected in water Cherenkov detectors.
+	Therefore, sntools generates \texttt{o16nc\_p} events only for WbLS detectors.
+	However, \texttt{o16nc\_n} events \textit{are} generated also in water Cherenkov detectors, since the neutron capture signal is potentially detectable.
+} is emitted,
+\begin{align}
+\nu + \/^{16}\text{O} \rightarrow \nu' + &^{16}\text{O}^*\\
+	\Rightarrow &^{16}\text{O}^{*} \rightarrow X + n\\
+\nu + \/^{16}\text{O} \rightarrow \nu' + &^{16}\text{O}^*\\
+	\Rightarrow &^{16}\text{O}^{*} \rightarrow X + p.
+\end{align}
+
+In sntools, the cross sections for these interactions is based on the theoretical calculations tabulated in~\cite{Suzuki2018}.
+The energy distribution of the outgoing particle is unknown.
+In the current implementation, the energy is simply taken to be a random fraction of the available neutrino energy above threshold.
+
+
 \subsubsection{\texttt{c12e} and \texttt{c12eb}: Charged-Current Interactions on $^{12}$C}
 In liquid scintillator, charged-current interactions of \nue and \nuebar on $^{12}$C nuclei,
 \begin{align}
