@@ -10,7 +10,7 @@ This README file should give a brief overview over sntools and help you get star
 
 ## Getting Started
 ### Installation Instructions
-First, make sure you have Python 3.7 or higher installed on your computer.
+First, make sure you have Python 3.8 or higher installed on your computer.
 Then, in a terminal, run
 ```
 pip install sntools

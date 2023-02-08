@@ -63,10 +63,10 @@ setup(
         # checked by 'pip install'. See instead 'python_requires' below.
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
 
     # Comma-separated list of keywords which will appear on the PyPI project
@@ -85,7 +85,7 @@ setup(
     # and refuse to install the project if the version does not match. See
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
     # When the supported version changes, remember to also update `classifiers` above!
-    python_requires='>=3.7, <4',
+    python_requires='>=3.8, <4',
 
     # This field lists other packages that your project depends on to run.
     # These packages will be installed by pip when your project is installed.
