@@ -1,3 +1,6 @@
+import numpy as np
+import awkward as ak
+
 class Event(object):
     """A single neutrino interaction in the detector."""
 
@@ -72,3 +75,60 @@ class Event(object):
                 dt = 0.0
             s += f"1 {pid} 0 0 {px * GeV:.8e} {py * GeV:.8e} {pz * GeV:.8e} {mass * GeV:.8e} {dt * ns:.5e} {self.vertex[0] * mm:.5e} {self.vertex[1] * mm:.5e} {self.vertex[2] * mm:.5e}\n"
         return s
+
+    def juno_string(self, i, outfile):
+
+        class EVENT():
+
+            def __init__(self):
+                self.nparticles = 0
+                self.t = [0,0]
+                self.px = [0,0]
+                self.py = [0,0]
+                self.pz = [0,0]
+                self.nuE = 0
+                self.m = [0,0]
+                self.pdgid = [0,0]
+                self.origPDGID = 0
+
+            def fill_root(self,outfile):
+
+                outfile["SNEvents"].extend({"pdgid": [self.pdgid],"px":[self.px],"py":[self.py],"pz":[self.pz],"t":[self.t],"m":[self.m],
+                                            "nuE":[self.nuE], "nparticles":[self.nparticles], "origPDGID":[self.origPDGID] })
+        
+        evt = EVENT()
+        for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
+            mass = 0.0
+            if pid == 11 or pid == -11:
+                mass = 0.5109907
+            if pid == 22:
+                mass = 0.0
+            if pid == 2112:
+                mass = 939.56563
+            if pid == 2212:
+                mass = 938.27205
+            p2 = (e**2) - (mass**2)
+            p = p2**0.5
+            evt.px[idx] = dirx * p
+            evt.py[idx] = diry * p
+            evt.pz[idx] = dirz * p
+            evt.m[idx] = mass
+            evt.pdgid[idx]=pid
+
+        if len(self.outgoing_particles) >2:
+            raise AttributeError("Invalid interaction, there should be two outgoing particles")
+        elif len(self.outgoing_particles) <2:
+            #is elastic scattering, second particle is a neutrino, not visible 
+            evt.px[1]=0
+            evt.py[1]=0
+            evt.pz[1]=0
+            evt.m[1]=0
+            evt.pdgid[1]=0
+
+        evt.nparticles = len(self.outgoing_particles)
+        evt.nuE = self.incoming_particles[0][1]
+        evt.t = [self.time*1e6,0]
+        evt.origPDGID = self.incoming_particles[0][0]
+
+        EVENT.fill_root(evt,outfile)
+                
