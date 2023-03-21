@@ -48,7 +48,7 @@ def wbls(x):
 
 # List of supported detector configurations
 supported_detectors = ["HyperK", "HyperKDR", "SuperK",
-                       "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
+                       "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS", "JUNO",
                        "THEIA25", "THEIA100", "SNOplusAV", "SNOplusEW"]
 
 
@@ -109,6 +109,12 @@ class Detector(object):
             self.innerRadius = 605
             self.outerRadius = 900
             self.material = water
+        elif name == "JUNO": # JUNO central detector
+            self.shape = "sphere"
+            self.radius = 2000
+            self.material = lab
+
+            
         else:
             raise ValueError(f"Unknown detector name: {name}")
 
