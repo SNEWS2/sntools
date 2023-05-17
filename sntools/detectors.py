@@ -22,6 +22,12 @@ lab = {
     "density": 0.856,  # g/cm^3
     "channel_weights": {"ibd": 27.3, "es": 127.2, "ps": 27.3, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
 }
+lab_juno = {
+    "molecular_weight": 227.50,  # g/mol                                                                                                                                             
+    "density": 0.861,  # g/cm^3                                                                                                                                                       
+    "channel_weights": {"ibd": 27.3, "es": 127.2, "ps": 27.3, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
+}
+
 
 
 def wbls(x):
@@ -111,8 +117,8 @@ class Detector(object):
             self.material = water
         elif name == "JUNO": # JUNO central detector
             self.shape = "sphere"
-            self.radius = 2000
-            self.material = lab
+            self.radius = 1770.0
+            self.material = lab_juno
 
             
         else:

@@ -1,5 +1,4 @@
 import numpy as np
-import awkward as ak
 
 class Event(object):
     """A single neutrino interaction in the detector."""
@@ -90,11 +89,12 @@ class Event(object):
                 self.m = [0,0]
                 self.pdgid = [0,0]
                 self.origPDGID = 0
-
+                self.channel = 0
+                
             def fill_root(self,outfile):
 
                 outfile["SNEvents"].extend({"pdgid": [self.pdgid],"px":[self.px],"py":[self.py],"pz":[self.pz],"t":[self.t],"m":[self.m],
-                                            "nuE":[self.nuE], "nparticles":[self.nparticles], "origPDGID":[self.origPDGID] })
+                                            "nuE":[self.nuE], "nparticles":[self.nparticles], "origPDGID":[self.origPDGID], "channel":[self.channel]})
         
         evt = EVENT()
         for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
@@ -115,9 +115,7 @@ class Event(object):
             evt.m[idx] = mass
             evt.pdgid[idx]=pid
 
-        if len(self.outgoing_particles) >2:
-            raise AttributeError("Invalid interaction, there should be two outgoing particles")
-        elif len(self.outgoing_particles) <2:
+        if len(self.outgoing_particles) <2:
             #is elastic scattering, second particle is a neutrino, not visible 
             evt.px[1]=0
             evt.py[1]=0
@@ -129,6 +127,7 @@ class Event(object):
         evt.nuE = self.incoming_particles[0][1]
         evt.t = [self.time*1e6,0]
         evt.origPDGID = self.incoming_particles[0][0]
-
+        evt.channel = self.code
+        
         EVENT.fill_root(evt,outfile)
                 
