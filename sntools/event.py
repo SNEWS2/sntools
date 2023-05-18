@@ -1,5 +1,3 @@
-import numpy as np
-
 class Event(object):
     """A single neutrino interaction in the detector."""
 
