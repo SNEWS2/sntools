@@ -59,7 +59,7 @@ Additionally, sntools can be used as a Python library that implements neutrino c
 % sntools should support *at least* the python/scipy/numpy versions required by NEP 29:
 % https://numpy.org/neps/nep-0029-deprecation_policy.html
 
-First, make sure you have Python 3.6 or higher installed on your computer.
+First, make sure you have Python 3.8 or higher installed on your computer.
 (If you don’t, you can get it from \href{https://www.python.org}{python.org} or as part of the \href{https://www.anaconda.com/products/individual}{Anaconda} distribution.)
 
 In a terminal, run \texttt{pip install sntools} to install the latest version of sntools and all dependencies.
@@ -87,7 +87,7 @@ The input file is a required argument. The following optional arguments are avai
 \begin{description}
 \item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
 \item[\texttt{--output <value>}] Name of the output file.
-\item[\texttt{--mcformat <value>}] Format of output file. Can be \texttt{NUANCE} (used e.\,g. by Hyper-Kamiokande) or \texttt{RATPAC} (used e.\,g. by WATCHMAN).\footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external}.}
+\item[\texttt{--mcformat <value>}] Format of output file. Can be 1) \texttt{NUANCE} (used e.\,g. by Hyper-Kamiokande), 2) \texttt{RATPAC} (used e.\,g. by WATCHMAN) or 3) \texttt{JUNO_ROOT} (used by the JUNO internal software) \footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external.}\footnote{For more details on the JUNO SNEvent internal structure, contact \url{marta.colomer@ulb.be}.}.}
 
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
 \item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
@@ -141,7 +141,7 @@ The rest of this chapter describes the various components of the code and the ph
 \subsection{Detector Materials}
 sntools currently supports three detector materials: water, liquid scintillator and water-based liquid scintillator.
 Water is assumed to consist of an oxygen-16 nucleus and two hydrogen nuclei (free protons).
-Generic liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons). In addition, linear alkylbenzene (LAB) is available as a liquid scintillator material and assumes a molecular structure of C$_6$H$_5$C$_n$H$_{2n+1}$ where $n$ is between 9-14 (95\% 9-12)  \cite{anderson2021development}.
+Generic liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons). In addition, linear alkylbenzene (LAB) is available as a liquid scintillator material and assumes a molecular structure of C$_6$H$_5$C$_n$H$_{2n+1}$ where $n$ is between 9-14 (95\% 9-12)  \cite{anderson2021development}. For JUNO, a dedicated LAB density has been implented to match with the LAB mass and detector volume of JUNO.
 Water-based liquid scintillator is assumed to be a mixture of $x\,\%$ liquid scintillator and $(100-x)\,\%$ water.
 %Each material supports the appropriate detection channels presented in section~\ref{sec:interaction-channels}.
 
@@ -161,6 +161,7 @@ Select a detector configuration by using the \texttt{--detector <value>} command
 \item[\texttt{THEIA100}] THEIA-100 geometry~\cite{Askins2020}. Cylindrical detector filled with \SI{100}{kt} of water-based liquid scintillator (10\,\% LS, 90\,\% water).
 \item[\texttt{SNOplusAV}] Inner acrylic vessel of SNO+ \cite{albanese2021sno+}. Sphere with a radius of \SI{6}{m}, filled with linear alkylbenzene (LAB) liquid scintillator.
 \item[\texttt{SNOplusEW}] External water of SNO+ \cite{albanese2021sno+}. Two concentric spheres of radii \SI{9}{m} and \SI{6.05}{m}. The outer sphere is filled with water, the inner sphere is empty.
+\item[\texttt{JUNO}] Central detector of JUNO \cite{JUNO:2021vlw}. Sphere with a radius of \SI{17.7}{m}, filled with \SI{20}{kton} of LAB liquid scintillator.
 \end{description}
 
 

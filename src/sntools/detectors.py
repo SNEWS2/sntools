@@ -22,6 +22,12 @@ lab = {
     "density": 0.856,  # g/cm^3
     "channel_weights": {"ibd": 27.3, "es": 127.2, "ps": 27.3, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
 }
+lab_juno = {
+    "molecular_weight": 227.50,  # g/mol                                                                                                                                             
+    "density": 0.861,  # g/cm^3                                                                                                                                                       
+    "channel_weights": {"ibd": 27.3, "es": 127.2, "ps": 27.3, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
+}
+
 
 
 def wbls(x):
@@ -48,7 +54,7 @@ def wbls(x):
 
 # List of supported detector configurations
 supported_detectors = ["HyperK", "HyperKDR", "SuperK",
-                       "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS",
+                       "WATCHMAN", "WATCHMAN-LS", "WATCHMAN-WbLS", "JUNO",
                        "THEIA25", "THEIA100", "SNOplusAV", "SNOplusEW"]
 
 
@@ -109,6 +115,12 @@ class Detector(object):
             self.innerRadius = 605
             self.outerRadius = 900
             self.material = water
+        elif name == "JUNO": # JUNO central detector
+            self.shape = "sphere"
+            self.radius = 1770.0
+            self.material = lab_juno
+
+            
         else:
             raise ValueError(f"Unknown detector name: {name}")
 

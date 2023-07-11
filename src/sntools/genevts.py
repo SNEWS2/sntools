@@ -5,6 +5,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from importlib import import_module
 import random
+import uproot
 
 try:
     import sntools  # if sntools was installed via pip
@@ -60,7 +61,14 @@ def main():
             for (i, evt) in enumerate(events):
                 evt.vertex = args.detector.generate_random_vertex()
                 outfile.write(evt.ratpac_string(i, events))
-
+        if args.mcformat == 'ROOT_JUNO':
+            fname =	args.output+".root"
+            root_outfile = uproot.recreate(fname)
+            root_outfile.mktree("SNEvents",{"nparticles": "uint64", "origPDGID":"int32", "nuE":"double", "pdgid": ("int32",(2,)),"t": ("float64",(2,)),
+                                            "px": ("float64",(2,)),"py":("float64",(2,)),"pz":("float64",(2,)),"m":("float64",(2,)), "channel": "int64"})
+            for (i, evt) in enumerate(events):
+                evt.vertex = args.detector.generate_random_vertex()
+                evt.juno_string(i, root_outfile)
 
 def parse_command_line_options():
     """Define and parse command line options."""
@@ -75,7 +83,7 @@ def parse_command_line_options():
 
     parser.add_argument("-o", "--output", metavar="FILE", default="outfile.kin", help="Name of the output file. Default: %(default)s.")
 
-    choices = ("NUANCE", "RATPAC")
+    choices = ("NUANCE", "RATPAC","ROOT_JUNO")
     parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=choices[0],
                         help="MC output format for simulations. Choices: %(choices)s. Default: %(default)s.")
 
