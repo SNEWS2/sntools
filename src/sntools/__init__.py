@@ -28,7 +28,7 @@ def setup():
 
     flux_dir = 'fluxes/'
     flux_file = flux_dir + 'intp2001.data'
-    flux_url = 'https://raw.githubusercontent.com/JostMigenda/sntools/master/fluxes/intp2001.data'
+    flux_url = 'https://raw.githubusercontent.com/JostMigenda/sntools/main/fluxes/intp2001.data'
     if os.path.exists(flux_file):
         tryprint(u"\u2705", "[SUCCESS]")
         print("Using sample flux file at " + flux_file)

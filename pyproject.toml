@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "sntools"
+dynamic = ["version"]
+authors = [
+    {name="Jost Migenda"},
+    {name="sntools Contributors"},
+]
+description = "Event generator for supernova burst neutrinos"
+readme = "README.md"
+license = {file = "LICENSE"}
+
+requires-python = ">=3.8"  # TODO: Also update classifiers below!
+dependencies = [
+    "numpy",
+    "scipy",
+    "h5py >= 2.10",
+    "snewpy ~=1.3.0",
+    "uproot"
+]
+
+keywords = ["astrophysics", "supernova", "neutrino", "event generator"]
+classifiers = [
+    'Private :: Do Not Upload',  # TODO: only for testing
+    'License :: OSI Approved :: BSD License',
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Astronomy',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Natural Language :: English',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+
+
+[project.scripts]
+sntools = "sntools.genevts:main"
+
+
+[project.urls]
+"Homepage" = "https://github.com/JostMigenda/sntools"
+"Bug Tracker" = "https://github.com/JostMigenda/sntools/issues"
+
+
+[tool.setuptools.dynamic]
+version = {attr = "sntools.__version__"}
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = [
+    "sntools",
+    "sntools.*",
+]
