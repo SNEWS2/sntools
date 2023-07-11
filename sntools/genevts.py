@@ -65,7 +65,7 @@ def main():
             fname =	args.output+".root"
             root_outfile = uproot.recreate(fname)
             root_outfile.mktree("SNEvents",{"nparticles": "uint64", "origPDGID":"int32", "nuE":"double", "pdgid": ("int32",(2,)),"t": ("float64",(2,)),
-                                            "px": ("float64",(2,)),"py":("float64",(2,)),"pz":("float64",(2,)),"m":("float64",(2,)), "channel": "uint64"})
+                                            "px": ("float64",(2,)),"py":("float64",(2,)),"pz":("float64",(2,)),"m":("float64",(2,)), "channel": "int64"})
             for (i, evt) in enumerate(events):
                 evt.vertex = args.detector.generate_random_vertex()
                 evt.juno_string(i, root_outfile)
