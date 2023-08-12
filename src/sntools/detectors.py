@@ -6,7 +6,7 @@ import random
 water = {
     "molecular_weight": 18.0153,  # g/mol
     "density": 1.0,  # g/cm^3
-    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1, "o16nc_n": 1},  # targets per molecule
+    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1},  # targets per molecule
 }
 
 # liquid scintillator: approximated here as CH_2
@@ -17,7 +17,7 @@ ls = {
 }
 
 # liquid scintillator: LAB, average structure -> C_16.65H_27.3 (C6H5CnH2n+1 where n is 95% 9-12, 5% 13-14)
-lab = {
+lab_snoplus = {
     "molecular_weight": 227.50,  # g/mol
     "density": 0.856,  # g/cm^3
     "channel_weights": {"ibd": 27.3, "es": 127.2, "ps": 27.3, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
@@ -38,10 +38,6 @@ def wbls(x):
     """
     if not 0 <= x <= 1:
         raise ValueError("Fraction of Liquid Scintillator must be between 0 and 1!")
-
-    # The free proton from o16nc_p is undetectable in pure water, so not included above.
-    # Since it may be detectable in WbLS, we add it manually here.
-    water["channel_weights"]["o16nc_p"] = 1
 
     mw = x * ls["molecular_weight"] + (1 - x) * water["molecular_weight"]
     d = x * ls["density"] + (1 - x) * water["density"]
@@ -109,7 +105,7 @@ class Detector(object):
         elif name == "SNOplusAV": # SNO+ inner AV only
             self.shape = "sphere"
             self.radius = 600
-            self.material = lab
+            self.material = lab_snoplus
         elif name == "SNOplusEW": # SNO+ external water
             self.shape = "hollowSphere"
             self.innerRadius = 605
