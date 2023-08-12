@@ -6,7 +6,7 @@ import random
 water = {
     "molecular_weight": 18.0153,  # g/mol
     "density": 1.0,  # g/cm^3
-    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1, "o16nc_n": 1},  # targets per molecule
+    "channel_weights": {"ibd": 2, "es": 10, "o16e": 1, "o16eb": 1},  # targets per molecule
 }
 
 # liquid scintillator: approximated here as CH_2
@@ -38,10 +38,6 @@ def wbls(x):
     """
     if not 0 <= x <= 1:
         raise ValueError("Fraction of Liquid Scintillator must be between 0 and 1!")
-
-    # The free proton from o16nc_p is undetectable in pure water, so not included above.
-    # Since it may be detectable in WbLS, we add it manually here.
-    water["channel_weights"]["o16nc_p"] = 1
 
     mw = x * ls["molecular_weight"] + (1 - x) * water["molecular_weight"]
     d = x * ls["density"] + (1 - x) * water["density"]
