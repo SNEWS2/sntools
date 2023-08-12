@@ -25,7 +25,6 @@ dependencies = [
 
 keywords = ["astrophysics", "supernova", "neutrino", "event generator"]
 classifiers = [
-    'Private :: Do Not Upload',  # TODO: only for testing
     'License :: OSI Approved :: BSD License',
     'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Science/Research',
