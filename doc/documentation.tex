@@ -168,7 +168,7 @@ Select a detector configuration by using the \texttt{--detector <value>} command
 
 \subsection{Interaction Channels} \label{sec:interaction-channels}
 sntools supports multiple different interaction channels described in this section.
-By default, it will generate events across all channels that are available in the selected detector, but it can be restricted to a single channel by using the \texttt{--channel <value>} command line argument, where \texttt{<value>} can be one of \texttt{ibd}, \texttt{es}, \texttt{ps}, \texttt{o16e}, \texttt{o16eb}, \texttt{c12e}, \texttt{c12eb} and \texttt{c12nc}.
+By default, it will generate events across all channels that are available in the selected detector, but it can be restricted to a single channel by using the \texttt{--channel <value>} command line argument, with possible values (\texttt{ibd}, \texttt{es}, \texttt{ps}, \texttt{o16e}, etc.) described in the rest of this subsection.
 
 For all supported channels, sntools includes code to calculate the differential cross sections, outgoing particle energy as a function of neutrino energy and other quantities.
 These could be used as a library from other Python code, e.\,g. as follows:\\
@@ -218,6 +218,25 @@ In sntools, the cross section for both interaction channels is based on a new sh
 To simplify the evaluation of the cross section, the implementation in sntools uses the four-group fit presented in reference~\cite{Nakazato2018}.
 This fit matches the cross sections calculated from the full set of nuclear states to within a few per cent at neutrino energies of up to \SI{100}{MeV}.
 For a typical supernova neutrino flux, the difference in the resulting event spectra when using the four groups instead of all 42 nuclear states is very small.
+
+
+\subsubsection{\texttt{o16nc\_n} and \texttt{o16nc\_p}: Neutral-Current Interactions on $^{16}$O}
+In water, neutral-current interactions on $^{16}$O nuclei are a subdominant interaction channel that neutrinos and antineutrinos of all flavours contribute to equally.
+The largest contribution to this channel comes from events where a single neutron or proton\footnote{
+	Since the energy of the emitted proton is below the Cherenkov threshold, it cannot be detected in water Cherenkov detectors.
+	Therefore, sntools generates \texttt{o16nc\_p} events only for WbLS detectors.
+	However, \texttt{o16nc\_n} events \textit{are} generated also in water Cherenkov detectors, since the neutron capture signal is potentially detectable.
+} is emitted,
+\begin{align}
+\nu + \/^{16}\text{O} \rightarrow \nu' + &^{16}\text{O}^*\\
+	\Rightarrow &^{16}\text{O}^{*} \rightarrow X + n\\
+\nu + \/^{16}\text{O} \rightarrow \nu' + &^{16}\text{O}^*\\
+	\Rightarrow &^{16}\text{O}^{*} \rightarrow X + p.
+\end{align}
+
+In sntools, the cross sections for these interactions is based on the theoretical calculations tabulated in~\cite{Suzuki2018}.
+The energy distribution of the outgoing particle is unknown.
+In the current implementation, the energy is simply taken to be a random fraction of the available neutrino energy above threshold.
 
 
 \subsubsection{\texttt{c12e} and \texttt{c12eb}: Charged-Current Interactions on $^{12}$C}
