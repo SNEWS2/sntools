@@ -17,7 +17,7 @@ ls = {
 }
 
 # liquid scintillator: LAB, average structure -> C_16.65H_27.3 (C6H5CnH2n+1 where n is 95% 9-12, 5% 13-14)
-lab = {
+lab_snoplus = {
     "molecular_weight": 227.50,  # g/mol
     "density": 0.856,  # g/cm^3
     "channel_weights": {"ibd": 27.3, "es": 127.2, "ps": 27.3, "c12e": 16.65, "c12eb": 16.65, "c12nc": 16.65},
@@ -109,7 +109,7 @@ class Detector(object):
         elif name == "SNOplusAV": # SNO+ inner AV only
             self.shape = "sphere"
             self.radius = 600
-            self.material = lab
+            self.material = lab_snoplus
         elif name == "SNOplusEW": # SNO+ external water
             self.shape = "hollowSphere"
             self.innerRadius = 605

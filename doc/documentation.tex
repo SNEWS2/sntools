@@ -87,7 +87,7 @@ The input file is a required argument. The following optional arguments are avai
 \begin{description}
 \item[\texttt{--format <value>}] Format of input file(s). See section~\ref{sec:input-formats}.
 \item[\texttt{--output <value>}] Name of the output file.
-\item[\texttt{--mcformat <value>}] Format of output file. Can be 1) \texttt{NUANCE} (used e.\,g. by Hyper-Kamiokande), 2) \texttt{RATPAC} (used e.\,g. by WATCHMAN) or 3) \texttt{JUNO_ROOT} (used by the JUNO internal software) \footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external.}\footnote{For more details on the JUNO SNEvent internal structure, contact \url{marta.colomer@ulb.be}.}.}
+\item[\texttt{--mcformat <value>}] Format of output file. Can be \texttt{NUANCE} (used e.\,g. by Hyper-Kamiokande), \texttt{RATPAC} (used e.\,g. by SNO+ and WATCHMAN) or \texttt{JUNO\_ROOT} (used by the JUNO internal software).\footnote{For a description of these formats see \url{http://neutrino.phy.duke.edu/nuance-format/} and \url{https://rat.readthedocs.io/en/latest/generators.html\#external}. For more details on the JUNO SNEvent internal structure, contact \url{marta.colomer@ulb.be}.}
 
 \item[\texttt{--detector <value>}] Detector configuration. See section~\ref{sec:detector-configurations}.
 \item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
@@ -141,8 +141,9 @@ The rest of this chapter describes the various components of the code and the ph
 \subsection{Detector Materials}
 sntools currently supports three detector materials: water, liquid scintillator and water-based liquid scintillator.
 Water is assumed to consist of an oxygen-16 nucleus and two hydrogen nuclei (free protons).
-Generic liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons). In addition, linear alkylbenzene (LAB) is available as a liquid scintillator material and assumes a molecular structure of C$_6$H$_5$C$_n$H$_{2n+1}$ where $n$ is between 9-14 (95\% 9-12)  \cite{anderson2021development}. For JUNO, a dedicated LAB density has been implented to match with the LAB mass and detector volume of JUNO.
-Water-based liquid scintillator is assumed to be a mixture of $x\,\%$ liquid scintillator and $(100-x)\,\%$ water.
+Generic liquid scintillator is assumed to consist of $n$ carbon-12 nuclei and $2n$ hydrogen nuclei (free protons).
+In addition, two specific liquid scintillators\footnote{both linear alkylbenzene (LAB), a mixture of C$_6$H$_5$C$_n$H$_{2n+1}$ molecules with $9<n<14$} are implemented, which match the materials used in SNO+~\cite{anderson2021development} and JUNO.
+Water-based liquid scintillator is assumed to be a mixture of $x\,\%$ generic liquid scintillator and $(100-x)\,\%$ water.
 %Each material supports the appropriate detection channels presented in section~\ref{sec:interaction-channels}.
 
 The detector material doesn’t need to be specified explicitly; it is determined by the detector configuration.
@@ -199,7 +200,7 @@ In sntools, elastic scattering is implemented using the tree-level cross section
 \subsubsection{\texttt{ps}: Neutrino-Proton Scattering}
 In liquid scintillator, neutrino-proton scattering ($\nu + p \rightarrow \nu + p$) is an additional available subdominant interaction channel. The recoiling proton energy spectrum is soft meaning the deposited energy in the detector is relatively low ($<5$~MeV). These protons are invisible in water as they're below the Cherenkov threshold. Furthermore, the slow heavily ionizing protons lose energy very quickly, quenching the effective signal. Despite this, over a realistic detection threshold ($\mathcal{O}(100)$s~keV), the neutrino-proton scattering yield can be the second largest available to liquid scintillator detectors below IBD. 
 
-Neutrino-proton scattering is a neutral current interaction and is available to all (anti-)neutrino flavours. The proton recoil spectrum can also provide spectral information about the incoming neutrino, which could solve a long-standing problem of how to separately measure the total energy and temperature of $\nu_{\mu}$, $\nu_{\tau}$, $\bar{\nu}_{\mu}$, and $\bar{\nu}_{\tau}$ \cite{beacom2002detection}.
+Neutrino-proton scattering is a neutral-current interaction and is available to all (anti-)neutrino flavours. The proton recoil spectrum can also provide spectral information about the incoming neutrino, which could solve a long-standing problem of how to separately measure the total energy and temperature of $\nu_{\mu}$, $\nu_{\tau}$, $\bar{\nu}_{\mu}$, and $\bar{\nu}_{\tau}$ \cite{beacom2002detection}.
 
 In sntools, the implementation of neutrino-proton scattering is based a prediction by Beacom, Farr, and Vogel \cite{beacom2002detection}. Here the cross-section is calculated directly from the Standard Model, which has been extensively verified by GeV-scale experiments \cite{ahrens1987measurement}. 
 
