@@ -6,7 +6,7 @@ sntools was originally developed for Hyper-Kamiokande and later extended to supp
 
 Additionally, sntools can be used as a Python library that implements neutrino cross sections.
 
-This README file should give a brief overview over sntools and help you get started. For more information, see the [full documentation for each release on GitHub](https://github.com/JostMigenda/sntools/releases).
+This README file should give a brief overview over sntools and help you get started. For more information, see the [full documentation for each release on GitHub](https://github.com/SNEWS2/sntools/releases).
 
 ## Getting Started
 ### Installation Instructions
@@ -81,8 +81,8 @@ Water-based liquid scintillator, a mixture of the two materials, is also support
 A text file in the NUANCE format (used by the `/mygen/vecfile` options in WCSim) or the RATPAC format.
 
 ## Support and Contributing
-To report problems or ask for help, [open an issue on GitHub](https://github.com/JostMigenda/sntools/issues) or email the [lead developer](https://github.com/JostMigenda/).
+To report problems or ask for help, [open an issue on GitHub](https://github.com/SNEWS2/sntools/issues) or email the [lead developer](https://github.com/JostMigenda/).
 
-Contributions to sntools are welcome! See instructions in the [full documentation](https://github.com/JostMigenda/sntools/releases) for help on common ways to extend sntools (e. g. by adding a new detector, input format or interaction channel) and please submit a pull request with your contributions!
+Contributions to sntools are welcome! See instructions in the [full documentation](https://github.com/SNEWS2/sntools/releases) for help on common ways to extend sntools (e. g. by adding a new detector, input format or interaction channel) and please submit a pull request with your contributions!
 
 Please note that this project is released with a Contributor Code of Conduct (see `CODE_OF_CONDUCT.md`). By participating in this project you agree to abide by its terms.

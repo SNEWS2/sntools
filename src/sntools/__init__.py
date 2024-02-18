@@ -10,7 +10,7 @@ support different detectors and detector materials.
 
 For usage information, run `sntools -h` or `python sntools/genevts.py -h`.
 For more extensive documentation, to report issues or to contribute code,
-see https://github.com/JostMigenda/sntools.
+see https://github.com/SNEWS2/sntools.
 """
 __version__ = '1.3'
 
@@ -28,7 +28,7 @@ def setup():
 
     flux_dir = 'fluxes/'
     flux_file = flux_dir + 'intp2001.data'
-    flux_url = 'https://raw.githubusercontent.com/JostMigenda/sntools/main/fluxes/intp2001.data'
+    flux_url = 'https://raw.githubusercontent.com/SNEWS2/sntools/main/fluxes/intp2001.data'
     if os.path.exists(flux_file):
         tryprint(u"\u2705", "[SUCCESS]")
         print("Using sample flux file at " + flux_file)
@@ -68,7 +68,7 @@ def setup():
         tryprint(u"\u274c", "[ERROR]")
         print("Please ensure you have installed the most recent version of sntools and all dependencies.")
         tryprint(u"\u274c", "[ERROR]")
-        print("If this persists, please go to https://github.com/JostMigenda/sntools and open a new issue.")
+        print("If this persists, please go to https://github.com/SNEWS2/sntools and open a new issue.")
 
 
 def tryprint(default, alternative=''):

@@ -47,8 +47,8 @@ sntools = "sntools.genevts:main"
 
 
 [project.urls]
-"Homepage" = "https://github.com/JostMigenda/sntools"
-"Bug Tracker" = "https://github.com/JostMigenda/sntools/issues"
+"Homepage" = "https://github.com/SNEWS2/sntools"
+"Bug Tracker" = "https://github.com/SNEWS2/sntools/issues"
 
 
 [tool.setuptools.dynamic]
