@@ -162,7 +162,7 @@ class SNEWPYCompositeFlux(CompositeFlux):
 
         # snewpy.models.loaders classes treat relative file paths as relative to the snewpy cache directory,
         # so we’ll turn it into an absolute path first.
-        sn_model = getattr(import_module('snewpy.models.loaders'), format)(abspath(file))
+        sn_model = getattr(import_module('snewpy.models.ccsn_loaders'), format)(abspath(file))
 
         for flv in ('e', 'eb', 'x', 'xb'):
             f = SNEWPYFlux(sn_model, flv, starttime, endtime)
