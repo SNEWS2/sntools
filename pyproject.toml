@@ -19,7 +19,7 @@ dependencies = [
     "numpy",
     "scipy",
     "h5py >= 2.10",
-    "snewpy ~=1.4.0",
+    "snewpy ~=1.5.0",
     "uproot"
 ]
 
