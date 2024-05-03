@@ -48,27 +48,28 @@ def main():
 
     # Sort events by time and write them to an output file
     events.sort(key=lambda evt: evt.time)
-    with open(args.output, "w") as outfile:
-        if args.verbose:  # write parameters to file as a comment
-            outfile.write(f"# Generated on {datetime.now()} with the options:\n")
-            outfile.write(f"# {args}\n")
-        if args.mcformat == 'NUANCE':
-            for (i, evt) in enumerate(events):
-                evt.vertex = args.detector.generate_random_vertex()
-                outfile.write(evt.nuance_string(i))
-            outfile.write("$ stop\n")
-        if args.mcformat == 'RATPAC':
-            for (i, evt) in enumerate(events):
-                evt.vertex = args.detector.generate_random_vertex()
-                outfile.write(evt.ratpac_string(i, events))
-        if args.mcformat == 'ROOT_JUNO':
-            fname =	args.output+".root"
-            root_outfile = uproot.recreate(fname)
-            root_outfile.mktree("SNEvents",{"nparticles": "uint64", "origPDGID":"int32", "nuE":"double", "pdgid": ("int32",(2,)),"t": ("float64",(2,)),
-                                            "px": ("float64",(2,)),"py":("float64",(2,)),"pz":("float64",(2,)),"m":("float64",(2,)), "channel": "int64"})
-            for (i, evt) in enumerate(events):
-                evt.vertex = args.detector.generate_random_vertex()
-                evt.juno_string(i, root_outfile)
+    for evt in events:
+        evt.vertex = args.detector.generate_random_vertex()
+
+    if args.mcformat in ('NUANCE', 'RATPAC'):
+        with open(args.output, "w") as outfile:
+            if args.verbose:  # write parameters to file as a comment
+                outfile.write(f"# Generated on {datetime.now()} with the options:\n")
+                outfile.write(f"# {args}\n")
+            if args.mcformat == 'NUANCE':
+                for (i, evt) in enumerate(events):
+                    outfile.write(evt.nuance_string(i))
+                outfile.write("$ stop\n")
+            if args.mcformat == 'RATPAC':
+                for (i, evt) in enumerate(events):
+                    outfile.write(evt.ratpac_string(i, events))
+    if args.mcformat == 'ROOT_JUNO':
+        fname =	args.output+".root"
+        root_outfile = uproot.recreate(fname)
+        root_outfile.mktree("SNEvents",{"nparticles": "uint64", "origPDGID":"int32", "nuE":"double", "pdgid": ("int32",(2,)),"t": ("float64",(2,)),
+                                        "px": ("float64",(2,)),"py":("float64",(2,)),"pz":("float64",(2,)),"m":("float64",(2,)), "channel": "int64"})
+        for (i, evt) in enumerate(events):
+            evt.juno_string(i, root_outfile)
 
 def parse_command_line_options():
     """Define and parse command line options."""
