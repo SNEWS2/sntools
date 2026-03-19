@@ -4,6 +4,7 @@ from sntools.event import Event
 
 
 cherenkov_threshold = 0.77  # Cherenkov threshold of electron/positron in water
+# If a detector contains liquid scintillator, we modify this threshold in gen_evts() in channel.py
 
 
 class BaseChannel(ABC):
