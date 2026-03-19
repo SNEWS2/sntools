@@ -93,17 +93,15 @@ class EventWriter:
 
         s = f"{len(evt.outgoing_particles)}\n"
         for idx, (pid, e, dirx, diry, dirz) in enumerate(evt.outgoing_particles):
-            mass = 0.0
             if pid == 11 or pid == -11:
                 mass = 0.5109907
-            if pid == 22:
-                mass = 0.0
-            if pid == 2112:
+            elif pid == 2112:
                 mass = 939.56563
-            if pid == 2212:
+            elif pid == 2212:
                 mass = 938.27205
-            p2 = (e**2) - (mass**2)
-            p = p2**0.5
+            else:
+                mass = 0.0
+            p = (e**2 - mass**2)**0.5
             px = dirx * p
             py = diry * p
             pz = dirz * p
@@ -115,7 +113,6 @@ class EventWriter:
     def _juno_string(self, orig_evt, i, outfile):
 
         class EVENT():
-
             def __init__(self):
                 self.nparticles = 0
                 self.t = [0,0]
@@ -127,43 +124,38 @@ class EventWriter:
                 self.pdgid = [0,0]
                 self.origPDGID = 0
                 self.channel = 0
-                
-            def fill_root(self,outfile):
 
-                outfile["SNEvents"].extend({"pdgid": [self.pdgid],"px":[self.px],"py":[self.py],"pz":[self.pz],"t":[self.t],"m":[self.m],
-                                            "nuE":[self.nuE], "nparticles":[self.nparticles], "origPDGID":[self.origPDGID], "channel":[self.channel]})
-        
         evt = EVENT()
+
         for idx, (pid, e, dirx, diry, dirz) in enumerate(orig_evt.outgoing_particles):
-            mass = 0.0
             if pid == 11 or pid == -11:
                 mass = 0.5109907
-            if pid == 22:
-                mass = 0.0
-            if pid == 2112:
+            elif pid == 2112:
                 mass = 939.56563
-            if pid == 2212:
+            elif pid == 2212:
                 mass = 938.27205
-            p2 = (e**2) - (mass**2)
-            p = p2**0.5
+            else:
+                mass = 0.0
+            p = (e**2 - mass**2)**0.5
             evt.px[idx] = dirx * p
             evt.py[idx] = diry * p
             evt.pz[idx] = dirz * p
             evt.m[idx] = mass
-            evt.pdgid[idx]=pid
+            evt.pdgid[idx] = pid
 
-        if len(orig_evt.outgoing_particles) <2:
-            #is elastic scattering, second particle is a neutrino, not visible 
-            evt.px[1]=0
-            evt.py[1]=0
-            evt.pz[1]=0
-            evt.m[1]=0
-            evt.pdgid[1]=0
+        if len(orig_evt.outgoing_particles) < 2:
+            # is elastic scattering, second particle is a neutrino, not visible 
+            evt.px[1] = 0
+            evt.py[1] = 0
+            evt.pz[1] = 0
+            evt.m[1] = 0
+            evt.pdgid[1] = 0
 
         evt.nparticles = len(orig_evt.outgoing_particles)
         evt.nuE = orig_evt.incoming_particles[0][1]
-        evt.t = [orig_evt.time*1e6,0]
+        evt.t = [orig_evt.time*1e6, 0]
         evt.origPDGID = orig_evt.incoming_particles[0][0]
         evt.channel = orig_evt.code
         
-        EVENT.fill_root(evt,outfile)
+        self.outfile["SNEvents"].extend({"pdgid": [evt.pdgid],"px":[evt.px],"py":[evt.py],"pz":[evt.pz],"t":[evt.t],"m":[evt.m],
+                            "nuE":[evt.nuE], "nparticles":[evt.nparticles], "origPDGID":[evt.origPDGID], "channel":[evt.channel]})
