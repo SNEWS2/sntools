@@ -58,7 +58,7 @@ def setup():
     with open('outfile.kin', 'r') as f:
         output_sha = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
 
-    test_sha = "0e3444d5a174ee49bd3adad498a2a022d2340736f2e056bfab12df0e5a9b0c54"
+    test_sha = "6a83b302f25e4693bcfa9047876af5a043360b43af0459c26952f78a0127371e"
     if output_sha == test_sha:
         tryprint(u"\u2705", "[SUCCESS]")
         print("Everything seems to work fine. Enjoy using sntools!")
@@ -69,6 +69,7 @@ def setup():
         print("Please ensure you have installed the most recent version of sntools and all dependencies.")
         tryprint(u"\u274c", "[ERROR]")
         print("If this persists, please go to https://github.com/SNEWS2/sntools and open a new issue.")
+        sys.exit(1)
 
 
 def tryprint(default, alternative=''):
