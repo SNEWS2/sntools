@@ -23,7 +23,9 @@ class EventWriter:
     def __init__(self, format, outfile):
         self.format = format
 
-        # TODO: check file endings for consistency with format, e.g. .root for ROOT_JUNO
+        file_extensions = {"NUANCE": ".kin", "RATPAC": ".txt", "ROOT_JUNO": ".root"}
+        if not outfile.endswith(file_extensions[format]):
+            outfile += file_extensions[format]
 
         if format in ('NUANCE', 'RATPAC'):
             self.outfile = open(outfile, "w")

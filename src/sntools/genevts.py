@@ -100,7 +100,7 @@ def parse_command_line_options():
     parser.add_argument("-f", "--format", metavar="FORMAT", choices=choices, default=choices[1],
                         help="Format of input file(s). Choices: %(choices)s. Default: %(default)s.")
 
-    parser.add_argument("-o", "--output", metavar="FILE", default="outfile.kin", help="Name of the output file. Default: %(default)s.")
+    parser.add_argument("-o", "--output", metavar="FILE", default="outfile", help="Name of the output file. Default: %(default)s. (File extension is added automatically based on output format.)")
 
     choices = ("NUANCE", "RATPAC","ROOT_JUNO")
     parser.add_argument("-m", "--mcformat", metavar="MCFORMAT", choices=choices, default=choices[0],
