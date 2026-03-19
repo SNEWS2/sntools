@@ -40,13 +40,12 @@ class EventWriter:
 
     def write_events(self, events):
         """Write list of Event objects to output file."""
-        match self.format:
-            case 'NUANCE':
-                self._write_nuance_events(events)
-            case 'RATPAC':
-                self._write_ratpac_events(events)
-            case 'ROOT_JUNO':
-                self._write_juno_events(events)
+        if self.format == 'NUANCE':
+            self._write_nuance_events(events)
+        elif self.format == 'RATPAC':
+            self._write_ratpac_events(events)
+        elif self.format == 'ROOT_JUNO':
+            self._write_juno_events(events)
         
         self.outfile.close()
 
