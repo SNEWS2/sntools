@@ -1,3 +1,5 @@
+import uproot
+
 class Event(object):
     """A single neutrino interaction in the detector."""
 
@@ -16,26 +18,63 @@ class Event(object):
             raise AttributeError(f"{name} is a list. Append to it instead of overwriting it.")
         object.__setattr__(self, name, value)
 
-    def nuance_string(self, i):
+
+class EventWriter:
+    def __init__(self, format, outfile):
+        self.format = format
+
+        # TODO: check file endings for consistency with format, e.g. .root for ROOT_JUNO
+
+        if format in ('NUANCE', 'RATPAC'):
+            self.outfile = open(outfile, "w")
+        elif format == 'ROOT_JUNO':
+            self.outfile = uproot.recreate(outfile)
+
+    def write_preamble(self, contents: str):
+        """Write preamble to output file. Not supported by all formats."""
+        if self.format in ('NUANCE', 'RATPAC'):
+            for line in contents.splitlines():
+                self.outfile.write(f"# {line}\n")
+
+    def write_events(self, events):
+        """Write list of Event objects to output file."""
+        match self.format:
+            case 'NUANCE':
+                for (i, evt) in enumerate(events):
+                    self.outfile.write(self._nuance_string(evt, i))
+                self.outfile.write("$ stop\n")
+            case 'RATPAC':
+                for (i, evt) in enumerate(events):
+                    self.outfile.write(self._ratpac_string(evt, i, events))
+            case 'ROOT_JUNO':
+                self.outfile.mktree("SNEvents",{"nparticles": "uint64", "origPDGID":"int32", "nuE":"double", "pdgid": ("int32",(2,)),"t": ("float64",(2,)),
+                                                "px": ("float64",(2,)),"py":("float64",(2,)),"pz":("float64",(2,)),"m":("float64",(2,)), "channel": "int64"})
+                for (i, evt) in enumerate(events):
+                    self._juno_string(evt, i, self.outfile)
+        
+        self.outfile.close()
+
+    def _nuance_string(self, evt, i):
         """Return NUANCE-formatted representation of event for writing to output file.
 
         Input:
+            evt: Event object
             i: number of event
         Output:
             String describing event."""
 
         s = "$ begin\n"
-        s += f"$ nuance {self.code}\n"
-        s += f"$ vertex {self.vertex[0]:.5f} {self.vertex[1]:.5f} {self.vertex[2]:.5f} {self.time:.8f}\n"
-        for (pid, e, dirx, diry, dirz) in self.incoming_particles:
+        s += f"$ nuance {evt.code}\n"
+        s += f"$ vertex {evt.vertex[0]:.5f} {evt.vertex[1]:.5f} {evt.vertex[2]:.5f} {evt.time:.8f}\n"
+        for (pid, e, dirx, diry, dirz) in evt.incoming_particles:
             s += f"$ track {pid} {e:.5f} {dirx:.5f} {diry:.5f} {dirz:.5f} -1\n"
         s += f"$ info 0 0 {i}\n"
-        for (pid, e, dirx, diry, dirz) in self.outgoing_particles:
+        for (pid, e, dirx, diry, dirz) in evt.outgoing_particles:
             s += f"$ track {pid} {e:.5f} {dirx:.5f} {diry:.5f} {dirz:.5f} 0\n"
         s += "$ end\n"
         return s
 
-    def ratpac_string(self, i, events):
+    def _ratpac_string(self, evt, i, events):
         """Return RAT-PAC readable HEPEVT-style representation of event for writing to output file.
 
         Input:
@@ -48,12 +87,12 @@ class Event(object):
         mm = 10       # convert from cm
         ns = 1000000  # convert from ms
 
-        dt = self.time
+        dt = evt.time
         if i > 0:
             dt -= events[i - 1].time
 
-        s = f"{len(self.outgoing_particles)}\n"
-        for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
+        s = f"{len(evt.outgoing_particles)}\n"
+        for idx, (pid, e, dirx, diry, dirz) in enumerate(evt.outgoing_particles):
             mass = 0.0
             if pid == 11 or pid == -11:
                 mass = 0.5109907
@@ -70,10 +109,10 @@ class Event(object):
             pz = dirz * p
             if idx > 0:
                 dt = 0.0
-            s += f"1 {pid} 0 0 {px * GeV:.8e} {py * GeV:.8e} {pz * GeV:.8e} {mass * GeV:.8e} {dt * ns:.5e} {self.vertex[0] * mm:.5e} {self.vertex[1] * mm:.5e} {self.vertex[2] * mm:.5e}\n"
+            s += f"1 {pid} 0 0 {px * GeV:.8e} {py * GeV:.8e} {pz * GeV:.8e} {mass * GeV:.8e} {dt * ns:.5e} {evt.vertex[0] * mm:.5e} {evt.vertex[1] * mm:.5e} {evt.vertex[2] * mm:.5e}\n"
         return s
 
-    def juno_string(self, i, outfile):
+    def _juno_string(self, orig_evt, i, outfile):
 
         class EVENT():
 
@@ -95,7 +134,7 @@ class Event(object):
                                             "nuE":[self.nuE], "nparticles":[self.nparticles], "origPDGID":[self.origPDGID], "channel":[self.channel]})
         
         evt = EVENT()
-        for idx, (pid, e, dirx, diry, dirz) in enumerate(self.outgoing_particles):
+        for idx, (pid, e, dirx, diry, dirz) in enumerate(orig_evt.outgoing_particles):
             mass = 0.0
             if pid == 11 or pid == -11:
                 mass = 0.5109907
@@ -113,7 +152,7 @@ class Event(object):
             evt.m[idx] = mass
             evt.pdgid[idx]=pid
 
-        if len(self.outgoing_particles) <2:
+        if len(orig_evt.outgoing_particles) <2:
             #is elastic scattering, second particle is a neutrino, not visible 
             evt.px[1]=0
             evt.py[1]=0
@@ -121,11 +160,10 @@ class Event(object):
             evt.m[1]=0
             evt.pdgid[1]=0
 
-        evt.nparticles = len(self.outgoing_particles)
-        evt.nuE = self.incoming_particles[0][1]
-        evt.t = [self.time*1e6,0]
-        evt.origPDGID = self.incoming_particles[0][0]
-        evt.channel = self.code
+        evt.nparticles = len(orig_evt.outgoing_particles)
+        evt.nuE = orig_evt.incoming_particles[0][1]
+        evt.t = [orig_evt.time*1e6,0]
+        evt.origPDGID = orig_evt.incoming_particles[0][0]
+        evt.channel = orig_evt.code
         
         EVENT.fill_root(evt,outfile)
-                
