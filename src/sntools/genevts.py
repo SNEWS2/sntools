@@ -4,6 +4,7 @@ import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from importlib import import_module
+import multiprocessing as mp
 import random
 import uproot
 
@@ -36,7 +37,7 @@ def main():
     
     # using the process pool executor for ccsn mode 
     if args.mode == "ccsn":
-        pool = ProcessPoolExecutor(max_workers=args.maxworkers)
+        pool = ProcessPoolExecutor(max_workers=args.maxworkers, mp_context=mp.get_context("spawn"))
         results = []
 
         for channel in sorted(args.channels):
