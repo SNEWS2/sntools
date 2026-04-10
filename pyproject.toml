@@ -20,7 +20,7 @@ dependencies = [
     "scipy",
     "h5py >= 2.10",
     "snewpy ~=1.6.0",
-    "uproot"
+    "uproot !=5.6.7,!=5.6.8,!=5.6.9,!=5.7.0,!=5.7.1,!=5.7.2"
 ]
 
 keywords = ["astrophysics", "supernova", "neutrino", "event generator"]
