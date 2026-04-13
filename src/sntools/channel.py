@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
+from importlib import import_module
 from math import pi, sin, cos, acos
 import numpy as np
 import random
 from scipy import integrate, interpolate
 
 
-def gen_evts(_channel, _flux, mode, binsize, n_targets, seed, verbose):
+def gen_evts(_channel, flv, _flux, mode, binsize, detector, seed, verbose):
     """Generate events.
 
     * Get event rate by interpolating from time steps in the input data.
@@ -14,20 +15,30 @@ def gen_evts(_channel, _flux, mode, binsize, n_targets, seed, verbose):
     * Generate these events from time-dependent energy & direction distribution.
 
     Arguments:
-    _channel -- BaseChannel instance for the current interaction channel
+    _channel -- name of the current interaction channel
+    flv -- incoming neutrino flavor
     _flux -- BaseFlux instance with appropriate flavor and time range (includes weighting due to flux transformation and distance)
-    n_targets -- number of target particles in detector
+    mode -- "ccsn" or "presn"
+    binsize -- bin size in seconds for presupernova mode (ignored for CCSN mode)
+    detector -- Detector instance
     seed -- random number seed to reproducibly generate events
     """
     random.seed(seed)
     np.random.seed(int(seed))
 
+    if "c12e" in detector.material["channel_weights"]:
+        # Detector contains liquid scintillator, so Cherenkov threshold does not apply.
+        # Set threshold slightly above electron mass to avoid ZeroDivisionError in `es` channel.
+        import sntools.interaction_channels
+        sntools.interaction_channels.cherenkov_threshold = 0.512
+
     global channel, cached_flux, flux
     flux = _flux
-    channel = _channel
-    tag = str(channel.__class__).split('.')[-2]
+    channel = import_module("sntools.interaction_channels." + _channel).Channel(flv)
+
+    tag = _channel
     if tag in ('c12nc', 'es'):
-        tag += '-' + str(channel).split("'")[-2]
+        tag += '-' + flv
 
     # ddEventRate(eE, eNu, time) is called hundreds of times for each generated event,
     # often with identical eNu and time values (when integrating over eE).
@@ -37,6 +48,7 @@ def gen_evts(_channel, _flux, mode, binsize, n_targets, seed, verbose):
     # integrate over eE and then eNu to obtain the event rate at time t
     if verbose:
         print(f"[{tag}] Calculating event rate for {flux} ...")
+    n_targets = detector.n_molecules * detector.material["channel_weights"][_channel]
     raw_nevts = [n_targets * integrate.nquad(ddEventRate, [channel.bounds_eE, channel.bounds_eNu], args=[t], opts=[channel._opts, {}])[0]
                  for t in flux.raw_times]
     event_rate = interpolate.pchip(flux.raw_times, raw_nevts)

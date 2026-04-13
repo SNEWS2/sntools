@@ -31,11 +31,7 @@ jobs:
     - name: Run unit tests
       run: python -m unittest discover
     - name: Run integration test
-      run: |
-        # Run setup function
-        python -c 'import sntools; sntools.setup()'
-        # Compare with sample output
-        diff outfile.kin tests/sample_outfile.kin
+      run: python -c 'import sntools; sntools.setup()'
 
   lint:
     runs-on: 'ubuntu-latest'

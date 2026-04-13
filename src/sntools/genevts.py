@@ -4,6 +4,7 @@ import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from importlib import import_module
+import multiprocessing as mp
 import random
 import uproot
 
@@ -36,16 +37,14 @@ def main():
     
     # using the process pool executor for ccsn mode 
     if args.mode == "ccsn":
-        pool = ProcessPoolExecutor(max_workers=args.maxworkers)
+        pool = ProcessPoolExecutor(max_workers=args.maxworkers, mp_context=mp.get_context("spawn"))
         results = []
 
         for channel in sorted(args.channels):
             mod_channel = import_module("sntools.interaction_channels." + channel)
-            n_targets = args.detector.n_molecules * args.detector.material["channel_weights"][channel]
             for flv in mod_channel.possible_flavors:
-                channel_instance = mod_channel.Channel(flv)
                 for flux in flux_at_detector.components[flv]:
-                    results.append(pool.submit(gen_evts, channel_instance, flux, args.mode, args.binsize, n_targets, args.randomseed + random.random(), args.verbose))
+                    results.append(pool.submit(gen_evts, channel, flv, flux, args.mode, args.binsize, args.detector, args.randomseed + random.random(), args.verbose))
         
         events = []
         for result in as_completed(results):
@@ -58,11 +57,9 @@ def main():
 
         for channel in sorted(args.channels):
             mod_channel = import_module("sntools.interaction_channels." + channel)
-            n_targets = args.detector.n_molecules * args.detector.material["channel_weights"][channel]
             for flv in mod_channel.possible_flavors:
-                channel_instance = mod_channel.Channel(flv)
                 for flux in flux_at_detector.components[flv]:
-                    events.extend(gen_evts(_channel=channel_instance, _flux=flux, mode=args.mode, binsize=args.binsize, n_targets=n_targets, seed=args.randomseed + random.random(), verbose=args.verbose))
+                    events.extend(gen_evts(channel, flv, flux, args.mode, args.binsize, args.detector, args.randomseed + random.random(), args.verbose))
 
     
     
