@@ -6,7 +6,7 @@ import random
 from scipy import integrate, interpolate
 
 
-def gen_evts(_channel, _flux, mode, binsize, n_targets, seed, verbose):
+def gen_evts(_channel, _flux, format, binsize, n_targets, seed, verbose):
     """Generate events.
 
     * Get event rate by interpolating from time steps in the input data.
@@ -41,16 +41,16 @@ def gen_evts(_channel, _flux, mode, binsize, n_targets, seed, verbose):
                  for t in flux.raw_times]
     event_rate = interpolate.pchip(flux.raw_times, raw_nevts)
 
-    # appropriate bin width is different for each mode
-    if mode == "ccsn":
-        bin_width = 1  # in ms
-    elif mode == "presn":
+    # appropriate bin width is different for ccsn and presn models
+    if format in ("Odrzywolek_2010", "Yoshida_2016", "Patton_2017", "Kato_2017"):
         bin_width = binsize*1000 # converting seconds into ms
+    else:
+        bin_width = 1  # in ms
 
     
     n_bins = int((flux.endtime - flux.starttime) / bin_width)  # number of full-width bins; int() implies floor()
     if verbose:
-        if mode == "presn":
+        if format in ("Odrzywolek_2010", "Yoshida_2016", "Patton_2017", "Kato_2017"):
             print(f"[{tag}] Generating events in {binsize} second bins from {(flux.starttime)/1000} to {(flux.endtime)/1000} seconds ...")
         else:
             print(f"[{tag}] Generating events in {bin_width} ms bins from {flux.starttime} to {flux.endtime} ms ...")

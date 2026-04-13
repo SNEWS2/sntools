@@ -33,9 +33,18 @@ def main():
 
     # Generate events for each (sub-)channel and combine them
 
-    
-    # using the process pool executor for ccsn mode 
-    if args.mode == "ccsn":
+    if args.format[7:] in ("Odrzywolek_2010", "Yoshida_2016", "Patton_2017", "Kato_2017"):
+        events = []
+
+        for channel in sorted(args.channels):
+            mod_channel = import_module("sntools.interaction_channels." + channel)
+            n_targets = args.detector.n_molecules * args.detector.material["channel_weights"][channel]
+            for flv in mod_channel.possible_flavors:
+                channel_instance = mod_channel.Channel(flv)
+                for flux in flux_at_detector.components[flv]:
+                    events.extend(gen_evts(_channel=channel_instance, _flux=flux, format=args.format[7:], binsize=args.binsize, n_targets=n_targets, seed=args.randomseed + random.random(), verbose=args.verbose))
+    # using process pool executor for ccsn models to improve performance time
+    else:
         pool = ProcessPoolExecutor(max_workers=args.maxworkers)
         results = []
 
@@ -45,26 +54,11 @@ def main():
             for flv in mod_channel.possible_flavors:
                 channel_instance = mod_channel.Channel(flv)
                 for flux in flux_at_detector.components[flv]:
-                    results.append(pool.submit(gen_evts, channel_instance, flux, args.mode, args.binsize, n_targets, args.randomseed + random.random(), args.verbose))
+                    results.append(pool.submit(gen_evts, channel_instance, flux, args.format[7:], args.binsize, n_targets, args.randomseed + random.random(), args.verbose))
         
         events = []
         for result in as_completed(results):
             events.extend(result.result())
-    
-
-    # but the process pool executor isn't compatible with presn code from snewpy so we can't use it in this case.
-    elif args.mode == "presn":
-        events = []
-
-        for channel in sorted(args.channels):
-            mod_channel = import_module("sntools.interaction_channels." + channel)
-            n_targets = args.detector.n_molecules * args.detector.material["channel_weights"][channel]
-            for flv in mod_channel.possible_flavors:
-                channel_instance = mod_channel.Channel(flv)
-                for flux in flux_at_detector.components[flv]:
-                    events.extend(gen_evts(_channel=channel_instance, _flux=flux, mode=args.mode, binsize=args.binsize, n_targets=n_targets, seed=args.randomseed + random.random(), verbose=args.verbose))
-
-    
     
     #===================================================================================================================================================
     
@@ -99,11 +93,6 @@ def parse_command_line_options():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("input_file", help="Name or common prefix of the input file(s). Required.")
-
-    choices = ("ccsn", "presn")
-
-    parser.add_argument("--mode", metavar="MODE", choices=choices, default=choices[0], 
-                        help="Mode of operation: supernova burst or pre supernova. Choices: %(choices)s. Default: %(default)s.")
 
     choices = ("gamma", "nakazato", "princeton", "totani", "warren2020",
                "SNEWPY-Bollig_2016", "SNEWPY-Fornax_2021", "SNEWPY-Fornax_2022", "SNEWPY-Kuroda_2020",
@@ -165,13 +154,13 @@ def parse_command_line_options():
     args.detector = Detector(args.detector)
     args.channels = args.detector.material["channel_weights"] if args.channel == "all" else [args.channel]
 
-    # converting minutes into milliseconds for the presn mode
-    if args.mode == "presn":
+    # converting minutes into milliseconds for the presn models
+    if args.format[7:] in ("Odrzywolek_2010", "Yoshida_2016", "Patton_2017", "Kato_2017"):
         args.starttime = args.starttime * 60* 1000
         args.endtime = args.endtime * 60 * 1000
 
     if args.format[:7] == "SNEWPY-":
-        args.flux = SNEWPYCompositeFlux.from_file(args.input_file, args.mode, args.format[7:], args.starttime, args.endtime)
+        args.flux = SNEWPYCompositeFlux.from_file(args.input_file, args.format[7:], args.starttime, args.endtime)
     else:
         args.flux = CompositeFlux.from_file(args.input_file, args.format, args.starttime, args.endtime)
 
@@ -182,7 +171,7 @@ def parse_command_line_options():
 
     del args.hierarchy  # see args.transformation
     del args.channel  # see args.channels
-    del args.format, args.input_file, args.starttime, args.endtime  # see args.flux
+    del args.input_file, args.starttime, args.endtime  # see args.flux
 
     if args.verbose:
         print("Parsed arguments:")

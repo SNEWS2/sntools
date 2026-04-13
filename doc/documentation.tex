@@ -35,7 +35,7 @@
 \newcommand{\nuxbar}{\ensuremath{\bar{\nu}_x}\xspace}
 
 
-\title{Documentation for sntools 1.5b1\footnote{See \url{https://github.com/SNEWS2/sntools} for the most recent version.}}
+\title{Documentation for sntools 1.5\footnote{See \url{https://github.com/SNEWS2/sntools} for the most recent version.}}
 \author{Jost Migenda\footnote{King’s College London, \url{jost.migenda@kcl.ac.uk}}}
 \date{\today}
 
@@ -48,10 +48,10 @@
 
 \section{Introduction}
 
-sntools is a Monte Carlo event generator for supernova neutrino interactions.
+sntools is a Monte Carlo event generator for supernova and pre-supernova neutrino interactions.
 
 It is a command line application that uses detailed time- and energy-dependent neutrino fluxes (provided by various supernova models) to generate interactions within the detector volume and write them to event files that can be used as an input for a full detector simulation.
-sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} and later extended to support different detectors and detector materials.
+sntools was originally developed for Hyper-Kamiokande~\cite{Migenda2019} using core-collapse supernova models and later extended to support different detectors, detector materials and to use pre-supernova models.
 
 Additionally, sntools can be used as a Python library that implements neutrino cross sections. See section~\ref{sec:interaction-channels}.
 
@@ -93,7 +93,8 @@ The input file is a required argument. The following optional arguments are avai
 \item[\texttt{--channel <value>}] Interaction channel to generate events for. See section~\ref{sec:interaction-channels}.
 \item[\texttt{--transformation <value>}] Transformation between initial flux (inside the supernova) and detected flux on Earth. See section~\ref{sec:transformation}.
 \item[\texttt{--distance <value>}] Distance to supernova (in kpc).
-\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range (in milliseconds). If these aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
+\item[\texttt{--starttime <value>} and \texttt{--endtime <value>}] Generate events in a certain time range. These times are given in milliseconds (for core-collapse supernova) or minutes (for pre-supernova). When using a pre-supernova model, all times before the core collapse of the star are given as negative. If these arguments aren’t specified, events are generated for the full time range for which fluxes are given in the input file.
+\item[\texttt{--binsize <value>}] For use with presn models, specify the width of time bins used during event generation (in seconds). See section~\ref{sec:pre-supernova-time-binning}.
 \item[\texttt{--randomseed <value>}] Set an integer as a seed for the random number generator, to generate events reproducibly.
 \item[\texttt{--maxworkers <value>}] Maximum number of parallel processes. sntools will generate events for up to this many channels in parallel, which may improve performance on multi-core CPUs.
 \item[\texttt{--verbose}] Print more detailed output.
@@ -104,7 +105,7 @@ The command \texttt{sntools -h} displays a more detailed overview over all argum
 
 
 
-\section{More Details}
+\section{More Details} \label{sec:more-details}
 
 \begin{figure}[htbp]
 	\centering
@@ -120,7 +121,9 @@ An overview over the structure of sntools is given in figure~\ref{fig-sim-sntool
 
 The main user interface is provided by the file \texttt{genevts.py}, which parses command line arguments and then calls code in \texttt{channel.py} to generate events.
 Events are generated separately for each combination of interaction channel and input species.\footnote{sntools uses the species \nue, \nuebar, \nux and \nuxbar, with \nux (\nuxbar) representing any one of \numu and \nutau (\numubar and \nutaubar). Since the energy of supernova neutrinos is too low to produce $\mu^\pm$ or $\tau^\pm$ in a detector, neutrinos with those two flavours interact in the same ways.}
-The code first calculates the total number of events expected in each \SI{1}{ms} bin, which is given by
+The code first calculates the total number of events expected in each specified time bin. For core-collapse supernova models, the bin size is fixed at \SI{1}{ms}. For pre-supernova model use, the binsize is an optional argument with a default value of \SI{1}{s}.
+The number of events per ms is calculated first and then multiplied by the bin width.
+The number of events per ms is given by
 \begin{equation}
 N(t) = \mathop{\mathlarger{\mathlarger{\iint}}} \tdiff{\Phi (t, E_\nu)}{E_\nu} \tdiff{\sigma (E_\nu, E_e)}{E_e}\, \d E_e\,\d E_\nu,
 \end{equation}
@@ -323,7 +326,12 @@ In addition, sntools supports the following input formats, which are implemented
 \texttt{Tamborra\_2014},
 \texttt{Walk\_2018},
 \texttt{Walk\_2019} and
-\texttt{Zha\_2021}.
+\texttt{Zha\_2021} for core-collapse supernova neutrino event generation,
+and 
+\texttt{Odrzywolek\_2010},
+\texttt{Patton\_2017},
+\texttt{Yoshida\_2016} and 
+\texttt{Kato\_2017} for pre-supernova neutrino event generation.
 SNEWPY also lets you download neutrino flux files from each of the corresponding simulations. See SNEWPY documentation for instructions.
 To use these flux files in sntools, prefix them with \texttt{SNEWPY-}. For example, to use an \texttt{OConnor\_2015} input file, use sntools with the command line argument \texttt{--format SNEWPY-OConnor\_2015}.
 
@@ -396,7 +404,11 @@ The spectral number luminosity at time $t_n$ and energy $E_k$ is given by
 Finally, a linear interpolation in time and log cubic spline interpolation in energy are used to determine the spectral number luminosity at an arbitrary time and energy.%
 \footnote{This approach closely follows the one used in code provided by Totani. There is excellent agreement of the calculated fluxes between Totani’s code and sntools, with differences of at most a few per mille due to slight differences in the numerical interpolation algorithms used.}
 
-
+\subsection{Pre-Supernova Time Binning}\label{sec:pre-supernova-time-binning}
+As mentioned in section~\ref{sec:more-details}, when using pre-supernova models, the size of the time bins used for calculations within SNTools can be specified through the optional argument \texttt{--binsize <value>}.
+During the development of support for pre-supernova models, a study was performed to optimse the time bin size for Hyper-Kamiokande. The study concluded that a bin size of \SI{1}{s} was the best choice,  
+limiting any artificial step features in the distribution of events arising from the nature of the time binning. As a result, \SI{1}{s} is chosen as the default value of this argument.
+It is advisable to use the default time bin size when working with pre-supernova models unless a detailed time bin optimsation study has been performed for the detector geometry you are using.  
 
 \section{Getting Help and Contributing}
 

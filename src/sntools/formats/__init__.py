@@ -156,7 +156,7 @@ class SNEWPYCompositeFlux(CompositeFlux):
     """Adapter class to turn a SNEWPY.models.SupernovaModel into an sntools.formats.CompositeFlux"""
 
     @classmethod
-    def from_file(cls, file, mode, format, starttime=None, endtime=None):
+    def from_file(cls, file, format, starttime=None, endtime=None):
         """Create a SNEWPYCompositeFlux from an input file."""
         self = SNEWPYCompositeFlux()
         self._repr = f"SNEWPYCompositeFlux.from_file('{file}', format='{format}', starttime={starttime}, endtime={endtime})"
@@ -164,11 +164,12 @@ class SNEWPYCompositeFlux(CompositeFlux):
         # snewpy.models.loaders classes treat relative file paths as relative to the snewpy cache directory,
         # so we’ll turn it into an absolute path first.
 
-        # need an if statement here to import the snewpy.models.presn_loaders module if the mode is set to presn.
-        if mode == "ccsn":
-            sn_model = getattr(import_module('snewpy.models.ccsn_loaders'), format)(abspath(file))
-        elif mode == "presn":
+        # need an if statement here to import the snewpy.models.presn_loaders module if the model is presn
+        if format in ("Odrzywolek_2010", "Yoshida_2016", "Patton_2017", "Kato_2017"):
             sn_model = getattr(import_module('snewpy.models.presn_loaders'), format)(abspath(file))
+        else:
+            sn_model = getattr(import_module('snewpy.models.ccsn_loaders'), format)(abspath(file))
+       
 
 
         for flv in ('e', 'eb', 'x', 'xb'):
