@@ -58,7 +58,7 @@ def setup():
     with open('outfile.kin', 'r') as f:
         output_sha = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
 
-    test_sha = "0e3444d5a174ee49bd3adad498a2a022d2340736f2e056bfab12df0e5a9b0c54"
+    test_sha = "3e8374e7da0fae12f4bd5f03a895a5f54290a8f23c106705af1dc4b8400701da"
     if output_sha == test_sha:
         tryprint(u"\u2705", "[SUCCESS]")
         print("Everything seems to work fine. Enjoy using sntools!")

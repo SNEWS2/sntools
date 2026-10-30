@@ -6,14 +6,23 @@ from ._crosssectiontest import CrossSectionTest
 
 class C12EBTest(CrossSectionTest):
     c = c12eb.Channel('eb')  # ensure we can access interaction channel module as self.c
+    
+    # To convert cm^2 to MeV^-2: http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
+    cm2_to_MeVm2 = (5.067731E10)**2  # convert cm^2 to MeV^-2: http://www.wolframalpha.com/input/?i=cm%2F(hbar+*+c)+in+MeV%5E(-1)
+    e_thr = 14.39  # energy threshold of this reaction (arXiv:1507.05613, p. 74)
+    epsilon = 0.001  # Used for approximating DiracDelta distribution.
+    deriv_factor = 1.0/(2.0 * epsilon)
+    #Factor to convert from sigma in cm^2 to dSigma/dE in MeV^-3.
+    conv_factor = deriv_factor * cm2_to_MeVm2
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
+    #Test values from Table V in arXiv:nucl-th/9903022
     test_dSigma_dE_values = (
-        (25, 10.61, 2.63032746305625e-18),
-        (25, 10.6109, 2.63032746305625e-18),
-        (50, 35.61, 5.493977104481186e-17),
-        (75, 60.61, 2.0634285413474464e-16),
-        (100, 85.61, 4.993427358604262e-16),
+        (20, 20-e_thr, 0.8e-42 * conv_factor),
+        (20, 20-e_thr+0.9*epsilon, 0.8e-42 * conv_factor),
+        (50, 50-e_thr, 41.4e-42 * conv_factor),
+        (70, 70-e_thr, 130e-42 * conv_factor),
+        (100, 100-e_thr, 386e-42 * conv_factor),
     )
 
     # iterable with tuples (eNu, eE, dSigma_dE(eNu, eE))
